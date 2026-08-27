@@ -57,7 +57,7 @@ El sistema seguirá una arquitectura basada en una aplicación web cliente-servi
 ```
 ┌──────────────────────────────┐
 │           FRONTEND           │
-│       HTML / CSS / JS        │
+│       HTML / CSS / TS        │
 └──────────────┬───────────────┘
                │
                │ HTTP / JSON
@@ -261,7 +261,7 @@ gestion-torneos/
 │
 ├── frontend/
 │   ├── css/
-│   ├── js/
+│   ├── ts/
 │   ├── pages/
 │   └── index.html
 │
