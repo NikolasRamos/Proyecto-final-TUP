@@ -26,9 +26,11 @@ Los participantes podrán inscribirse en torneos, consultar sus partidas, result
 
 ### Frontend
 
-- **HTML5** — Estructura de las páginas.
+- **React** — Construcción de interfaces mediante componentes.
+- **React Router** — Navegación entre las pantallas de la aplicación.
+- **TypeScript** — Tipado y lógica del cliente.
+- **Vite** — Servidor de desarrollo y compilación del frontend.
 - **CSS3** — Diseño y estilos de la aplicación.
-- **TypeScript** — Lógica del cliente e interacción con la API.
 
 ### Backend
 
@@ -171,7 +173,7 @@ El sistema seguirá una arquitectura basada en una aplicación web cliente-servi
 ```
 ┌──────────────────────────────┐
 │           FRONTEND           │
-│       HTML / CSS / TS        │
+│    React + TypeScript        │
 └──────────────┬───────────────┘
                │
                │ HTTP / JSON
@@ -374,16 +376,23 @@ gestion-torneos/
 │   └── app.js
 │
 ├── frontend/
-│   ├── css/
-│   ├── ts/
-│   ├── pages/
-│   └── index.html
-│
-├── docker/
+│   ├── src/
+│   │   ├── App.tsx
+│   │   ├── App.test.tsx
+│   │   ├── main.tsx
+│   │   └── styles.css
+│   ├── test/
+│   │   └── setup.ts
+│   ├── index.html
+│   ├── tsconfig.json
+│   └── vite.config.ts
 │
 ├── .env.example
 ├── docker-compose.yml
+├── eslint.config.js
 ├── package.json
+├── package-lock.json
+├── vitest.config.ts
 └── README.md
 ```
 
