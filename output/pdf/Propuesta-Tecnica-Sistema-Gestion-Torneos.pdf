@@ -1,93 +1,448 @@
 %PDF-1.4
-%“Œ‹ž ReportLab Generated PDF document (opensource)
+%âãÏÓ
 1 0 obj
 <<
-/F1 2 0 R /F2 3 0 R
+/Producer (ReportLab PDF Library \055 \050opensource\051)
+/Author (Nikol\341s Ramos\054 Giuliano Tedeschi G\363mez y Ramiro Olea)
+/CreationDate (D\07220260929181155\05503\04700\047)
+/Creator (\050unspecified\051)
+/Keywords ()
+/ModDate (D\07220260929181155\05503\04700\047)
+/Subject (\050unspecified\051)
+/Title (Propuesta t\351cnica \055 Sistema de gesti\363n de torneos)
+/Trapped (\057False)
 >>
 endobj
 2 0 obj
 <<
-/BaseFont /Helvetica /Encoding /WinAnsiEncoding /Name /F1 /Subtype /Type1 /Type /Font
+/Type /Pages
+/Count 2
+/Kids [ 4 0 R 10 0 R ]
 >>
 endobj
 3 0 obj
 <<
-/BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding /Name /F2 /Subtype /Type1 /Type /Font
+/Type /Catalog
+/Pages 2 0 R
 >>
 endobj
 4 0 obj
 <<
-/Contents 9 0 R /MediaBox [ 0 0 595.2756 841.8898 ] /Parent 8 0 R /Resources <<
-/Font 1 0 R /ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
->> /Rotate 0 /Trans <<
-
->> 
-  /Type /Page
+/Contents 5 0 R
+/MediaBox [ 0 0 595.2756 841.8898 ]
+/Resources <<
+/Font <<
+/F1 6 0 R
+/F1-0 7 0 R
+/F2 8 0 R
+/F2-0 9 0 R
+>>
+/ProcSet [ /ImageB /ImageC /ImageI /PDF /Text ]
+>>
+/Rotate 0
+/Trans <<
+>>
+/Type /Page
+/Annots [ ]
+/Parent 2 0 R
 >>
 endobj
 5 0 obj
 <<
-/Contents 10 0 R /MediaBox [ 0 0 595.2756 841.8898 ] /Parent 8 0 R /Resources <<
-/Font 1 0 R /ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
->> /Rotate 0 /Trans <<
-
->> 
-  /Type /Page
+/Length 7513
 >>
+stream
+q
+1 0 0 1 0 0 cm  BT /F1 12 Tf 14.4 TL ET
+q
+BT /F1 7.4 Tf 8.88 TL ET
+.364706 .364706 .364706 rg
+BT 1 0 0 1 356.2218 799.3701 Tm (Propuesta t\351cnica \267 Sistema de gesti\363n de torneos) Tj T* ET
+.717647 .803922 .894118 RG
+.45 w
+n 73.70079 795.1181 m 521.5748 795.1181 l S
+.364706 .364706 .364706 rg
+BT /F1 7.5 Tf 9 TL ET
+BT 1 0 0 1 274.4965 29.76378 Tm (P\341gina 1 de 2) Tj T* ET
+Q
+q
+1 0 0 1 73.70079 748.3465 cm
+Q
+q
+1 0 0 1 73.70079 730.3465 cm
+q
+BT 1 0 0 1 0 2.2 Tm 12 TL /F2 9.8 Tf .176471 .45098 .72549 rg (P R O P U E S T A) Tj ( ) Tj ( ) Tj ( ) Tj (T \311 C N I C A) Tj T* ET
+Q
+Q
+q
+1 0 0 1 73.70079 701.3465 cm
+q
+.133333 .247059 .427451 rg
+BT 1 0 0 1 0 3 Tm /F2 22 Tf 25 TL (Sistema de gesti\363n de torneos) Tj T* ET
+Q
+Q
+q
+1 0 0 1 73.70079 698.2465 cm
+q
+2.1 w
+1 J
+.133333 .247059 .427451 RG
+n 0 0 m 447.874 0 l S
+Q
+Q
+q
+1 0 0 1 73.70079 630.2228 cm
+q
+.133333 .247059 .427451 rg
+BT 1 0 0 1 0 2.8 Tm /F2 14.2 Tf 17 TL (1. Detalle de la propuesta) Tj T* ET
+Q
+Q
+q
+1 0 0 1 73.70079 627.5228 cm
+q
+.7 w
+1 J
+.717647 .803922 .894118 RG
+n 0 0 m 447.874 0 l S
+Q
+Q
+q
+1 0 0 1 73.70079 593.5228 cm
+q
+.141176 .141176 .141176 rg
+BT 1 0 0 1 0 16.3 Tm /F1 9.7 Tf 13 TL (Aplicaci\363n web para crear, administrar y seguir torneos desde una \372nica plataforma, con gesti\363n de) Tj T* (usuarios, equipos, participantes, partidas, resultados y tablas de posiciones.) Tj T* ET
+Q
+Q
+q
+1 0 0 1 73.70079 411.0228 cm
+q
+.133333 .247059 .427451 rg
+n 0 174.5 447.874 -20.5 re f*
+.952941 .952941 .952941 rg
+n 0 123.2 447.874 -30.8 re f*
+.952941 .952941 .952941 rg
+n 0 61.6 447.874 -30.8 re f*
+1 1 1 rg
+BT /F1 10 Tf 12 TL ET
+q
+1 0 0 1 6 159 cm
+q
+1 1 1 rg
+BT 1 0 0 1 0 2.25 Tm /F2 8.25 Tf 10.5 TL (Situaci\363n actual) Tj T* ET
+Q
+Q
+q
+1 0 0 1 229.937 159 cm
+q
+1 1 1 rg
+BT 1 0 0 1 0 2.25 Tm /F2 8.25 Tf 10.5 TL (Con el sistema propuesto) Tj T* ET
+Q
+Q
+0 0 0 rg
+q
+1 0 0 1 6 128.2 cm
+q
+.141176 .141176 .141176 rg
+BT 1 0 0 1 0 12.55 Tm /F1 8.25 Tf 10.4 TL (La informaci\363n de torneos suele quedar repartida entre) Tj T* (mensajes, planillas y documentos.) Tj T* ET
+Q
+Q
+q
+1 0 0 1 229.937 128.2 cm
+q
+.141176 .141176 .141176 rg
+BT 1 0 0 1 0 12.55 Tm /F1 8.25 Tf 10.4 TL (Una plataforma centraliza torneos, equipos, participantes,) Tj T* (partidas y resultados.) Tj T* ET
+Q
+Q
+q
+1 0 0 1 6 97.4 cm
+q
+.141176 .141176 .141176 rg
+BT 1 0 0 1 0 12.55 Tm /F1 8.25 Tf 10.4 TL (Las inscripciones y la conformaci\363n de equipos se) Tj T* (controlan manualmente.) Tj T* ET
+Q
+Q
+q
+1 0 0 1 229.937 97.4 cm
+q
+.141176 .141176 .141176 rg
+BT 1 0 0 1 0 12.55 Tm /F1 8.25 Tf 10.4 TL (Los equipos pueden registrar integrantes e inscribirse con) Tj T* (informaci\363n validada.) Tj T* ET
+Q
+Q
+q
+1 0 0 1 6 66.6 cm
+q
+.141176 .141176 .141176 rg
+BT 1 0 0 1 0 12.55 Tm /F1 8.25 Tf 10.4 TL (Los enfrentamientos se arman a mano y pueden requerir) Tj T* (m\372ltiples correcciones.) Tj T* ET
+Q
+Q
+q
+1 0 0 1 229.937 66.6 cm
+q
+.141176 .141176 .141176 rg
+BT 1 0 0 1 0 12.55 Tm /F1 8.25 Tf 10.4 TL (El organizador genera enfrentamientos seg\372n la) Tj T* (modalidad y la configuraci\363n elegida.) Tj T* ET
+Q
+Q
+q
+1 0 0 1 6 35.8 cm
+q
+.141176 .141176 .141176 rg
+BT 1 0 0 1 0 12.55 Tm /F1 8.25 Tf 10.4 TL (Cada resultado obliga a recalcular posiciones, puntos y) Tj T* (desempates.) Tj T* ET
+Q
+Q
+q
+1 0 0 1 229.937 35.8 cm
+q
+.141176 .141176 .141176 rg
+BT 1 0 0 1 0 12.55 Tm /F1 8.25 Tf 10.4 TL (Al cargar un resultado se actualizan autom\341ticamente) Tj T* (estad\355sticas y clasificaciones.) Tj T* ET
+Q
+Q
+q
+1 0 0 1 6 5 cm
+q
+.141176 .141176 .141176 rg
+BT 1 0 0 1 0 12.55 Tm /F1 8.25 Tf 10.4 TL (Participantes y organizadores dependen de consultas) Tj T* (informales para conocer novedades.) Tj T* ET
+Q
+Q
+q
+1 0 0 1 229.937 5 cm
+q
+.141176 .141176 .141176 rg
+BT 1 0 0 1 0 12.55 Tm /F1 8.25 Tf 10.4 TL (Cada usuario consulta pr\363ximas partidas, historial,) Tj T* (resultados y posici\363n desde su perfil.) Tj T* ET
+Q
+Q
+q
+1 J
+1 j
+.717647 .803922 .894118 RG
+.45 w
+n 0 174.5 m 447.874 174.5 l S
+n 0 0 m 447.874 0 l S
+n 0 0 m 0 174.5 l S
+n 447.874 0 m 447.874 174.5 l S
+n 0 154 m 447.874 154 l S
+n 0 123.2 m 447.874 123.2 l S
+n 0 92.4 m 447.874 92.4 l S
+n 0 61.6 m 447.874 61.6 l S
+n 0 30.8 m 447.874 30.8 l S
+n 223.937 0 m 223.937 174.5 l S
+Q
+Q
+Q
+q
+1 0 0 1 73.70079 394.015 cm
+Q
+q
+1 0 0 1 73.70079 369.015 cm
+q
+.133333 .247059 .427451 rg
+BT 1 0 0 1 0 2.8 Tm /F2 14.2 Tf 17 TL (2. Perfiles) Tj T* ET
+Q
+Q
+q
+1 0 0 1 73.70079 366.315 cm
+q
+.7 w
+1 J
+.717647 .803922 .894118 RG
+n 0 0 m 447.874 0 l S
+Q
+Q
+q
+1 0 0 1 73.70079 332.315 cm
+q
+.141176 .141176 .141176 rg
+BT 1 0 0 1 0 16.3 Tm /F1 9.7 Tf 13 TL (El sistema cuenta inicialmente con tres perfiles. Cada persona accede con su usuario y contrase\361a y) Tj T* (visualiza \372nicamente las funciones autorizadas para su rol.) Tj T* ET
+Q
+Q
+q
+1 0 0 1 73.70079 311.315 cm
+q
+.176471 .45098 .72549 rg
+BT 1 0 0 1 0 2.6 Tm /F2 10.4 Tf 13 TL (Administrador) Tj T* ET
+Q
+Q
+q
+1 0 0 1 73.70079 294.215 cm
+q
+BT 1 0 0 1 11 2.4 Tm -8 0 Td 11.1 TL /F2 8.7 Tf .176471 .45098 .72549 rg (-) Tj /F1 8.7 Tf .141176 .141176 .141176 rg ( ) Tj ( ) Tj (Gestionar usuarios, roles y permisos.) Tj T* 8 0 Td ET
+Q
+Q
+q
+1 0 0 1 73.70079 277.115 cm
+q
+BT 1 0 0 1 11 2.4 Tm -8 0 Td 11.1 TL /F2 8.7 Tf .176471 .45098 .72549 rg (-) Tj /F1 8.7 Tf .141176 .141176 .141176 rg ( ) Tj ( ) Tj (Administrar torneos, categor\355as, equipos y participantes.) Tj T* 8 0 Td ET
+Q
+Q
+q
+1 0 0 1 73.70079 260.015 cm
+q
+BT 1 0 0 1 11 2.4 Tm -8 0 Td 11.1 TL /F2 8.7 Tf .176471 .45098 .72549 rg (-) Tj /F1 8.7 Tf .141176 .141176 .141176 rg ( ) Tj ( ) Tj (Consultar estad\355sticas generales y supervisar el funcionamiento del sistema.) Tj T* 8 0 Td ET
+Q
+Q
+q
+1 0 0 1 73.70079 242.015 cm
+q
+.176471 .45098 .72549 rg
+BT 1 0 0 1 0 2.6 Tm /F2 10.4 Tf 13 TL (Organizador) Tj T* ET
+Q
+Q
+q
+1 0 0 1 73.70079 224.915 cm
+q
+BT 1 0 0 1 11 2.4 Tm -8 0 Td 11.1 TL /F2 8.7 Tf .176471 .45098 .72549 rg (-) Tj /F1 8.7 Tf .141176 .141176 .141176 rg ( ) Tj ( ) Tj (Crear torneos y configurar fechas, modalidad, cupos y reglas.) Tj T* 8 0 Td ET
+Q
+Q
+q
+1 0 0 1 73.70079 207.815 cm
+q
+BT 1 0 0 1 11 2.4 Tm -8 0 Td 11.1 TL /F2 8.7 Tf .176471 .45098 .72549 rg (-) Tj /F1 8.7 Tf .141176 .141176 .141176 rg ( ) Tj ( ) Tj (Registrar equipos, generar enfrentamientos y administrar el calendario.) Tj T* 8 0 Td ET
+Q
+Q
+q
+1 0 0 1 73.70079 190.715 cm
+q
+BT 1 0 0 1 11 2.4 Tm -8 0 Td 11.1 TL /F2 8.7 Tf .176471 .45098 .72549 rg (-) Tj /F1 8.7 Tf .141176 .141176 .141176 rg ( ) Tj ( ) Tj (Cargar resultados y consultar las tablas de posiciones actualizadas.) Tj T* 8 0 Td ET
+Q
+Q
+q
+1 0 0 1 73.70079 172.715 cm
+q
+.176471 .45098 .72549 rg
+BT 1 0 0 1 0 2.6 Tm /F2 10.4 Tf 13 TL (Participante) Tj T* ET
+Q
+Q
+q
+1 0 0 1 73.70079 155.615 cm
+q
+BT 1 0 0 1 11 2.4 Tm -8 0 Td 11.1 TL /F2 8.7 Tf .176471 .45098 .72549 rg (-) Tj /F1 8.7 Tf .141176 .141176 .141176 rg ( ) Tj ( ) Tj (Crear y actualizar su perfil y consultar sus equipos.) Tj T* 8 0 Td ET
+Q
+Q
+q
+1 0 0 1 73.70079 138.515 cm
+q
+BT 1 0 0 1 11 2.4 Tm -8 0 Td 11.1 TL /F2 8.7 Tf .176471 .45098 .72549 rg (-) Tj /F1 8.7 Tf .141176 .141176 .141176 rg ( ) Tj ( ) Tj (Inscribirse en torneos y consultar pr\363ximas partidas.) Tj T* 8 0 Td ET
+Q
+Q
+q
+1 0 0 1 73.70079 121.415 cm
+q
+BT 1 0 0 1 11 2.4 Tm -8 0 Td 11.1 TL /F2 8.7 Tf .176471 .45098 .72549 rg (-) Tj /F1 8.7 Tf .141176 .141176 .141176 rg ( ) Tj ( ) Tj (Revisar resultados, historial y posici\363n dentro de la competencia.) Tj T* 8 0 Td ET
+Q
+Q
+ 
+
+Q
+
+q
+0.0 0.0 595.2756 841.8898 re
+W
+n
+1 0 0 1 0 0 cm
+BT
+/F1-0 12 Tf
+14.4 TL
+ET
+0.176471 0.45098 0.72549 rg
+BT
+/F2-0 10 Tf
+12 TL
+ET
+BT
+1 0 0 1 454.5748 661 Tm
+(GRUPO N\056\272 16) Tj
+T*
+ET
+Q
+
+
+endstream
 endobj
 6 0 obj
 <<
-/PageMode /UseNone /Pages 8 0 R /Type /Catalog
+/BaseFont /Helvetica
+/Encoding /WinAnsiEncoding
+/Name /F1
+/Subtype /Type1
+/Type /Font
 >>
 endobj
 7 0 obj
 <<
-/Author (Nikol\341s Ramos, Giuliano Tedeschi G\363mez y Ramiro Olea) /CreationDate (D:20260929181155-03'00') /Creator (\(unspecified\)) /Keywords () /ModDate (D:20260929181155-03'00') /Producer (ReportLab PDF Library - \(opensource\)) 
-  /Subject (\(unspecified\)) /Title (Propuesta t\351cnica - Sistema de gesti\363n de torneos) /Trapped /False
+/BaseFont /Helvetica
+/Encoding /WinAnsiEncoding
+/Name /F1
+/Subtype /Type1
+/Type /Font
 >>
 endobj
 8 0 obj
 <<
-/Count 2 /Kids [ 4 0 R 5 0 R ] /Type /Pages
+/BaseFont /Helvetica-Bold
+/Encoding /WinAnsiEncoding
+/Name /F2
+/Subtype /Type1
+/Type /Font
 >>
 endobj
 9 0 obj
 <<
-/Filter [ /ASCII85Decode /FlateDecode ] /Length 2180
+/BaseFont /Helvetica-Bold
+/Encoding /WinAnsiEncoding
+/Name /F2
+/Subtype /Type1
+/Type /Font
 >>
-stream
-Gb!#]a`?,q&A@rkqWLKs(]rKR*fh\6<,1DPb0:`iJeY)la<6n0o(DSSY*()8.dNb;@M/eMo]pt>_42MCE;M`=M>iskTDrliJn>DM*qO(=M/HoANu-VGBHA`R@StWL0fSSg-_Tk-?CGeW[t3iM9F)\:(rsi0*DWr2/oPmCC/e2+Wpa5c-UjIp\edY'?dl#U\YQd1-!j.2h7tVdW%N4db3BM+rLhg_.mV0CCe60ugfOhe@uk,t]D!,coBFjq6(uIg`sH8BmPE(,b/kHiq4SUacSG@n!h*-l^<o4$_4P*L+VY[s5)GY\JK%'1`d?=tbI!@U"7hA,jBnS3ro6jD04M)><K_aU$a):un2T7]+i/ibe!TS;KG>3-a9]tjL,_I@:)jiRL%!!r"R5-151;*3UDs&%1V0mO?.,n!N:'usl'hUJ&,:R\JRl6g%\JR"\82'U'2YYM6Q0X^k?CW"a>FfnoYT$Qp]f")&WG?e9b9hI\sGl?%W67^\5t9oW3C'ujEVo,64`gF,l?/J@>#3>EG,N6HG"4,f'u(bQo"SCeM>=4JXK)5p$Qi#<WSePZ@kBjrP!:d<'PQ(bB#3I_HF=MgJE123nn[/1UKta$h\8"_=a#;W5$gaXe_8IBI3=UP4Ldf@"'[bXf54A-Iof_Tpc>BC#E@mDCB<(=_4n)Mc/a//L=u5ad6=XQVH"$SX.f1;NFP`1,mjm:6TcGMd#ek\\t%><KksRNr@O.bD/c[N<p]cos.C/HeB[k$$-TMLTptP/F`sL]FtcE>1)?S"cId0UXAeCs%p3JdI8;-)'/EZ^fdo54/;u<P5rZECH+&EL)t%o*'c'dkr0R?amZb]fmBf1OL>'n2Zj.mJjHhHVZIGgG/IDKG7A#[N2eM3oY+=CD<fd(YjqunJ`VpQ^0n\4PCFd8c*3P,,c-3+D"8jU;:R(JJB(.(_1/RJ<g"qI4gI(L74!Fcen23Y1W.Qsc-)p!9O0hLcp=(t#5,*c\frFi@%!k+AWLZ2k7+A9%g8-E"nt@j-oM7O8I\V710('t<U8k1"HaNuA_UB/'SNAMHG!8D''>il(>uO(KR2;_-cZ4dHKi68\LO8rAJ\-@LpYZ4mA)eA&#l^r_)NRj,3MahEA$GF3D0JUilS/s'FP?jaum)%L9=*7/Aqpki=`R:nA/CPW^le;aW[_6<<esbWO5?)$J`<T:(?82UJ`c(UVB*,NT=%e/U'Hag3a+5N?HAhX8%g1l*A]h=V)pGl17qqI<KGTIMU-b=>7<5Pn.$/P[kg]1/"&E$lbBUgq9oMecR1.Dj@M:I>B%A/c/O;M1d03WeUlb6RnRS?m%/(WQX(]n-Dh<3q+9(WPmr_>PuXfRE1I4lD=qnaZRnOJG`=i\Xc2ca>)Y?153kC'uhcdeu:7HC>6.U?aM[l=d4ck<0TV0E9;omk+l*1UUo/q&/XTa;#J'bQdql_qi2e"l;VA*`n76>>3bc(g=1sZ6S"uLBsnE"8,WC,83beZB4J@)N_RL*]8l<O3ZE!tn*F88qqcE)ULD.XHBU?NmUp%GVB=N#5A)L[ER#'k3Eu6;F*?3]$*8'(D.N&&7p3UnX*WUS@h.DRc+63rc_$qE&r^_1IFS?-To7:c%XXhZ7rhli=oHl&d`kmp-B6+]8Ceo-=&mm:V`*DGlJOJ(SqLNPU(EM[U0@RU51'2YRV[s-.g7<ZEY=ahVH"Q:LUO5=a4-B4VW`m\'-4Ie1pW#\=;r"$!SriqDJ5c8h<,I+<Y#D847,%-h`_MZ+sPmeH_]t:Jj2C`i<X.0h43=jGVGWI$01te9%9;>s&mK+]5nq@\l\VDIJ[^>^$/@%-;@uO$9d*N%L_E52(<l6fq-"rL5_`>^8jg158=,(df-Q%-A0IG(GLZCl0J].JMW%DZ[dJ[V(YQt[6e*j[0EcPQl,g7?H[ZXl3]hQXhjIed"EdD61oBGom&)8%WF#YZ1ttJ@*Xjg?@"b8c'fCtq/2QYeCEJfdo$_d&gH-D)L%8Tc3j=%d,GL/G"XmpUt8^eS?OG@(2'Q_9cQ3!"$Cag3R:8!f55NB;%Y.-8")iSlQgC"ro_<5J;7Tes&tbYf(1Ql*;=jsS<rB?c`K];lETj80LF:u7h\Ckg5VJL<d6i&N_Rl5D$6=<l)k6Q#fqTRn#RYhWA\7GhDK#fT!Vhd*3B#^7T/A!<@]?*I0klcrWfnR'N"~>endstream
 endobj
 10 0 obj
 <<
-/Filter [ /ASCII85Decode /FlateDecode ] /Length 2629
+/Contents 11 0 R
+/MediaBox [ 0 0 595.2756 841.8898 ]
+/Resources <<
+/Font 12 0 R
+/ProcSet [ /PDF /Text /ImageB /ImageC /ImageI ]
+>>
+/Rotate 0
+/Trans <<
+>>
+/Type /Page
+/Parent 2 0 R
+>>
+endobj
+11 0 obj
+<<
+/Filter [ /ASCII85Decode /FlateDecode ]
+/Length 2629
 >>
 stream
-Gb!#^>Beg[&q9SYQq)(UJeI!9gcf9i2k(erE@gMF93u!=daFfp"XMR.^OBh2Wt\iQS*;gpYls&AK=QJ!F)^W(gY_N*i#bVenRi>:^iBV6@id1>i-K\=jeA.Ll-Tk#Cd)d7QlC:D'>XUF=jnGK&9.Su$,Pd97M0]/LVn-7Qa]G&.ohfHb"o1dj#i;IHkJ^NMmOn_7REhWN=401DW'Y6.^dB`0)c'u#?^t5)$kMD,_=2\2\H0V,EF(G]=/U#oAR0:*($!GNY=lQh.J^f@0=7%bR_C4s"&fARG64(n4<[YF8`oq7>M#'!ZshK_S?WDoc69-*abhU"@;sD!TtP%Y3kAC75n`epI!F8:,D=d5@=QGn0;<^;XsRSF<(q:;Z#us6#*IN(D;Xm/q[M%H:aCd!Zkc#o291g/<H>0MH\:e9H@Qb@rBUnLiVVHrflnnHc-+N04a\$_s\l/,KK\4@)847e#>IFD;Db+KS(a/$<BArYfIX%!:53D)[4?_gZU[X)RV<X.+9>*DqmOgo$BSm1#N/7if7$,kkqQJ:k8D4,B56#iNAmBL#4A0DSP4',SO(*Vu*5=N]9D^\`!o&h0*u7V,EE;EE56&UI8B"O?("9k/SsJ\<3fn1(@5,o0%\c4U9<g&Z@sC["a=d)PW_iI=B?CDn+^m/o5dFHl^8-(aIppl/&BsHEY_=`-d?V1Y!1K$<8qQdSARIZV%RqR[BJSV+rkHV*M^nd\JrZH^=n8M'H1[R#(NdQ8kb*M$`(47V'rGjGb@E;"`bh-lFsiH%];_X)qX8p<d%97,cV)jF[1T9K(S"3>i@uC23`3R'k/e5Iq(O8*JU&7+7mCESR/g#W\J>SKP,N<9\Rb"t-9p>_2A5rbFl!.,"npCsq]Q%0jXI/aZ?cU$#2i!\DkiN_n`RKWep`nq;Ti/XPdNAJD#>9o?].UV8fi<*?EjJ"e@!8`fb=3AIl;8qW8K')n\]Itaj`?"!b_cCR+o:!CCNhIj:T8%5BqQFD<d9cf.:hFAOsT<P1n5?%1HPXOY0=]]\T5$B72P5eU)gW!H>f';9f@Na0T1a9P.R%S3@K%5/>HliqDm/rU1j8Xlh#dFOJ4^=u,"Bc3:RJ*VdZa*qZlm2#0Qj3i%G21>GKJJq&j*!=!DN+Et(7t.SG1b)ccH^uafZmVbda-TT4ZE*SMkZ,OKAfO0>YXLZ"mu&5ro6kKLBYHU$#9[!(C7KS0EqIK(bA[WlV+K$Mj7,(Bnd5oOMuUbNPiW)S#Ki"8)FN;*U+1KF'FueO=.W@>?=N>U.5o*W:L!h/jXB]5-VqCl5if9Z.4,^IT81cKO</SXE,"S@/Q#WAm8,A1i`dH7V,SOL0/"e-4PUn/jisJN5cj&-V02><Red_WFC9k.DNTF#C"dX-'l1\gs^YIc)+tRGKC8K.W9JREOu4-jlk0hUI9^Vq`71_jk?ZP`uB2.G:r^:(e^mb;R#@f4U("OSUpfV7mVfFL3s3h^-_G,jF!se5uD.R)Y"VAg@<opaPM1d8ifnb5,D3/hg&*HmLV7A^nVbu+1GuNJ>8W#rU`idV)%7<s%Z?jMXu?%;^U>TGNYeV1!O'JU=_g6_Ln?>_M4EChmXHA:).877pMt\h8H<378U3\A9jmflsqh*++4]r*(Q`*W%XFQB_a#b]7jEi#/OS3Efd1\@%AF;L3]5n7%l<(E:hS\d9)bKi3Yh]O3JpF8uY%U]R]bVTd7!FAs4!4e8>k8)1<Lk9ocDp9r78RTU/DE'@Wf1:imjj8M=$52;G#%7[h@8/1M>?X[(j,@;WaCTmeY>F.LdlS.SdX-.+Y4rer#LjtJ>N[aI\`psZ^33R"X>=%O-*Jb29^@7uPfj\Oo6#\1+0+MubkM(jRkLEX<Zf%E>2:6-+O*(+m6AV].R@8LZGeOp_C#5q8V+pcegZQP(ZUBj31h/:%C#f:6Di?$2,YHmRgS?G&oggO(+_:5DLp]sL'is3'Oj>G.bs/S.D=XNp"EOnSE?s0SH//MDkHG1';JVCu8,*W=;^9Uh@*N*%dbidmsm,I/;E;\f:[7^&!K9IfZ%FV&Xq"t'LQ^B_=8Ygos:9`BkA>4ra#@OJD<97]AHK#@;pq_93=qZ\2.Vc;T,m'Hm$H*Cm3IKOqVn)h=3b[83U,T9TTX0*.<,KOr&/qQQJ].ms+jceX^U!K/gmHbMD0)3sjn>A6&[//R0sFq`-h(9jiL71Cfhl:[m_o,nTb2>N0!OS_gGF+e"6mY^^@^I!Y2W6-[UF_mI>ZbGm30$"H9gD&<NLYigk<XISB;FiiK;19^U.;YKk&Z/%O_GL"_O1+8l67h$E?ca1j.r>-50+%/mY79XgSF0!i*.+j^gp00?>ZbpFMcYTf.4%6C[8TZfnZ9X._Sd2<l&(B$(L!NH#F]n:PVp']CuY:qmFEJ,Wm;]mMeG1^pm5=k%LIFU/J=7m*?'l7J[IT(V7R2NtidlhB&l)$%=!j`OP\_ACEB3PU@]<Us7`md'NgaIa;;r0i']J+@gbGB.a+c?2(:R"<k3c"T'`qN6u:Ogf%iV)$X.#V_C\s%VH("b;U/j8Aj'AnBcrVZ[%!kL=2?OK%:-SF3hL^90G@eL*Tg)c:cNol7/b"q(t#Ln/Ua0DU;<e1r>=h4Pur=8[%-5Bbde'`~>endstream
+Gb!#^>Beg[&q9SYQq)(UJeI!9gcf9i2k(erE@gMF93u!=daFfp"XMR.^OBh2Wt\iQS*;gpYls&AK=QJ!F)^W(gY_N*i#bVenRi>:^iBV6@id1>i-K\=jeA.Ll-Tk#Cd)d7QlC:D'>XUF=jnGK&9.Su$,Pd97M0]/LVn-7Qa]G&.ohfHb"o1dj#i;IHkJ^NMmOn_7REhWN=401DW'Y6.^dB`0)c'u#?^t5)$kMD,_=2\2\H0V,EF(G]=/U#oAR0:*($!GNY=lQh.J^f@0=7%bR_C4s"&fARG64(n4<[YF8`oq7>M#'!ZshK_S?WDoc69-*abhU"@;sD!TtP%Y3kAC75n`epI!F8:,D=d5@=QGn0;<^;XsRSF<(q:;Z#us6#*IN(D;Xm/q[M%H:aCd!Zkc#o291g/<H>0MH\:e9H@Qb@rBUnLiVVHrflnnHc-+N04a\$_s\l/,KK\4@)847e#>IFD;Db+KS(a/$<BArYfIX%!:53D)[4?_gZU[X)RV<X.+9>*DqmOgo$BSm1#N/7if7$,kkqQJ:k8D4,B56#iNAmBL#4A0DSP4',SO(*Vu*5=N]9D^\`!o&h0*u7V,EE;EE56&UI8B"O?("9k/SsJ\<3fn1(@5,o0%\c4U9<g&Z@sC["a=d)PW_iI=B?CDn+^m/o5dFHl^8-(aIppl/&BsHEY_=`-d?V1Y!1K$<8qQdSARIZV%RqR[BJSV+rkHV*M^nd\JrZH^=n8M'H1[R#(NdQ8kb*M$`(47V'rGjGb@E;"`bh-lFsiH%];_X)qX8p<d%97,cV)jF[1T9K(S"3>i@uC23`3R'k/e5Iq(O8*JU&7+7mCESR/g#W\J>SKP,N<9\Rb"t-9p>_2A5rbFl!.,"npCsq]Q%0jXI/aZ?cU$#2i!\DkiN_n`RKWep`nq;Ti/XPdNAJD#>9o?].UV8fi<*?EjJ"e@!8`fb=3AIl;8qW8K')n\]Itaj`?"!b_cCR+o:!CCNhIj:T8%5BqQFD<d9cf.:hFAOsT<P1n5?%1HPXOY0=]]\T5$B72P5eU)gW!H>f';9f@Na0T1a9P.R%S3@K%5/>HliqDm/rU1j8Xlh#dFOJ4^=u,"Bc3:RJ*VdZa*qZlm2#0Qj3i%G21>GKJJq&j*!=!DN+Et(7t.SG1b)ccH^uafZmVbda-TT4ZE*SMkZ,OKAfO0>YXLZ"mu&5ro6kKLBYHU$#9[!(C7KS0EqIK(bA[WlV+K$Mj7,(Bnd5oOMuUbNPiW)S#Ki"8)FN;*U+1KF'FueO=.W@>?=N>U.5o*W:L!h/jXB]5-VqCl5if9Z.4,^IT81cKO</SXE,"S@/Q#WAm8,A1i`dH7V,SOL0/"e-4PUn/jisJN5cj&-V02><Red_WFC9k.DNTF#C"dX-'l1\gs^YIc)+tRGKC8K.W9JREOu4-jlk0hUI9^Vq`71_jk?ZP`uB2.G:r^:(e^mb;R#@f4U("OSUpfV7mVfFL3s3h^-_G,jF!se5uD.R)Y"VAg@<opaPM1d8ifnb5,D3/hg&*HmLV7A^nVbu+1GuNJ>8W#rU`idV)%7<s%Z?jMXu?%;^U>TGNYeV1!O'JU=_g6_Ln?>_M4EChmXHA:).877pMt\h8H<378U3\A9jmflsqh*++4]r*(Q`*W%XFQB_a#b]7jEi#/OS3Efd1\@%AF;L3]5n7%l<(E:hS\d9)bKi3Yh]O3JpF8uY%U]R]bVTd7!FAs4!4e8>k8)1<Lk9ocDp9r78RTU/DE'@Wf1:imjj8M=$52;G#%7[h@8/1M>?X[(j,@;WaCTmeY>F.LdlS.SdX-.+Y4rer#LjtJ>N[aI\`psZ^33R"X>=%O-*Jb29^@7uPfj\Oo6#\1+0+MubkM(jRkLEX<Zf%E>2:6-+O*(+m6AV].R@8LZGeOp_C#5q8V+pcegZQP(ZUBj31h/:%C#f:6Di?$2,YHmRgS?G&oggO(+_:5DLp]sL'is3'Oj>G.bs/S.D=XNp"EOnSE?s0SH//MDkHG1';JVCu8,*W=;^9Uh@*N*%dbidmsm,I/;E;\f:[7^&!K9IfZ%FV&Xq"t'LQ^B_=8Ygos:9`BkA>4ra#@OJD<97]AHK#@;pq_93=qZ\2.Vc;T,m'Hm$H*Cm3IKOqVn)h=3b[83U,T9TTX0*.<,KOr&/qQQJ].ms+jceX^U!K/gmHbMD0)3sjn>A6&[//R0sFq`-h(9jiL71Cfhl:[m_o,nTb2>N0!OS_gGF+e"6mY^^@^I!Y2W6-[UF_mI>ZbGm30$"H9gD&<NLYigk<XISB;FiiK;19^U.;YKk&Z/%O_GL"_O1+8l67h$E?ca1j.r>-50+%/mY79XgSF0!i*.+j^gp00?>ZbpFMcYTf.4%6C[8TZfnZ9X._Sd2<l&(B$(L!NH#F]n:PVp']CuY:qmFEJ,Wm;]mMeG1^pm5=k%LIFU/J=7m*?'l7J[IT(V7R2NtidlhB&l)$%=!j`OP\_ACEB3PU@]<Us7`md'NgaIa;;r0i']J+@gbGB.a+c?2(:R"<k3c"T'`qN6u:Ogf%iV)$X.#V_C\s%VH("b;U/j8Aj'AnBcrVZ[%!kL=2?OK%:-SF3hL^90G@eL*Tg)c:cNol7/b"q(t#Ln/Ua0DU;<e1r>=h4Pur=8[%-5Bbde'`~>
+endstream
+endobj
+12 0 obj
+<<
+/F1 6 0 R
+/F2 8 0 R
+>>
 endobj
 xref
-0 11
+0 13
 0000000000 65535 f 
-0000000061 00000 n 
-0000000102 00000 n 
-0000000209 00000 n 
-0000000321 00000 n 
-0000000524 00000 n 
-0000000728 00000 n 
-0000000796 00000 n 
-0000001163 00000 n 
-0000001228 00000 n 
-0000003499 00000 n 
+0000000015 00000 n 
+0000000429 00000 n 
+0000000495 00000 n 
+0000000544 00000 n 
+0000000799 00000 n 
+0000008364 00000 n 
+0000008471 00000 n 
+0000008578 00000 n 
+0000008690 00000 n 
+0000008802 00000 n 
+0000009004 00000 n 
+0000011726 00000 n 
 trailer
 <<
-/ID 
-[<d0dd31416f367e52f666c17d1bd5231e><d0dd31416f367e52f666c17d1bd5231e>]
-% ReportLab generated PDF document -- digest (opensource)
-
-/Info 7 0 R
-/Root 6 0 R
-/Size 11
+/Size 13
+/Root 3 0 R
+/Info 1 0 R
 >>
 startxref
-6220
+11768
 %%EOF
