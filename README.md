@@ -156,6 +156,47 @@ API está funcionando.
 | `npm run db:migrate` | Ejecuta las migraciones de Sequelize         |
 | `npm run db:seed`    | Ejecuta los datos iniciales de Sequelize     |
 
+### Convención para las migraciones
+
+Las migraciones de la base de datos se guardan en `backend/migrations` y sus
+nombres siguen esta estructura:
+
+```text
+AAAAMMDDHHmmss-accion-recurso.cjs
+```
+
+Por ejemplo, `20261011000100-create-tournaments.cjs` se interpreta así:
+
+- `20261011000100`: marca temporal (`2026-10-11 00:01:00`) que Sequelize usa
+  para ordenar las migraciones.
+- `create-tournaments`: descripción breve de la modificación; en este caso,
+  crear la tabla `tournaments`.
+- `.cjs`: indica que la migración usa módulos CommonJS, formato esperado por
+  `sequelize-cli`, mientras el resto del proyecto utiliza módulos ES.
+
+El texto descriptivo no es un título obligatorio ni afecta el nombre de la
+tabla. Se utiliza para que el equipo pueda reconocer la finalidad del archivo
+sin abrirlo. La marca temporal sí debe ser única y anterior a las migraciones
+que dependan de esta.
+
+Cuando se ejecuta `npm run db:migrate`, Sequelize guarda el nombre completo del
+archivo en la tabla interna `SequelizeMeta`. Por ese motivo, una migración que
+ya fue aplicada no debe renombrarse, eliminarse ni reescribirse para introducir
+un nuevo cambio: Sequelize podría interpretarla como una migración distinta o
+la base de datos podría quedar desincronizada. Las modificaciones posteriores
+se deben realizar mediante una migración nueva, con otra marca temporal y un
+nombre descriptivo.
+
+Cada archivo contiene dos operaciones:
+
+- `up`: aplica el cambio en la base de datos.
+- `down`: revierte ese cambio cuando se deshace la migración.
+
+La migración `create-tournaments` crea la estructura inicial de los torneos y
+su campo `organizer_id`. La clave foránea hacia `users.id` se agregará mediante
+otra migración cuando la tabla `users` esté disponible, evitando que el orden
+de trabajo de los distintos integrantes bloquee la creación de la tabla.
+
 ### Dependencias
 
 Las dependencias necesarias durante la ejecución están declaradas en
@@ -305,11 +346,12 @@ El backend expondrá una API REST para la comunicación entre el frontend y el s
 Ejemplos de endpoints:
 
 ```
-GET    /api/torneos
-GET    /api/torneos/:id
-POST   /api/torneos
-PUT    /api/torneos/:id
-DELETE /api/torneos/:id
+GET    /api/tournaments
+GET    /api/tournaments/:id
+POST   /api/tournaments
+PUT    /api/tournaments/:id
+PATCH  /api/tournaments/:id/status
+DELETE /api/tournaments/:id
 
 GET    /api/equipos
 POST   /api/equipos
@@ -325,6 +367,135 @@ POST   /api/auth/login
 ```
 
 Los endpoints podrán ampliarse a medida que avance el proyecto.
+
+### Listado de torneos
+
+`GET /api/tournaments` devuelve los torneos ordenados desde el más reciente y
+acepta los siguientes parámetros opcionales:
+
+| Parámetro  | Valores                                                  | Predeterminado |
+| ---------- | -------------------------------------------------------- | -------------- |
+| `status`   | `draft`, `open`, `in_progress`, `finished` o `cancelled` | Todos          |
+| `modality` | `league`, `single_elimination` o `group_stage`           | Todas          |
+| `page`     | Número entero mayor o igual a `1`                        | `1`            |
+| `limit`    | Número entero entre `1` y `100`                          | `10`           |
+
+Ejemplo:
+
+```http
+GET /api/tournaments?status=open&modality=league&page=2&limit=5
+```
+
+La respuesta incluye los registros encontrados y los datos necesarios para
+navegar entre páginas:
+
+```json
+{
+  "data": [],
+  "pagination": {
+    "page": 2,
+    "limit": 5,
+    "total": 0,
+    "totalPages": 0
+  }
+}
+```
+
+### Gestión de torneos
+
+#### Crear un torneo
+
+`POST /api/tournaments` crea un torneo en estado `draft`. El identificador del
+torneo es un UUID v4 generado automáticamente, por lo que no se envía en el
+cuerpo de la petición.
+
+```json
+{
+  "name": "Torneo de apertura",
+  "description": "Competencia inicial de la temporada",
+  "modality": "league",
+  "maxParticipants": 16,
+  "registrationDeadline": "2026-11-01",
+  "startDate": "2026-11-05",
+  "endDate": "2026-12-10",
+  "organizerId": "7c02bd53-08d3-4f3d-8a74-6bd1b567a912"
+}
+```
+
+Las fechas utilizan el formato `AAAA-MM-DD`. La inscripción no puede cerrar
+después del inicio y la finalización no puede ser anterior al inicio. Hasta que
+se integre la autenticación, `organizerId` debe enviarse como un UUID v4.
+
+#### Consultar y editar
+
+- `GET /api/tournaments/:id` devuelve un torneo mediante su UUID.
+- `PUT /api/tournaments/:id` reemplaza todos sus datos editables.
+
+La edición requiere `name`, `modality`, `maxParticipants`,
+`registrationDeadline`, `startDate` y `endDate`. `description` es opcional. El
+identificador, el organizador y el estado no se modifican mediante `PUT`.
+
+#### Estados
+
+`PATCH /api/tournaments/:id/status` recibe el nuevo estado:
+
+```json
+{
+  "status": "open"
+}
+```
+
+Las transiciones permitidas son:
+
+| Estado actual | Estados siguientes permitidos |
+| ------------- | ----------------------------- |
+| `draft`       | `open`, `cancelled`           |
+| `open`        | `in_progress`, `cancelled`    |
+| `in_progress` | `finished`, `cancelled`       |
+| `finished`    | Ninguno                       |
+| `cancelled`   | Ninguno                       |
+
+Enviar nuevamente el estado actual es una operación válida que no reescribe el
+registro. Una transición no permitida responde con `409 Conflict`.
+
+#### Eliminación
+
+`DELETE /api/tournaments/:id` elimina físicamente un torneo únicamente cuando
+se encuentra en estado `draft`. Los torneos abiertos, iniciados, finalizados o
+cancelados se conservan como historial y responden con `409 Conflict`.
+
+#### Respuestas de error
+
+Los endpoints de torneos utilizan las siguientes respuestas generales:
+
+| Código | Significado                                             |
+| ------ | ------------------------------------------------------- |
+| `400`  | UUID, datos, filtros o estado inválidos                 |
+| `404`  | El torneo solicitado no existe                          |
+| `409`  | La regla de estado no permite la operación              |
+| `500`  | Ocurrió un error interno sin exponer detalles sensibles |
+
+### Integración pendiente con usuarios
+
+La tabla `tournaments` ya almacena `organizer_id` como UUID, pero la clave
+foránea se incorporará cuando la migración que crea `users` esté disponible. La
+integración deberá realizarse mediante una migración nueva y posterior, sin
+modificar ni renombrar `20261011000100-create-tournaments.cjs`.
+
+El contrato esperado es:
+
+- `users.id`: UUID v4 y clave primaria.
+- `tournaments.organizer_id`: clave foránea hacia `users.id`.
+- `ON UPDATE CASCADE`: propagar una actualización excepcional del UUID.
+- `ON DELETE RESTRICT`: impedir borrar un usuario que todavía organiza torneos.
+- `Tournament.belongsTo(User, { as: "organizer" })`.
+- `User.hasMany(Tournament, { as: "organizedTournaments" })`.
+
+Cuando esté disponible la autenticación, la API deberá obtener el organizador
+desde el token JWT y no desde el cuerpo enviado por el cliente. El middleware
+de autenticación expondrá el usuario actual y las operaciones de creación,
+edición, cambio de estado y eliminación deberán comprobar que sea el organizador
+del torneo o un administrador.
 
 ---
 
