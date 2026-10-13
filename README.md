@@ -211,6 +211,10 @@ equipo instale el mismo árbol de paquetes.
 
 El sistema seguirá una arquitectura basada en una aplicación web cliente-servidor:
 
+Las decisiones sobre patrones de diseño, incluidas las alternativas evaluadas y
+sus costos, se mantienen en
+[`docs/design-patterns.md`](docs/design-patterns.md).
+
 ```
 ┌──────────────────────────────┐
 │           FRONTEND           │
@@ -353,10 +357,18 @@ PUT    /api/tournaments/:id
 PATCH  /api/tournaments/:id/status
 DELETE /api/tournaments/:id
 
-GET    /api/equipos
-POST   /api/equipos
-PUT    /api/equipos/:id
-DELETE /api/equipos/:id
+GET    /api/teams
+GET    /api/teams/:id
+POST   /api/teams
+PUT    /api/teams/:id
+DELETE /api/teams/:id
+GET    /api/teams/:teamId/members
+POST   /api/teams/:teamId/members
+DELETE /api/teams/:teamId/members/:userId
+
+GET    /api/tournaments/:tournamentId/registrations
+POST   /api/tournaments/:tournamentId/registrations
+DELETE /api/tournaments/:tournamentId/registrations/:teamId
 
 GET    /api/partidas
 GET    /api/partidas/:id
@@ -475,12 +487,164 @@ Los endpoints de torneos utilizan las siguientes respuestas generales:
 | `409`  | La regla de estado no permite la operación              |
 | `500`  | Ocurrió un error interno sin exponer detalles sensibles |
 
+### Gestión de equipos
+
+#### Crear un equipo
+
+`POST /api/teams` crea un equipo con un UUID v4 generado automáticamente. El
+capitán también se registra automáticamente como el primer integrante.
+
+```json
+{
+  "name": "Los Halcones",
+  "description": "Equipo de la categoría principal",
+  "captainId": "7c02bd53-08d3-4f3d-8a74-6bd1b567a912"
+}
+```
+
+El nombre debe tener entre 3 y 120 caracteres. La descripción es opcional y
+admite hasta 2000 caracteres. Mientras el módulo de usuarios no esté integrado,
+`captainId` debe ser un UUID v4, pero la API todavía no comprueba que corresponda
+a un usuario existente.
+
+#### Listar y consultar equipos
+
+`GET /api/teams` devuelve los equipos desde el más reciente. Admite `page`, con
+valor predeterminado `1`, y `limit`, con valor predeterminado `10` y máximo
+`100`.
+
+```http
+GET /api/teams?page=1&limit=10
+```
+
+La respuesta incluye los datos de paginación:
+
+```json
+{
+  "data": [],
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 0,
+    "totalPages": 0
+  }
+}
+```
+
+`GET /api/teams/:id` devuelve un equipo mediante su UUID v4 y responde `404`
+cuando no existe.
+
+#### Editar un equipo
+
+`PUT /api/teams/:id` modifica el nombre y la descripción. El identificador y el
+capitán no pueden cambiarse mediante este endpoint.
+
+```json
+{
+  "name": "Los Halcones renovados",
+  "description": "Nueva descripción del equipo"
+}
+```
+
+#### Eliminar un equipo
+
+`DELETE /api/teams/:id` elimina un equipo solamente cuando nunca fue inscrito
+en un torneo. Si existe una inscripción activa o retirada, la API conserva el
+historial y responde `409 Conflict`:
+
+```json
+{
+  "message": "No se puede eliminar un equipo con inscripciones registradas"
+}
+```
+
+Al eliminar un equipo permitido, sus registros de integrantes se eliminan en
+cascada. Esta operación no permite borrar indirectamente el historial de los
+torneos.
+
+#### Integrantes de un equipo
+
+Para agregar un integrante se utiliza `POST /api/teams/:teamId/members`:
+
+```json
+{
+  "userId": "a6d841d2-3f7e-4f18-8c29-1b65af5ca901"
+}
+```
+
+Un mismo UUID no puede pertenecer dos veces al mismo equipo. Hasta que se
+integre la tabla `users`, la API valida el formato UUID v4, pero no la existencia
+del usuario.
+
+- `GET /api/teams/:teamId/members` lista los integrantes e indica cuál es el
+  capitán mediante `isCaptain`.
+- `DELETE /api/teams/:teamId/members/:userId` elimina un integrante.
+- El capitán no puede eliminarse de su equipo y ese intento responde
+  `409 Conflict`.
+
+### Inscripciones de equipos en torneos
+
+#### Inscribir un equipo
+
+`POST /api/tournaments/:tournamentId/registrations` recibe el UUID del equipo:
+
+```json
+{
+  "teamId": "7a3cd275-ea6c-4c7e-a322-c6b2a132fb24"
+}
+```
+
+El torneo debe existir, estar en estado `open` y tener cupo disponible. Un
+equipo no puede mantener dos inscripciones activas en el mismo torneo. Si había
+sido retirado, una nueva petición reactiva su inscripción y conserva el mismo
+registro histórico.
+
+#### Listar inscripciones
+
+`GET /api/tournaments/:tournamentId/registrations` devuelve por defecto las
+inscripciones activas (`registered`). Admite estos parámetros:
+
+| Parámetro | Valores                    | Predeterminado |
+| --------- | -------------------------- | -------------- |
+| `status`  | `registered` o `withdrawn` | `registered`   |
+| `page`    | Entero mayor o igual a `1` | `1`            |
+| `limit`   | Entero entre `1` y `100`   | `10`           |
+
+```http
+GET /api/tournaments/ID_DEL_TORNEO/registrations?status=registered&page=1&limit=10
+```
+
+Cada resultado incluye el estado, las fechas de la inscripción y los datos
+básicos del equipo. La respuesta también contiene `page`, `limit`, `total` y
+`totalPages`.
+
+#### Retirar un equipo
+
+`DELETE /api/tournaments/:tournamentId/registrations/:teamId` cambia la
+inscripción a `withdrawn` sin borrar el registro. El retiro solo es posible
+mientras el torneo se encuentra en estado `open`; de esta forma se preserva el
+historial y se libera el cupo para otro equipo.
+
+#### Respuestas de error de equipos e inscripciones
+
+| Código | Significado                                                         |
+| ------ | ------------------------------------------------------------------- |
+| `400`  | UUID, cuerpo, filtro o paginación inválidos                         |
+| `404`  | El equipo, torneo, integrante o inscripción no existe               |
+| `409`  | Duplicado, falta de cupo o una regla de negocio impide la operación |
+| `500`  | Ocurrió un error interno sin exponer detalles sensibles             |
+
 ### Integración pendiente con usuarios
 
 La tabla `tournaments` ya almacena `organizer_id` como UUID, pero la clave
 foránea se incorporará cuando la migración que crea `users` esté disponible. La
 integración deberá realizarse mediante una migración nueva y posterior, sin
 modificar ni renombrar `20261011000100-create-tournaments.cjs`.
+
+Las tablas `teams` y `team_members` siguen la misma estrategia temporal:
+`teams.captain_id` y `team_members.user_id` almacenan UUID v4, pero todavía no
+poseen una clave foránea hacia `users.id`. Esto permite avanzar con el bloque de
+equipos sin depender del bloque de usuarios.
 
 El contrato esperado es:
 
@@ -490,6 +654,12 @@ El contrato esperado es:
 - `ON DELETE RESTRICT`: impedir borrar un usuario que todavía organiza torneos.
 - `Tournament.belongsTo(User, { as: "organizer" })`.
 - `User.hasMany(Tournament, { as: "organizedTournaments" })`.
+
+Para equipos también deberán agregarse, mediante una migración posterior, las
+claves foráneas `teams.captain_id -> users.id` y
+`team_members.user_id -> users.id`, junto con las asociaciones de Sequelize. En
+ese momento, las respuestas de integrantes podrán incorporar los datos públicos
+del usuario en lugar de devolver solamente su UUID.
 
 Cuando esté disponible la autenticación, la API deberá obtener el organizador
 desde el token JWT y no desde el cuerpo enviado por el cliente. El middleware
