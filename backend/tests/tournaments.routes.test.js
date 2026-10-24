@@ -63,6 +63,8 @@ describe("GET /api/tournaments", () => {
     expect(listTournaments).toHaveBeenCalledWith({
       page: 1,
       limit: 10,
+      sortBy: "createdAt",
+      order: "desc",
     });
   });
 
@@ -83,11 +85,11 @@ describe("GET /api/tournaments", () => {
     });
   });
 
-  it("aplica filtros y paginacion", async () => {
+  it("aplica busqueda, filtros, ordenamiento y paginacion", async () => {
     listTournaments.mockResolvedValue({ count: 25, rows: [] });
 
     const response = await request(app).get(
-      "/api/tournaments?status=open&modality=league&page=2&limit=5",
+      "/api/tournaments?search=apertura&status=open&modality=league&page=2&limit=5&sortBy=name&order=asc",
     );
 
     expect(response.status).toBe(200);
@@ -98,16 +100,19 @@ describe("GET /api/tournaments", () => {
       totalPages: 5,
     });
     expect(listTournaments).toHaveBeenCalledWith({
+      search: "apertura",
       status: "open",
       modality: "league",
       page: 2,
       limit: 5,
+      sortBy: "name",
+      order: "asc",
     });
   });
 
   it("rechaza filtros y paginacion invalidos", async () => {
     const response = await request(app).get(
-      "/api/tournaments?status=unknown&page=0&limit=101",
+      "/api/tournaments?status=unknown&page=0&limit=101&sortBy=unknown&order=sideways",
     );
 
     expect(response.status).toBe(400);
@@ -119,6 +124,8 @@ describe("GET /api/tournaments", () => {
         expect.objectContaining({ field: "status" }),
         expect.objectContaining({ field: "page" }),
         expect.objectContaining({ field: "limit" }),
+        expect.objectContaining({ field: "sortBy" }),
+        expect.objectContaining({ field: "order" }),
       ]),
     );
     expect(listTournaments).not.toHaveBeenCalled();

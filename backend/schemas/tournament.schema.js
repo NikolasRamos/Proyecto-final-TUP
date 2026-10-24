@@ -8,6 +8,8 @@ import {
 const uuidV4Pattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
+const tournamentSortFields = ["createdAt", "name", "startDate"];
+
 export const tournamentIdSchema = z
   .string()
   .regex(uuidV4Pattern, "El identificador del torneo debe ser un UUID v4");
@@ -82,6 +84,12 @@ export const updateTournamentStatusSchema = z.object({
 });
 
 export const listTournamentsQuerySchema = z.object({
+  search: z
+    .string()
+    .trim()
+    .min(1, "La busqueda no puede estar vacia")
+    .max(120, "La busqueda no puede superar los 120 caracteres")
+    .optional(),
   status: z
     .enum(TOURNAMENT_STATUSES, {
       error: "El estado del torneo no es valido",
@@ -103,4 +111,14 @@ export const listTournamentsQuerySchema = z.object({
     .min(1, "El limite debe ser mayor o igual a 1")
     .max(100, "El limite no puede superar los 100 torneos")
     .default(10),
+  sortBy: z
+    .enum(tournamentSortFields, {
+      error: "El campo de ordenamiento no es valido",
+    })
+    .default("createdAt"),
+  order: z
+    .enum(["asc", "desc"], {
+      error: "La direccion de ordenamiento no es valida",
+    })
+    .default("desc"),
 });

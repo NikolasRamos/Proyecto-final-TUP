@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { Op } from "sequelize";
 
 import Tournament from "../models/Tournament.js";
 import {
@@ -41,27 +42,45 @@ describe("tournaments service", () => {
     await expect(listTournaments({ page: 1, limit: 10 })).resolves.toBe(result);
     expect(Tournament.findAndCountAll).toHaveBeenCalledWith({
       where: {},
-      order: [["createdAt", "DESC"]],
+      order: [
+        ["createdAt", "DESC"],
+        ["id", "ASC"],
+      ],
       limit: 10,
       offset: 0,
     });
   });
 
-  it("filtra y calcula el desplazamiento del listado", async () => {
+  it("busca, filtra, ordena y calcula el desplazamiento", async () => {
     const result = { count: 0, rows: [] };
     Tournament.findAndCountAll.mockResolvedValue(result);
 
     await expect(
       listTournaments({
+        search: "apertura",
         status: "open",
         modality: "league",
         page: 3,
         limit: 5,
+        sortBy: "name",
+        order: "asc",
       }),
     ).resolves.toBe(result);
-    expect(Tournament.findAndCountAll).toHaveBeenCalledWith({
-      where: { status: "open", modality: "league" },
-      order: [["createdAt", "DESC"]],
+    const query = Tournament.findAndCountAll.mock.calls[0][0];
+
+    expect(query).toEqual({
+      where: {
+        status: "open",
+        modality: "league",
+        [Op.or]: [
+          { name: { [Op.iLike]: "%apertura%" } },
+          { description: { [Op.iLike]: "%apertura%" } },
+        ],
+      },
+      order: [
+        ["name", "ASC"],
+        ["id", "ASC"],
+      ],
       limit: 5,
       offset: 10,
     });

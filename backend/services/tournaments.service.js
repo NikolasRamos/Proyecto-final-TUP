@@ -1,3 +1,5 @@
+import { Op } from "sequelize";
+
 import Tournament from "../models/Tournament.js";
 
 const allowedStatusTransitions = Object.freeze({
@@ -12,8 +14,23 @@ export function createTournament(tournamentData) {
   return Tournament.create(tournamentData);
 }
 
-export function listTournaments({ status, modality, page, limit }) {
+export function listTournaments({
+  search,
+  status,
+  modality,
+  page,
+  limit,
+  sortBy = "createdAt",
+  order = "desc",
+}) {
   const where = {};
+
+  if (search) {
+    where[Op.or] = [
+      { name: { [Op.iLike]: `%${search}%` } },
+      { description: { [Op.iLike]: `%${search}%` } },
+    ];
+  }
 
   if (status) {
     where.status = status;
@@ -25,7 +42,10 @@ export function listTournaments({ status, modality, page, limit }) {
 
   return Tournament.findAndCountAll({
     where,
-    order: [["createdAt", "DESC"]],
+    order: [
+      [sortBy, order.toUpperCase()],
+      ["id", "ASC"],
+    ],
     limit,
     offset: (page - 1) * limit,
   });
