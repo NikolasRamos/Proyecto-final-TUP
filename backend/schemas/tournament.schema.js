@@ -4,15 +4,11 @@ import {
   TOURNAMENT_MODALITIES,
   TOURNAMENT_STATUSES,
 } from "../models/Tournament.js";
-
-const uuidV4Pattern =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+import { entityIdSchema } from "./id.schema.js";
 
 const tournamentSortFields = ["createdAt", "name", "startDate"];
 
-export const tournamentIdSchema = z
-  .string()
-  .regex(uuidV4Pattern, "El identificador del torneo debe ser un UUID v4");
+export const tournamentIdSchema = entityIdSchema;
 
 const dateSchema = z.iso.date({
   error: "Debe utilizar el formato de fecha AAAA-MM-DD",
@@ -64,12 +60,7 @@ function validateTournamentDates(tournament, context) {
 export const createTournamentSchema = z
   .object({
     ...tournamentFields,
-    organizerId: z
-      .string()
-      .regex(
-        uuidV4Pattern,
-        "El identificador del organizador debe ser un UUID v4",
-      ),
+    organizerId: entityIdSchema,
   })
   .superRefine(validateTournamentDates);
 

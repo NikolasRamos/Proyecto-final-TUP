@@ -1,14 +1,10 @@
 import { z } from "zod";
 
 import { REGISTRATION_STATUSES } from "../models/TournamentRegistration.js";
-
-const uuidV4Pattern =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+import { entityIdSchema } from "./id.schema.js";
 
 export const createRegistrationSchema = z.object({
-  teamId: z
-    .string()
-    .regex(uuidV4Pattern, "El identificador del equipo debe ser un UUID v4"),
+  teamId: entityIdSchema,
 });
 
 export const listRegistrationsQuerySchema = z.object({

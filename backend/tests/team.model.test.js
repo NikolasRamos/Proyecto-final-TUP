@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { nextTestId } from "./test-id.js";
 
 import { describe, expect, it } from "vitest";
 
@@ -7,15 +7,16 @@ import Team from "../models/Team.js";
 const validTeam = {
   name: "Los Halcones",
   description: "Equipo participante de la liga local",
-  captainId: randomUUID(),
+  captainId: nextTestId(),
 };
 
 describe("Team", () => {
-  it("usa UUID para el equipo y para el capitan", () => {
+  it("usa enteros autoincrementales para el equipo y el capitan", () => {
     const attributes = Team.getAttributes();
 
-    expect(attributes.id.type.key).toBe("UUID");
-    expect(attributes.captainId.type.key).toBe("UUID");
+    expect(attributes.id.type.key).toBe("INTEGER");
+    expect(attributes.id.autoIncrement).toBe(true);
+    expect(attributes.captainId.type.key).toBe("INTEGER");
     expect(attributes.captainId.field).toBe("captain_id");
   });
 
@@ -43,10 +44,10 @@ describe("Team", () => {
     await expect(team.validate()).rejects.toThrow();
   });
 
-  it("rechaza un identificador de capitan que no es UUID v4", async () => {
+  it("rechaza un identificador de capitan que no es un entero positivo", async () => {
     const team = Team.build({
       ...validTeam,
-      captainId: "not-a-uuid",
+      captainId: "invalid-id",
     });
 
     await expect(team.validate()).rejects.toThrow();

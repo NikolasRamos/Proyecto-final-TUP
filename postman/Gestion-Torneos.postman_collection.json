@@ -1,0 +1,385 @@
+{
+  "info": {
+    "_postman_id": "6edba1ac-6fd5-4e2c-87fe-f882d42e27ee",
+    "name": "Gestión de torneos - API",
+    "description": "Colección entregable de los endpoints implementados para torneos, equipos, integrantes e inscripciones. Los identificadores creados por los POST se guardan automáticamente como variables de la colección.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "noauth"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "tournamentId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "teamId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "organizerId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "captainId",
+      "value": "1",
+      "type": "string"
+    },
+    {
+      "key": "userId",
+      "value": "2",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 - Salud",
+      "description": "Comprobación básica de disponibilidad de la API.",
+      "item": [
+        {
+          "name": "Comprobar API",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/health",
+            "description": "Debe responder 200 y permite comprobar que Express está funcionando."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "02 - Torneos",
+      "description": "Creación, consulta, modificación, cambio de estado y eliminación de torneos.",
+      "item": [
+        {
+          "name": "Listar torneos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/tournaments?search=apertura&status=draft&modality=league&page=1&limit=10&sortBy=createdAt&order=desc",
+            "description": "Listado con ejemplos de búsqueda, filtros, paginación y ordenamiento. Se pueden desactivar o eliminar parámetros en la pestaña Params."
+          },
+          "response": []
+        },
+        {
+          "name": "Crear torneo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const response = pm.response.json();",
+                  "  if (response.data?.id) {",
+                  "    pm.collectionVariables.set('tournamentId', response.data.id);",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Torneo de apertura\",\n  \"description\": \"Competencia inicial de la temporada\",\n  \"modality\": \"league\",\n  \"maxParticipants\": 16,\n  \"registrationDeadline\": \"2026-11-01\",\n  \"startDate\": \"2026-11-05\",\n  \"endDate\": \"2026-12-10\",\n  \"organizerId\": {{organizerId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/tournaments",
+            "description": "Crea un torneo en estado draft. Si responde 201, guarda automáticamente su ID en tournamentId."
+          },
+          "response": []
+        },
+        {
+          "name": "Consultar torneo por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/tournaments/{{tournamentId}}",
+            "description": "Consulta el torneo indicado por la variable tournamentId."
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar torneo",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Torneo de apertura actualizado\",\n  \"description\": \"Descripción actualizada desde Postman\",\n  \"modality\": \"league\",\n  \"maxParticipants\": 20,\n  \"registrationDeadline\": \"2026-11-01\",\n  \"startDate\": \"2026-11-05\",\n  \"endDate\": \"2026-12-10\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/tournaments/{{tournamentId}}",
+            "description": "Actualiza los datos editables del torneo. No modifica organizador, estado ni identificador."
+          },
+          "response": []
+        },
+        {
+          "name": "Cambiar estado del torneo",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"open\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/tournaments/{{tournamentId}}/status",
+            "description": "Aplica una transición de estado válida. Para inscribir equipos el torneo debe estar open."
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar torneo",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/tournaments/{{tournamentId}}",
+            "description": "Solo elimina físicamente torneos que permanezcan en estado draft."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "03 - Equipos",
+      "description": "Creación, consulta, modificación y eliminación de equipos.",
+      "item": [
+        {
+          "name": "Listar equipos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/teams?page=1&limit=10",
+            "description": "Listado paginado de equipos."
+          },
+          "response": []
+        },
+        {
+          "name": "Crear equipo",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.response.code === 201) {",
+                  "  const response = pm.response.json();",
+                  "  if (response.data?.id) {",
+                  "    pm.collectionVariables.set('teamId', response.data.id);",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Los Halcones\",\n  \"description\": \"Equipo de la categoría principal\",\n  \"captainId\": {{captainId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/teams",
+            "description": "Crea un equipo y registra al capitán como primer integrante. Si responde 201, guarda su ID en teamId."
+          },
+          "response": []
+        },
+        {
+          "name": "Consultar equipo por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/teams/{{teamId}}",
+            "description": "Consulta el equipo indicado por la variable teamId."
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar equipo",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Los Halcones renovados\",\n  \"description\": \"Descripción actualizada desde Postman\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/teams/{{teamId}}",
+            "description": "Actualiza nombre y descripción. No cambia el capitán ni el identificador."
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar equipo",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/teams/{{teamId}}",
+            "description": "Elimina un equipo solamente si no posee historial de inscripciones."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "04 - Integrantes",
+      "description": "Administración de integrantes pertenecientes a un equipo.",
+      "item": [
+        {
+          "name": "Listar integrantes del equipo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/teams/{{teamId}}/members",
+            "description": "Lista integrantes e indica cuál es el capitán."
+          },
+          "response": []
+        },
+        {
+          "name": "Agregar integrante al equipo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"userId\": {{userId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/teams/{{teamId}}/members",
+            "description": "Agrega el usuario indicado por userId al equipo indicado por teamId."
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar integrante del equipo",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/teams/{{teamId}}/members/{{userId}}",
+            "description": "Elimina un integrante. El capitán no puede ser eliminado mediante esta operación."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "05 - Inscripciones",
+      "description": "Inscripción, listado y retiro de equipos en torneos.",
+      "item": [
+        {
+          "name": "Listar equipos inscritos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/tournaments/{{tournamentId}}/registrations?status=registered&page=1&limit=10",
+            "description": "Lista las inscripciones del torneo. status puede ser registered o withdrawn."
+          },
+          "response": []
+        },
+        {
+          "name": "Inscribir equipo en torneo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"teamId\": {{teamId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/tournaments/{{tournamentId}}/registrations",
+            "description": "Inscribe un equipo existente. El torneo debe estar en estado open y tener cupo."
+          },
+          "response": []
+        },
+        {
+          "name": "Retirar equipo del torneo",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/tournaments/{{tournamentId}}/registrations/{{teamId}}",
+            "description": "Realiza un retiro lógico de la inscripción mientras el torneo está open."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
