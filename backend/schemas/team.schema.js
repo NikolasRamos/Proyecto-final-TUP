@@ -1,15 +1,10 @@
 import { z } from "zod";
 
-const uuidV4Pattern =
-  /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+import { entityIdSchema } from "./id.schema.js";
 
-export const teamIdSchema = z
-  .string()
-  .regex(uuidV4Pattern, "El identificador del equipo debe ser un UUID v4");
+export const teamIdSchema = entityIdSchema;
 
-export const teamMemberUserIdSchema = z
-  .string()
-  .regex(uuidV4Pattern, "El identificador del integrante debe ser un UUID v4");
+export const teamMemberUserIdSchema = entityIdSchema;
 
 const teamFields = {
   name: z
@@ -27,9 +22,7 @@ const teamFields = {
 
 export const createTeamSchema = z.object({
   ...teamFields,
-  captainId: z
-    .string()
-    .regex(uuidV4Pattern, "El identificador del capitan debe ser un UUID v4"),
+  captainId: entityIdSchema,
 });
 
 export const updateTeamSchema = z.object(teamFields);

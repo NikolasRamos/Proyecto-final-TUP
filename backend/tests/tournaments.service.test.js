@@ -26,7 +26,7 @@ describe("tournaments service", () => {
 
   it("delega la creacion al modelo", async () => {
     const tournamentData = { name: "Torneo de apertura" };
-    const createdTournament = { id: "tournament-id", ...tournamentData };
+    const createdTournament = { id: 101, ...tournamentData };
     Tournament.create.mockResolvedValue(createdTournament);
 
     await expect(createTournament(tournamentData)).resolves.toBe(
@@ -36,7 +36,7 @@ describe("tournaments service", () => {
   });
 
   it("lista los torneos mas recientes primero", async () => {
-    const result = { count: 1, rows: [{ id: "tournament-id" }] };
+    const result = { count: 1, rows: [{ id: 101 }] };
     Tournament.findAndCountAll.mockResolvedValue(result);
 
     await expect(listTournaments({ page: 1, limit: 10 })).resolves.toBe(result);
@@ -87,7 +87,7 @@ describe("tournaments service", () => {
   });
 
   it("busca un torneo por su clave primaria", async () => {
-    const tournamentId = "tournament-id";
+    const tournamentId = 101;
     const tournament = { id: tournamentId };
     Tournament.findByPk.mockResolvedValue(tournament);
 
@@ -96,7 +96,7 @@ describe("tournaments service", () => {
   });
 
   it("actualiza un torneo existente", async () => {
-    const tournamentId = "tournament-id";
+    const tournamentId = 101;
     const tournamentData = { name: "Torneo actualizado" };
     const updatedTournament = { id: tournamentId, ...tournamentData };
     const tournament = {
@@ -115,21 +115,19 @@ describe("tournaments service", () => {
     Tournament.findByPk.mockResolvedValue(null);
 
     await expect(
-      updateTournament("tournament-id", { name: "Torneo actualizado" }),
+      updateTournament(101, { name: "Torneo actualizado" }),
     ).resolves.toBeNull();
   });
 
   it("actualiza una transicion de estado permitida", async () => {
-    const updatedTournament = { id: "tournament-id", status: "open" };
+    const updatedTournament = { id: 101, status: "open" };
     const tournament = {
       status: "draft",
       update: vi.fn().mockResolvedValue(updatedTournament),
     };
     Tournament.findByPk.mockResolvedValue(tournament);
 
-    await expect(
-      updateTournamentStatus("tournament-id", "open"),
-    ).resolves.toEqual({
+    await expect(updateTournamentStatus(101, "open")).resolves.toEqual({
       outcome: "updated",
       tournament: updatedTournament,
     });
@@ -138,7 +136,7 @@ describe("tournaments service", () => {
 
   it("permite cancelar un torneo que no finalizo", async () => {
     const cancelledTournament = {
-      id: "tournament-id",
+      id: 101,
       status: "cancelled",
     };
     const tournament = {
@@ -147,9 +145,7 @@ describe("tournaments service", () => {
     };
     Tournament.findByPk.mockResolvedValue(tournament);
 
-    await expect(
-      updateTournamentStatus("tournament-id", "cancelled"),
-    ).resolves.toEqual({
+    await expect(updateTournamentStatus(101, "cancelled")).resolves.toEqual({
       outcome: "updated",
       tournament: cancelledTournament,
     });
@@ -162,9 +158,9 @@ describe("tournaments service", () => {
     };
     Tournament.findByPk.mockResolvedValue(tournament);
 
-    await expect(
-      updateTournamentStatus("tournament-id", "cancelled"),
-    ).resolves.toEqual({ outcome: "invalid_transition" });
+    await expect(updateTournamentStatus(101, "cancelled")).resolves.toEqual({
+      outcome: "invalid_transition",
+    });
     expect(tournament.update).not.toHaveBeenCalled();
   });
 
@@ -175,18 +171,19 @@ describe("tournaments service", () => {
     };
     Tournament.findByPk.mockResolvedValue(tournament);
 
-    await expect(
-      updateTournamentStatus("tournament-id", "cancelled"),
-    ).resolves.toEqual({ outcome: "updated", tournament });
+    await expect(updateTournamentStatus(101, "cancelled")).resolves.toEqual({
+      outcome: "updated",
+      tournament,
+    });
     expect(tournament.update).not.toHaveBeenCalled();
   });
 
   it("informa cuando el torneo no existe al cambiar su estado", async () => {
     Tournament.findByPk.mockResolvedValue(null);
 
-    await expect(
-      updateTournamentStatus("tournament-id", "open"),
-    ).resolves.toEqual({ outcome: "not_found" });
+    await expect(updateTournamentStatus(101, "open")).resolves.toEqual({
+      outcome: "not_found",
+    });
   });
 
   it("elimina un torneo en estado draft", async () => {
@@ -196,10 +193,10 @@ describe("tournaments service", () => {
     };
     Tournament.findByPk.mockResolvedValue(tournament);
 
-    await expect(deleteTournament("tournament-id")).resolves.toEqual({
+    await expect(deleteTournament(101)).resolves.toEqual({
       outcome: "deleted",
     });
-    expect(Tournament.findByPk).toHaveBeenCalledWith("tournament-id");
+    expect(Tournament.findByPk).toHaveBeenCalledWith(101);
     expect(tournament.destroy).toHaveBeenCalledOnce();
   });
 
@@ -210,7 +207,7 @@ describe("tournaments service", () => {
     };
     Tournament.findByPk.mockResolvedValue(tournament);
 
-    await expect(deleteTournament("tournament-id")).resolves.toEqual({
+    await expect(deleteTournament(101)).resolves.toEqual({
       outcome: "not_deletable",
     });
     expect(tournament.destroy).not.toHaveBeenCalled();
@@ -219,7 +216,7 @@ describe("tournaments service", () => {
   it("informa cuando el torneo no existe al eliminarlo", async () => {
     Tournament.findByPk.mockResolvedValue(null);
 
-    await expect(deleteTournament("tournament-id")).resolves.toEqual({
+    await expect(deleteTournament(101)).resolves.toEqual({
       outcome: "not_found",
     });
   });

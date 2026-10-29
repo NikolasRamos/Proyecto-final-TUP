@@ -21,10 +21,10 @@ class Tournament extends Model {}
 Tournament.init(
   {
     id: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       allowNull: false,
       primaryKey: true,
-      defaultValue: DataTypes.UUIDV4,
+      autoIncrement: true,
     },
     name: {
       type: DataTypes.STRING(120),
@@ -90,11 +90,12 @@ Tournament.init(
       },
     },
     organizerId: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       allowNull: false,
       field: "organizer_id",
       validate: {
-        isUUID: 4,
+        isInt: true,
+        min: 1,
       },
     },
   },

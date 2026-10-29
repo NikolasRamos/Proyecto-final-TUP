@@ -7,10 +7,10 @@ class Team extends Model {}
 Team.init(
   {
     id: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       allowNull: false,
       primaryKey: true,
-      defaultValue: DataTypes.UUIDV4,
+      autoIncrement: true,
     },
     name: {
       type: DataTypes.STRING(120),
@@ -28,11 +28,12 @@ Team.init(
       },
     },
     captainId: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       allowNull: false,
       field: "captain_id",
       validate: {
-        isUUID: 4,
+        isInt: true,
+        min: 1,
       },
     },
   },

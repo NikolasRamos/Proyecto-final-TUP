@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { nextTestId } from "./test-id.js";
 
 import { describe, expect, it } from "vitest";
 
@@ -7,20 +7,21 @@ import TournamentRegistration, {
 } from "../models/TournamentRegistration.js";
 
 describe("TournamentRegistration", () => {
-  it("usa UUID para la inscripcion, el torneo y el equipo", () => {
+  it("usa enteros autoincrementales para inscripcion, torneo y equipo", () => {
     const attributes = TournamentRegistration.getAttributes();
 
-    expect(attributes.id.type.key).toBe("UUID");
-    expect(attributes.tournamentId.type.key).toBe("UUID");
+    expect(attributes.id.type.key).toBe("INTEGER");
+    expect(attributes.id.autoIncrement).toBe(true);
+    expect(attributes.tournamentId.type.key).toBe("INTEGER");
     expect(attributes.tournamentId.field).toBe("tournament_id");
-    expect(attributes.teamId.type.key).toBe("UUID");
+    expect(attributes.teamId.type.key).toBe("INTEGER");
     expect(attributes.teamId.field).toBe("team_id");
   });
 
   it("acepta una inscripcion valida con estado registered", async () => {
     const registration = TournamentRegistration.build({
-      tournamentId: randomUUID(),
-      teamId: randomUUID(),
+      tournamentId: nextTestId(),
+      teamId: nextTestId(),
     });
 
     await expect(registration.validate()).resolves.toBe(registration);
@@ -30,8 +31,8 @@ describe("TournamentRegistration", () => {
 
   it("rechaza un estado desconocido", async () => {
     const registration = TournamentRegistration.build({
-      tournamentId: randomUUID(),
-      teamId: randomUUID(),
+      tournamentId: nextTestId(),
+      teamId: nextTestId(),
       status: "unknown",
     });
 
