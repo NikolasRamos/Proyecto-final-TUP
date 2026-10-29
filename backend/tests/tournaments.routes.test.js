@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { nextTestId } from "./test-id.js";
 
 import request from "supertest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -30,7 +30,7 @@ const validPayload = {
   registrationDeadline: "2026-11-01",
   startDate: "2026-11-05",
   endDate: "2026-12-10",
-  organizerId: randomUUID(),
+  organizerId: nextTestId(),
 };
 
 describe("GET /api/tournaments", () => {
@@ -41,7 +41,7 @@ describe("GET /api/tournaments", () => {
   it("devuelve la lista de torneos", async () => {
     const tournaments = [
       {
-        id: randomUUID(),
+        id: nextTestId(),
         ...validPayload,
         status: "draft",
       },
@@ -149,7 +149,7 @@ describe("GET /api/tournaments/:id", () => {
   });
 
   it("devuelve el torneo solicitado", async () => {
-    const tournamentId = randomUUID();
+    const tournamentId = nextTestId();
     const tournament = {
       id: tournamentId,
       ...validPayload,
@@ -164,8 +164,8 @@ describe("GET /api/tournaments/:id", () => {
     expect(getTournamentById).toHaveBeenCalledWith(tournamentId);
   });
 
-  it("rechaza un identificador que no es UUID v4", async () => {
-    const response = await request(app).get("/api/tournaments/not-a-uuid");
+  it("rechaza un identificador que no es un entero positivo", async () => {
+    const response = await request(app).get("/api/tournaments/invalid-id");
 
     expect(response.status).toBe(400);
     expect(response.body).toEqual({
@@ -175,7 +175,7 @@ describe("GET /api/tournaments/:id", () => {
   });
 
   it("responde 404 cuando el torneo no existe", async () => {
-    const tournamentId = randomUUID();
+    const tournamentId = nextTestId();
     getTournamentById.mockResolvedValue(null);
 
     const response = await request(app).get(`/api/tournaments/${tournamentId}`);
@@ -187,7 +187,7 @@ describe("GET /api/tournaments/:id", () => {
   });
 
   it("responde sin exponer detalles cuando falla la consulta", async () => {
-    const tournamentId = randomUUID();
+    const tournamentId = nextTestId();
     getTournamentById.mockRejectedValue(new Error("database unavailable"));
 
     const response = await request(app).get(`/api/tournaments/${tournamentId}`);
@@ -206,7 +206,7 @@ describe("POST /api/tournaments", () => {
 
   it("crea un torneo valido", async () => {
     const createdTournament = {
-      id: randomUUID(),
+      id: nextTestId(),
       ...validPayload,
       status: "draft",
     };
@@ -274,7 +274,7 @@ describe("PUT /api/tournaments/:id", () => {
   });
 
   it("actualiza un torneo existente", async () => {
-    const tournamentId = randomUUID();
+    const tournamentId = nextTestId();
     const updatedTournament = {
       id: tournamentId,
       ...updatePayload,
@@ -295,9 +295,9 @@ describe("PUT /api/tournaments/:id", () => {
     expect(updateTournament).toHaveBeenCalledWith(tournamentId, updatePayload);
   });
 
-  it("rechaza un identificador que no es UUID v4", async () => {
+  it("rechaza un identificador que no es un entero positivo", async () => {
     const response = await request(app)
-      .put("/api/tournaments/not-a-uuid")
+      .put("/api/tournaments/invalid-id")
       .send(updatePayload);
 
     expect(response.status).toBe(400);
@@ -309,7 +309,7 @@ describe("PUT /api/tournaments/:id", () => {
 
   it("rechaza datos invalidos antes de llamar al servicio", async () => {
     const response = await request(app)
-      .put(`/api/tournaments/${randomUUID()}`)
+      .put(`/api/tournaments/${nextTestId()}`)
       .send({
         ...updatePayload,
         name: "No",
@@ -328,7 +328,7 @@ describe("PUT /api/tournaments/:id", () => {
   });
 
   it("responde 404 cuando el torneo no existe", async () => {
-    const tournamentId = randomUUID();
+    const tournamentId = nextTestId();
     updateTournament.mockResolvedValue(null);
 
     const response = await request(app)
@@ -345,7 +345,7 @@ describe("PUT /api/tournaments/:id", () => {
     updateTournament.mockRejectedValue(new Error("database unavailable"));
 
     const response = await request(app)
-      .put(`/api/tournaments/${randomUUID()}`)
+      .put(`/api/tournaments/${nextTestId()}`)
       .send(updatePayload);
 
     expect(response.status).toBe(500);
@@ -361,7 +361,7 @@ describe("PATCH /api/tournaments/:id/status", () => {
   });
 
   it("actualiza el estado de un torneo", async () => {
-    const tournamentId = randomUUID();
+    const tournamentId = nextTestId();
     const tournament = {
       id: tournamentId,
       ...validPayload,
@@ -387,9 +387,9 @@ describe("PATCH /api/tournaments/:id/status", () => {
     );
   });
 
-  it("rechaza un identificador que no es UUID v4", async () => {
+  it("rechaza un identificador que no es un entero positivo", async () => {
     const response = await request(app)
-      .patch("/api/tournaments/not-a-uuid/status")
+      .patch("/api/tournaments/invalid-id/status")
       .send({ status: "cancelled" });
 
     expect(response.status).toBe(400);
@@ -401,7 +401,7 @@ describe("PATCH /api/tournaments/:id/status", () => {
 
   it("rechaza un estado desconocido", async () => {
     const response = await request(app)
-      .patch(`/api/tournaments/${randomUUID()}/status`)
+      .patch(`/api/tournaments/${nextTestId()}/status`)
       .send({ status: "unknown" });
 
     expect(response.status).toBe(400);
@@ -416,7 +416,7 @@ describe("PATCH /api/tournaments/:id/status", () => {
     updateTournamentStatus.mockResolvedValue({ outcome: "not_found" });
 
     const response = await request(app)
-      .patch(`/api/tournaments/${randomUUID()}/status`)
+      .patch(`/api/tournaments/${nextTestId()}/status`)
       .send({ status: "cancelled" });
 
     expect(response.status).toBe(404);
@@ -429,7 +429,7 @@ describe("PATCH /api/tournaments/:id/status", () => {
     });
 
     const response = await request(app)
-      .patch(`/api/tournaments/${randomUUID()}/status`)
+      .patch(`/api/tournaments/${nextTestId()}/status`)
       .send({ status: "draft" });
 
     expect(response.status).toBe(409);
@@ -442,7 +442,7 @@ describe("PATCH /api/tournaments/:id/status", () => {
     updateTournamentStatus.mockRejectedValue(new Error("database unavailable"));
 
     const response = await request(app)
-      .patch(`/api/tournaments/${randomUUID()}/status`)
+      .patch(`/api/tournaments/${nextTestId()}/status`)
       .send({ status: "cancelled" });
 
     expect(response.status).toBe(500);
@@ -458,7 +458,7 @@ describe("DELETE /api/tournaments/:id", () => {
   });
 
   it("elimina un torneo en estado draft", async () => {
-    const tournamentId = randomUUID();
+    const tournamentId = nextTestId();
     deleteTournament.mockResolvedValue({ outcome: "deleted" });
 
     const response = await request(app).delete(
@@ -472,8 +472,8 @@ describe("DELETE /api/tournaments/:id", () => {
     expect(deleteTournament).toHaveBeenCalledWith(tournamentId);
   });
 
-  it("rechaza un identificador que no es UUID v4", async () => {
-    const response = await request(app).delete("/api/tournaments/not-a-uuid");
+  it("rechaza un identificador que no es un entero positivo", async () => {
+    const response = await request(app).delete("/api/tournaments/invalid-id");
 
     expect(response.status).toBe(400);
     expect(response.body).toEqual({
@@ -486,7 +486,7 @@ describe("DELETE /api/tournaments/:id", () => {
     deleteTournament.mockResolvedValue({ outcome: "not_found" });
 
     const response = await request(app).delete(
-      `/api/tournaments/${randomUUID()}`,
+      `/api/tournaments/${nextTestId()}`,
     );
 
     expect(response.status).toBe(404);
@@ -497,7 +497,7 @@ describe("DELETE /api/tournaments/:id", () => {
     deleteTournament.mockResolvedValue({ outcome: "not_deletable" });
 
     const response = await request(app).delete(
-      `/api/tournaments/${randomUUID()}`,
+      `/api/tournaments/${nextTestId()}`,
     );
 
     expect(response.status).toBe(409);
@@ -510,7 +510,7 @@ describe("DELETE /api/tournaments/:id", () => {
     deleteTournament.mockRejectedValue(new Error("database unavailable"));
 
     const response = await request(app).delete(
-      `/api/tournaments/${randomUUID()}`,
+      `/api/tournaments/${nextTestId()}`,
     );
 
     expect(response.status).toBe(500);

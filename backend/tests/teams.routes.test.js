@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { nextTestId } from "./test-id.js";
 
 import request from "supertest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -29,7 +29,7 @@ vi.mock("../services/teams.service.js", () => ({
 const validPayload = {
   name: "Los Halcones",
   description: "Equipo participante de la liga local",
-  captainId: randomUUID(),
+  captainId: nextTestId(),
 };
 
 describe("GET /api/teams", () => {
@@ -38,7 +38,7 @@ describe("GET /api/teams", () => {
   });
 
   it("devuelve la lista de equipos", async () => {
-    const teams = [{ id: randomUUID(), ...validPayload }];
+    const teams = [{ id: nextTestId(), ...validPayload }];
     listTeams.mockResolvedValue({ count: 1, rows: teams });
 
     const response = await request(app).get("/api/teams");
@@ -122,7 +122,7 @@ describe("GET /api/teams/:id", () => {
   });
 
   it("devuelve el equipo solicitado", async () => {
-    const teamId = randomUUID();
+    const teamId = nextTestId();
     const team = { id: teamId, ...validPayload };
     getTeamById.mockResolvedValue(team);
 
@@ -133,8 +133,8 @@ describe("GET /api/teams/:id", () => {
     expect(getTeamById).toHaveBeenCalledWith(teamId);
   });
 
-  it("rechaza un identificador que no es UUID v4", async () => {
-    const response = await request(app).get("/api/teams/not-a-uuid");
+  it("rechaza un identificador que no es un entero positivo", async () => {
+    const response = await request(app).get("/api/teams/invalid-id");
 
     expect(response.status).toBe(400);
     expect(response.body).toEqual({
@@ -144,7 +144,7 @@ describe("GET /api/teams/:id", () => {
   });
 
   it("responde 404 cuando el equipo no existe", async () => {
-    const teamId = randomUUID();
+    const teamId = nextTestId();
     getTeamById.mockResolvedValue(null);
 
     const response = await request(app).get(`/api/teams/${teamId}`);
@@ -154,7 +154,7 @@ describe("GET /api/teams/:id", () => {
   });
 
   it("responde sin exponer detalles cuando falla la consulta", async () => {
-    const teamId = randomUUID();
+    const teamId = nextTestId();
     getTeamById.mockRejectedValue(new Error("database unavailable"));
 
     const response = await request(app).get(`/api/teams/${teamId}`);
@@ -173,7 +173,7 @@ describe("POST /api/teams", () => {
 
   it("crea un equipo valido", async () => {
     const createdTeam = {
-      id: randomUUID(),
+      id: nextTestId(),
       ...validPayload,
     };
     createTeam.mockResolvedValue(createdTeam);
@@ -194,7 +194,7 @@ describe("POST /api/teams", () => {
       .send({
         ...validPayload,
         name: "AB",
-        captainId: "not-a-uuid",
+        captainId: "invalid-id",
       });
 
     expect(response.status).toBe(400);
@@ -231,7 +231,7 @@ describe("PUT /api/teams/:id", () => {
   });
 
   it("actualiza un equipo existente", async () => {
-    const teamId = randomUUID();
+    const teamId = nextTestId();
     const updatedTeam = {
       id: teamId,
       ...updatePayload,
@@ -251,9 +251,9 @@ describe("PUT /api/teams/:id", () => {
     expect(updateTeam).toHaveBeenCalledWith(teamId, updatePayload);
   });
 
-  it("rechaza un identificador que no es UUID v4", async () => {
+  it("rechaza un identificador que no es un entero positivo", async () => {
     const response = await request(app)
-      .put("/api/teams/not-a-uuid")
+      .put("/api/teams/invalid-id")
       .send(updatePayload);
 
     expect(response.status).toBe(400);
@@ -265,7 +265,7 @@ describe("PUT /api/teams/:id", () => {
 
   it("rechaza datos invalidos antes de llamar al servicio", async () => {
     const response = await request(app)
-      .put(`/api/teams/${randomUUID()}`)
+      .put(`/api/teams/${nextTestId()}`)
       .send({ ...updatePayload, name: "AB" });
 
     expect(response.status).toBe(400);
@@ -277,7 +277,7 @@ describe("PUT /api/teams/:id", () => {
   });
 
   it("responde 404 cuando el equipo no existe", async () => {
-    const teamId = randomUUID();
+    const teamId = nextTestId();
     updateTeam.mockResolvedValue(null);
 
     const response = await request(app)
@@ -292,7 +292,7 @@ describe("PUT /api/teams/:id", () => {
     updateTeam.mockRejectedValue(new Error("database unavailable"));
 
     const response = await request(app)
-      .put(`/api/teams/${randomUUID()}`)
+      .put(`/api/teams/${nextTestId()}`)
       .send(updatePayload);
 
     expect(response.status).toBe(500);
@@ -308,7 +308,7 @@ describe("DELETE /api/teams/:id", () => {
   });
 
   it("elimina un equipo existente", async () => {
-    const teamId = randomUUID();
+    const teamId = nextTestId();
     deleteTeam.mockResolvedValue({ outcome: "deleted" });
 
     const response = await request(app).delete(`/api/teams/${teamId}`);
@@ -320,8 +320,8 @@ describe("DELETE /api/teams/:id", () => {
     expect(deleteTeam).toHaveBeenCalledWith(teamId);
   });
 
-  it("rechaza un identificador que no es UUID v4", async () => {
-    const response = await request(app).delete("/api/teams/not-a-uuid");
+  it("rechaza un identificador que no es un entero positivo", async () => {
+    const response = await request(app).delete("/api/teams/invalid-id");
 
     expect(response.status).toBe(400);
     expect(response.body).toEqual({
@@ -331,7 +331,7 @@ describe("DELETE /api/teams/:id", () => {
   });
 
   it("responde 404 cuando el equipo no existe", async () => {
-    const teamId = randomUUID();
+    const teamId = nextTestId();
     deleteTeam.mockResolvedValue({ outcome: "team_not_found" });
 
     const response = await request(app).delete(`/api/teams/${teamId}`);
@@ -341,7 +341,7 @@ describe("DELETE /api/teams/:id", () => {
   });
 
   it("responde 409 cuando el equipo tiene inscripciones registradas", async () => {
-    const teamId = randomUUID();
+    const teamId = nextTestId();
     deleteTeam.mockResolvedValue({ outcome: "has_registrations" });
 
     const response = await request(app).delete(`/api/teams/${teamId}`);
@@ -355,7 +355,7 @@ describe("DELETE /api/teams/:id", () => {
   it("responde sin exponer detalles cuando falla la eliminacion", async () => {
     deleteTeam.mockRejectedValue(new Error("database unavailable"));
 
-    const response = await request(app).delete(`/api/teams/${randomUUID()}`);
+    const response = await request(app).delete(`/api/teams/${nextTestId()}`);
 
     expect(response.status).toBe(500);
     expect(response.body).toEqual({
@@ -370,9 +370,9 @@ describe("POST /api/teams/:teamId/members", () => {
   });
 
   it("agrega un integrante al equipo", async () => {
-    const teamId = randomUUID();
-    const userId = randomUUID();
-    const membership = { id: randomUUID(), teamId, userId };
+    const teamId = nextTestId();
+    const userId = nextTestId();
+    const membership = { id: nextTestId(), teamId, userId };
     addTeamMember.mockResolvedValue({ outcome: "added", membership });
 
     const response = await request(app)
@@ -387,10 +387,10 @@ describe("POST /api/teams/:teamId/members", () => {
     expect(addTeamMember).toHaveBeenCalledWith(teamId, userId);
   });
 
-  it("rechaza un identificador de equipo que no es UUID v4", async () => {
+  it("rechaza un identificador de equipo que no es un entero positivo", async () => {
     const response = await request(app)
-      .post("/api/teams/not-a-uuid/members")
-      .send({ userId: randomUUID() });
+      .post("/api/teams/invalid-id/members")
+      .send({ userId: nextTestId() });
 
     expect(response.status).toBe(400);
     expect(response.body).toEqual({
@@ -399,10 +399,10 @@ describe("POST /api/teams/:teamId/members", () => {
     expect(addTeamMember).not.toHaveBeenCalled();
   });
 
-  it("rechaza un identificador de usuario que no es UUID v4", async () => {
+  it("rechaza un identificador de usuario que no es un entero positivo", async () => {
     const response = await request(app)
-      .post(`/api/teams/${randomUUID()}/members`)
-      .send({ userId: "not-a-uuid" });
+      .post(`/api/teams/${nextTestId()}/members`)
+      .send({ userId: "invalid-id" });
 
     expect(response.status).toBe(400);
     expect(response.body.message).toBe(
@@ -418,8 +418,8 @@ describe("POST /api/teams/:teamId/members", () => {
     addTeamMember.mockResolvedValue({ outcome: "team_not_found" });
 
     const response = await request(app)
-      .post(`/api/teams/${randomUUID()}/members`)
-      .send({ userId: randomUUID() });
+      .post(`/api/teams/${nextTestId()}/members`)
+      .send({ userId: nextTestId() });
 
     expect(response.status).toBe(404);
     expect(response.body).toEqual({ message: "Equipo no encontrado" });
@@ -429,8 +429,8 @@ describe("POST /api/teams/:teamId/members", () => {
     addTeamMember.mockResolvedValue({ outcome: "already_member" });
 
     const response = await request(app)
-      .post(`/api/teams/${randomUUID()}/members`)
-      .send({ userId: randomUUID() });
+      .post(`/api/teams/${nextTestId()}/members`)
+      .send({ userId: nextTestId() });
 
     expect(response.status).toBe(409);
     expect(response.body).toEqual({
@@ -442,8 +442,8 @@ describe("POST /api/teams/:teamId/members", () => {
     addTeamMember.mockRejectedValue(new Error("database unavailable"));
 
     const response = await request(app)
-      .post(`/api/teams/${randomUUID()}/members`)
-      .send({ userId: randomUUID() });
+      .post(`/api/teams/${nextTestId()}/members`)
+      .send({ userId: nextTestId() });
 
     expect(response.status).toBe(500);
     expect(response.body).toEqual({
@@ -458,11 +458,11 @@ describe("GET /api/teams/:teamId/members", () => {
   });
 
   it("devuelve los integrantes del equipo", async () => {
-    const teamId = randomUUID();
+    const teamId = nextTestId();
     const members = [
       {
-        id: randomUUID(),
-        userId: randomUUID(),
+        id: nextTestId(),
+        userId: nextTestId(),
         isCaptain: true,
         joinedAt: "2026-10-12T12:00:00.000Z",
       },
@@ -480,15 +480,15 @@ describe("GET /api/teams/:teamId/members", () => {
     listTeamMembers.mockResolvedValue({ outcome: "found", members: [] });
 
     const response = await request(app).get(
-      `/api/teams/${randomUUID()}/members`,
+      `/api/teams/${nextTestId()}/members`,
     );
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ data: [] });
   });
 
-  it("rechaza un identificador de equipo que no es UUID v4", async () => {
-    const response = await request(app).get("/api/teams/not-a-uuid/members");
+  it("rechaza un identificador de equipo que no es un entero positivo", async () => {
+    const response = await request(app).get("/api/teams/invalid-id/members");
 
     expect(response.status).toBe(400);
     expect(response.body).toEqual({
@@ -501,7 +501,7 @@ describe("GET /api/teams/:teamId/members", () => {
     listTeamMembers.mockResolvedValue({ outcome: "team_not_found" });
 
     const response = await request(app).get(
-      `/api/teams/${randomUUID()}/members`,
+      `/api/teams/${nextTestId()}/members`,
     );
 
     expect(response.status).toBe(404);
@@ -512,7 +512,7 @@ describe("GET /api/teams/:teamId/members", () => {
     listTeamMembers.mockRejectedValue(new Error("database unavailable"));
 
     const response = await request(app).get(
-      `/api/teams/${randomUUID()}/members`,
+      `/api/teams/${nextTestId()}/members`,
     );
 
     expect(response.status).toBe(500);
@@ -528,8 +528,8 @@ describe("DELETE /api/teams/:teamId/members/:userId", () => {
   });
 
   it("elimina un integrante del equipo", async () => {
-    const teamId = randomUUID();
-    const userId = randomUUID();
+    const teamId = nextTestId();
+    const userId = nextTestId();
     removeTeamMember.mockResolvedValue({ outcome: "removed" });
 
     const response = await request(app).delete(
@@ -543,9 +543,9 @@ describe("DELETE /api/teams/:teamId/members/:userId", () => {
     expect(removeTeamMember).toHaveBeenCalledWith(teamId, userId);
   });
 
-  it("rechaza un identificador de equipo que no es UUID v4", async () => {
+  it("rechaza un identificador de equipo que no es un entero positivo", async () => {
     const response = await request(app).delete(
-      `/api/teams/not-a-uuid/members/${randomUUID()}`,
+      `/api/teams/invalid-id/members/${nextTestId()}`,
     );
 
     expect(response.status).toBe(400);
@@ -555,9 +555,9 @@ describe("DELETE /api/teams/:teamId/members/:userId", () => {
     expect(removeTeamMember).not.toHaveBeenCalled();
   });
 
-  it("rechaza un identificador de integrante que no es UUID v4", async () => {
+  it("rechaza un identificador de integrante que no es un entero positivo", async () => {
     const response = await request(app).delete(
-      `/api/teams/${randomUUID()}/members/not-a-uuid`,
+      `/api/teams/${nextTestId()}/members/invalid-id`,
     );
 
     expect(response.status).toBe(400);
@@ -571,7 +571,7 @@ describe("DELETE /api/teams/:teamId/members/:userId", () => {
     removeTeamMember.mockResolvedValue({ outcome: "team_not_found" });
 
     const response = await request(app).delete(
-      `/api/teams/${randomUUID()}/members/${randomUUID()}`,
+      `/api/teams/${nextTestId()}/members/${nextTestId()}`,
     );
 
     expect(response.status).toBe(404);
@@ -584,7 +584,7 @@ describe("DELETE /api/teams/:teamId/members/:userId", () => {
     });
 
     const response = await request(app).delete(
-      `/api/teams/${randomUUID()}/members/${randomUUID()}`,
+      `/api/teams/${nextTestId()}/members/${nextTestId()}`,
     );
 
     expect(response.status).toBe(409);
@@ -597,7 +597,7 @@ describe("DELETE /api/teams/:teamId/members/:userId", () => {
     removeTeamMember.mockResolvedValue({ outcome: "member_not_found" });
 
     const response = await request(app).delete(
-      `/api/teams/${randomUUID()}/members/${randomUUID()}`,
+      `/api/teams/${nextTestId()}/members/${nextTestId()}`,
     );
 
     expect(response.status).toBe(404);
@@ -610,7 +610,7 @@ describe("DELETE /api/teams/:teamId/members/:userId", () => {
     removeTeamMember.mockRejectedValue(new Error("database unavailable"));
 
     const response = await request(app).delete(
-      `/api/teams/${randomUUID()}/members/${randomUUID()}`,
+      `/api/teams/${nextTestId()}/members/${nextTestId()}`,
     );
 
     expect(response.status).toBe(500);

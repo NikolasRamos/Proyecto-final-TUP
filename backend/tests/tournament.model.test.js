@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { nextTestId } from "./test-id.js";
 
 import { describe, expect, it } from "vitest";
 
@@ -15,15 +15,16 @@ const validTournament = {
   registrationDeadline: "2026-11-01",
   startDate: "2026-11-05",
   endDate: "2026-12-10",
-  organizerId: randomUUID(),
+  organizerId: nextTestId(),
 };
 
 describe("Tournament", () => {
-  it("usa UUID para el torneo y para el usuario organizador", () => {
+  it("usa enteros autoincrementales para el torneo y el organizador", () => {
     const attributes = Tournament.getAttributes();
 
-    expect(attributes.id.type.key).toBe("UUID");
-    expect(attributes.organizerId.type.key).toBe("UUID");
+    expect(attributes.id.type.key).toBe("INTEGER");
+    expect(attributes.id.autoIncrement).toBe(true);
+    expect(attributes.organizerId.type.key).toBe("INTEGER");
     expect(attributes.organizerId.field).toBe("organizer_id");
   });
 

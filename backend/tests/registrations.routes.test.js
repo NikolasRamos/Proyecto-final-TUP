@@ -1,4 +1,4 @@
-import { randomUUID } from "node:crypto";
+import { nextTestId } from "./test-id.js";
 
 import request from "supertest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -22,10 +22,10 @@ describe("POST /api/tournaments/:tournamentId/registrations", () => {
   });
 
   it("inscribe un equipo en el torneo", async () => {
-    const tournamentId = randomUUID();
-    const teamId = randomUUID();
+    const tournamentId = nextTestId();
+    const teamId = nextTestId();
     const registration = {
-      id: randomUUID(),
+      id: nextTestId(),
       tournamentId,
       teamId,
       status: "registered",
@@ -47,10 +47,10 @@ describe("POST /api/tournaments/:tournamentId/registrations", () => {
     expect(registerTeamInTournament).toHaveBeenCalledWith(tournamentId, teamId);
   });
 
-  it("rechaza un identificador de torneo que no es UUID v4", async () => {
+  it("rechaza un identificador de torneo que no es un entero positivo", async () => {
     const response = await request(app)
-      .post("/api/tournaments/not-a-uuid/registrations")
-      .send({ teamId: randomUUID() });
+      .post("/api/tournaments/invalid-id/registrations")
+      .send({ teamId: nextTestId() });
 
     expect(response.status).toBe(400);
     expect(response.body).toEqual({
@@ -59,10 +59,10 @@ describe("POST /api/tournaments/:tournamentId/registrations", () => {
     expect(registerTeamInTournament).not.toHaveBeenCalled();
   });
 
-  it("rechaza un identificador de equipo que no es UUID v4", async () => {
+  it("rechaza un identificador de equipo que no es un entero positivo", async () => {
     const response = await request(app)
-      .post(`/api/tournaments/${randomUUID()}/registrations`)
-      .send({ teamId: "not-a-uuid" });
+      .post(`/api/tournaments/${nextTestId()}/registrations`)
+      .send({ teamId: "invalid-id" });
 
     expect(response.status).toBe(400);
     expect(response.body.message).toBe(
@@ -88,8 +88,8 @@ describe("POST /api/tournaments/:tournamentId/registrations", () => {
     registerTeamInTournament.mockResolvedValue({ outcome });
 
     const response = await request(app)
-      .post(`/api/tournaments/${randomUUID()}/registrations`)
-      .send({ teamId: randomUUID() });
+      .post(`/api/tournaments/${nextTestId()}/registrations`)
+      .send({ teamId: nextTestId() });
 
     expect(response.status).toBe(status);
     expect(response.body).toEqual({ message });
@@ -101,8 +101,8 @@ describe("POST /api/tournaments/:tournamentId/registrations", () => {
     );
 
     const response = await request(app)
-      .post(`/api/tournaments/${randomUUID()}/registrations`)
-      .send({ teamId: randomUUID() });
+      .post(`/api/tournaments/${nextTestId()}/registrations`)
+      .send({ teamId: nextTestId() });
 
     expect(response.status).toBe(500);
     expect(response.body).toEqual({
@@ -117,10 +117,10 @@ describe("DELETE /api/tournaments/:tournamentId/registrations/:teamId", () => {
   });
 
   it("retira un equipo del torneo", async () => {
-    const tournamentId = randomUUID();
-    const teamId = randomUUID();
+    const tournamentId = nextTestId();
+    const teamId = nextTestId();
     const registration = {
-      id: randomUUID(),
+      id: nextTestId(),
       tournamentId,
       teamId,
       status: "withdrawn",
@@ -145,9 +145,9 @@ describe("DELETE /api/tournaments/:tournamentId/registrations/:teamId", () => {
     );
   });
 
-  it("rechaza un identificador de torneo que no es UUID v4", async () => {
+  it("rechaza un identificador de torneo que no es un entero positivo", async () => {
     const response = await request(app).delete(
-      `/api/tournaments/not-a-uuid/registrations/${randomUUID()}`,
+      `/api/tournaments/invalid-id/registrations/${nextTestId()}`,
     );
 
     expect(response.status).toBe(400);
@@ -157,9 +157,9 @@ describe("DELETE /api/tournaments/:tournamentId/registrations/:teamId", () => {
     expect(withdrawTeamFromTournament).not.toHaveBeenCalled();
   });
 
-  it("rechaza un identificador de equipo que no es UUID v4", async () => {
+  it("rechaza un identificador de equipo que no es un entero positivo", async () => {
     const response = await request(app).delete(
-      `/api/tournaments/${randomUUID()}/registrations/not-a-uuid`,
+      `/api/tournaments/${nextTestId()}/registrations/invalid-id`,
     );
 
     expect(response.status).toBe(400);
@@ -182,7 +182,7 @@ describe("DELETE /api/tournaments/:tournamentId/registrations/:teamId", () => {
     withdrawTeamFromTournament.mockResolvedValue({ outcome });
 
     const response = await request(app).delete(
-      `/api/tournaments/${randomUUID()}/registrations/${randomUUID()}`,
+      `/api/tournaments/${nextTestId()}/registrations/${nextTestId()}`,
     );
 
     expect(response.status).toBe(status);
@@ -195,7 +195,7 @@ describe("DELETE /api/tournaments/:tournamentId/registrations/:teamId", () => {
     );
 
     const response = await request(app).delete(
-      `/api/tournaments/${randomUUID()}/registrations/${randomUUID()}`,
+      `/api/tournaments/${nextTestId()}/registrations/${nextTestId()}`,
     );
 
     expect(response.status).toBe(500);
@@ -211,12 +211,12 @@ describe("GET /api/tournaments/:tournamentId/registrations", () => {
   });
 
   it("devuelve las inscripciones activas por defecto", async () => {
-    const tournamentId = randomUUID();
+    const tournamentId = nextTestId();
     const registrations = [
       {
-        id: randomUUID(),
+        id: nextTestId(),
         status: "registered",
-        team: { id: randomUUID(), name: "Los Halcones" },
+        team: { id: nextTestId(), name: "Los Halcones" },
       },
     ];
     listTournamentRegistrations.mockResolvedValue({
@@ -247,7 +247,7 @@ describe("GET /api/tournaments/:tournamentId/registrations", () => {
   });
 
   it("permite consultar inscripciones retiradas y paginarlas", async () => {
-    const tournamentId = randomUUID();
+    const tournamentId = nextTestId();
     listTournamentRegistrations.mockResolvedValue({
       outcome: "found",
       count: 12,
@@ -272,9 +272,9 @@ describe("GET /api/tournaments/:tournamentId/registrations", () => {
     });
   });
 
-  it("rechaza un identificador de torneo que no es UUID v4", async () => {
+  it("rechaza un identificador de torneo que no es un entero positivo", async () => {
     const response = await request(app).get(
-      "/api/tournaments/not-a-uuid/registrations",
+      "/api/tournaments/invalid-id/registrations",
     );
 
     expect(response.status).toBe(400);
@@ -286,7 +286,7 @@ describe("GET /api/tournaments/:tournamentId/registrations", () => {
 
   it("rechaza filtros y paginacion invalidos", async () => {
     const response = await request(app).get(
-      `/api/tournaments/${randomUUID()}/registrations?status=unknown&page=0&limit=101`,
+      `/api/tournaments/${nextTestId()}/registrations?status=unknown&page=0&limit=101`,
     );
 
     expect(response.status).toBe(400);
@@ -309,7 +309,7 @@ describe("GET /api/tournaments/:tournamentId/registrations", () => {
     });
 
     const response = await request(app).get(
-      `/api/tournaments/${randomUUID()}/registrations`,
+      `/api/tournaments/${nextTestId()}/registrations`,
     );
 
     expect(response.status).toBe(404);
@@ -322,7 +322,7 @@ describe("GET /api/tournaments/:tournamentId/registrations", () => {
     );
 
     const response = await request(app).get(
-      `/api/tournaments/${randomUUID()}/registrations`,
+      `/api/tournaments/${nextTestId()}/registrations`,
     );
 
     expect(response.status).toBe(500);

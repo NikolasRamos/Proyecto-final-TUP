@@ -9,25 +9,27 @@ class TournamentRegistration extends Model {}
 TournamentRegistration.init(
   {
     id: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       allowNull: false,
       primaryKey: true,
-      defaultValue: DataTypes.UUIDV4,
+      autoIncrement: true,
     },
     tournamentId: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       allowNull: false,
       field: "tournament_id",
       validate: {
-        isUUID: 4,
+        isInt: true,
+        min: 1,
       },
     },
     teamId: {
-      type: DataTypes.UUID,
+      type: DataTypes.INTEGER,
       allowNull: false,
       field: "team_id",
       validate: {
-        isUUID: 4,
+        isInt: true,
+        min: 1,
       },
     },
     status: {
