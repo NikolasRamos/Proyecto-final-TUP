@@ -249,6 +249,53 @@ cliente no puede enviar nombres arbitrarios de columnas para ordenar. El costo
 es que cada nuevo campo de búsqueda u ordenamiento debe agregarse de forma
 explícita al schema y al servicio.
 
+El frontend conserva búsqueda, filtros, orden, página y límite en los
+parámetros de la URL. Esto permite recargar, compartir el enlace y utilizar la
+navegación anterior o siguiente sin perder el estado del listado. El costo es
+validar esos parámetros también en el cliente y corregir automáticamente una
+página que deje de existir después de aplicar filtros o eliminar registros.
+
+El detalle de un torneo separa la visualización del modo de edición y exige
+una confirmación visible antes de eliminar. La interfaz solo ofrece el borrado
+para torneos en estado `draft`, pero la API continúa siendo la autoridad final
+y puede responder `409` si el estado cambió en otra sesión. Esta duplicación
+intencional mejora la experiencia sin trasladar la regla de negocio al
+frontend.
+
+Las pantallas de equipos reutilizan el mismo criterio: búsqueda y paginación
+quedan representadas en la URL, mientras que creación, edición y eliminación
+consumen la API existente. La interfaz confirma el borrado, pero no intenta
+reproducir la regla del historial de inscripciones: si el equipo ya participó,
+la API responde `409` y la pantalla explica el conflicto. Así se evita que dos
+implementaciones distintas decidan si un equipo puede eliminarse.
+
+El detalle del torneo incorpora la apertura de inscripciones, el listado de
+equipos activos y las acciones de alta y retiro. La pantalla oculta las
+acciones cuando el estado no las permite y excluye del selector los equipos ya
+inscritos, pero la API sigue validando estado, cupo y duplicados. Después de
+cada cambio se vuelve a consultar el servidor en lugar de asumir el resultado;
+esto mantiene visible el estado confirmado por la base ante operaciones
+simultáneas, a cambio de una petición adicional.
+
+Se mantuvo el servicio de inscripciones como punto único de coordinación y no
+se agregó una **Facade**: el frontend solamente consume tres operaciones ya
+cohesivas y una capa adicional duplicaría la interfaz sin simplificarla. Esta
+decisión deberá revisarse si el flujo incorpora pagos, aprobaciones o
+notificaciones.
+
+El reporte exportable se genera en el backend con los datos completos del
+torneo y todas sus inscripciones activas. No se construye a partir de la tabla
+visible en React, porque esa vista puede estar paginada o desactualizada. El PDF
+se produce en memoria y se envía como descarga, evitando archivos temporales en
+el servidor. El beneficio es que la API conserva el control del contenido; el
+costo es incorporar PDFKit como dependencia de producción y utilizar memoria
+proporcional al tamaño del reporte.
+
+No se aplicó **Builder** para el documento: actualmente existe un único formato
+con secciones fijas y funciones pequeñas de composición. Si se agregan varios
+tipos de informe o diseños configurables, Builder permitiría separar la
+construcción de cada variante y deberá reconsiderarse.
+
 ### Identificadores del prototipo (25 de octubre de 2026)
 
 Se evaluaron UUID, enteros autoincrementales y un UUID interno acompañado por

@@ -1,3 +1,5 @@
+import { Op } from "sequelize";
+
 import database from "../config/database.js";
 import Team from "../models/Team.js";
 import TeamMember from "../models/TeamMember.js";
@@ -19,8 +21,18 @@ export function createTeam(teamData) {
   });
 }
 
-export function listTeams({ page, limit }) {
+export function listTeams({ search, page, limit }) {
+  const where = {};
+
+  if (search) {
+    where[Op.or] = [
+      { name: { [Op.iLike]: `%${search}%` } },
+      { description: { [Op.iLike]: `%${search}%` } },
+    ];
+  }
+
   return Team.findAndCountAll({
+    where,
     order: [["createdAt", "DESC"]],
     limit,
     offset: (page - 1) * limit,

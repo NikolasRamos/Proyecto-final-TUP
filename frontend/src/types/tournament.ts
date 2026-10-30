@@ -30,8 +30,12 @@ export interface CreateTournamentInput {
   organizerId: EntityId;
 }
 
-export interface CreateTournamentResponse {
+export type UpdateTournamentInput = Omit<CreateTournamentInput, "organizerId">;
+
+export interface TournamentResponse {
   message: string;
   data: Tournament;
 }
+
+export type CreateTournamentResponse = TournamentResponse;
 import type { EntityId } from "./id";

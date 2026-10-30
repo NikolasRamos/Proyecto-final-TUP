@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { Op } from "sequelize";
 
 import database from "../config/database.js";
 import Team from "../models/Team.js";
@@ -71,10 +72,23 @@ describe("teams service", () => {
 
     await expect(listTeams({ page: 2, limit: 5 })).resolves.toBe(result);
     expect(Team.findAndCountAll).toHaveBeenCalledWith({
+      where: {},
       order: [["createdAt", "DESC"]],
       limit: 5,
       offset: 5,
     });
+  });
+
+  it("busca equipos por nombre o descripcion", async () => {
+    Team.findAndCountAll.mockResolvedValue({ count: 0, rows: [] });
+
+    await listTeams({ search: "halcones", page: 1, limit: 10 });
+
+    const options = Team.findAndCountAll.mock.calls[0][0];
+    expect(options.where[Op.or]).toEqual([
+      { name: { [Op.iLike]: "%halcones%" } },
+      { description: { [Op.iLike]: "%halcones%" } },
+    ]);
   });
 
   it("busca un equipo por su clave primaria", async () => {

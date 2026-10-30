@@ -32,6 +32,12 @@ export const addTeamMemberSchema = z.object({
 });
 
 export const listTeamsQuerySchema = z.object({
+  search: z
+    .string()
+    .trim()
+    .min(1, "La busqueda no puede estar vacia")
+    .max(120, "La busqueda no puede superar los 120 caracteres")
+    .optional(),
   page: z.coerce
     .number({ error: "La pagina debe ser un numero" })
     .int("La pagina debe ser un numero entero")

@@ -78,6 +78,7 @@ deben incorporarse.
 ```text
 Proyecto-final-TUP/
 ├── backend/
+│   ├── Dockerfile
 │   ├── config/
 │   ├── controllers/
 │   ├── migrations/
@@ -89,6 +90,8 @@ Proyecto-final-TUP/
 │   ├── app.js
 │   └── server.js
 ├── frontend/
+│   ├── Dockerfile
+│   ├── nginx.conf
 │   ├── src/
 │   │   ├── api/
 │   │   ├── components/
@@ -98,6 +101,7 @@ Proyecto-final-TUP/
 │   └── vite.config.ts
 ├── docs/
 ├── output/
+├── .dockerignore
 ├── docker-compose.yml
 ├── package.json
 └── README.md
@@ -111,6 +115,9 @@ Proyecto-final-TUP/
   referencian la tabla `users`.
 - El frontend consume la API mediante `VITE_API_URL` y utiliza
   `http://localhost:3000` como valor local predeterminado.
+- Docker Compose espera que PostgreSQL esté saludable, ejecuta las migraciones
+  en un contenedor de una sola ejecución y solo después habilita la API y el
+  frontend servido por Nginx.
 - Los módulos de partidas, resultados y clasificaciones no existen todavía.
 
 ## Decisiones relacionadas

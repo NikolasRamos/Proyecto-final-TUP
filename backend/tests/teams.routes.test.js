@@ -88,12 +88,27 @@ describe("GET /api/teams", () => {
     expect(listTeams).toHaveBeenCalledWith({ page: 2, limit: 5 });
   });
 
+  it("aplica la busqueda solicitada", async () => {
+    listTeams.mockResolvedValue({ count: 1, rows: [] });
+
+    const response = await request(app).get(
+      "/api/teams?search=halcones&page=1&limit=10",
+    );
+
+    expect(response.status).toBe(200);
+    expect(listTeams).toHaveBeenCalledWith({
+      search: "halcones",
+      page: 1,
+      limit: 10,
+    });
+  });
+
   it("rechaza una paginacion invalida", async () => {
     const response = await request(app).get("/api/teams?page=0&limit=101");
 
     expect(response.status).toBe(400);
     expect(response.body.message).toBe(
-      "La paginacion del listado no es valida",
+      "Los filtros del listado no son validos",
     );
     expect(response.body.errors).toEqual(
       expect.arrayContaining([

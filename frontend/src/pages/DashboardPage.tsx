@@ -99,6 +99,9 @@ export default function DashboardPage() {
           <Link className="primary-link" to="/tournaments/new">
             Crear torneo
           </Link>
+          <Link className="secondary-button" to="/teams/new">
+            Crear equipo
+          </Link>
         </div>
       </section>
 
@@ -163,6 +166,9 @@ export default function DashboardPage() {
               <p className="section-kicker">Participantes</p>
               <h2 id="teams-title">Últimos equipos</h2>
             </div>
+            <Link className="secondary-link" to="/teams">
+              Ver todos
+            </Link>
           </div>
           {teams.status === "loading" && (
             <ResourceListSkeleton label="Cargando equipos…" />

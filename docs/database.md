@@ -132,7 +132,13 @@ ejecutar la nueva secuencia.
 
 ## Comandos
 
-Iniciar PostgreSQL:
+Iniciar todo el sistema y aplicar migraciones automáticamente:
+
+```bash
+npm run docker:up
+```
+
+Iniciar solamente PostgreSQL para desarrollo local con Node:
 
 ```bash
 docker compose up -d postgres
@@ -164,6 +170,16 @@ docker compose down
 
 El volumen `postgres_data` mantiene la información entre reinicios. Eliminar
 el volumen borra los datos locales y solo debe hacerse de manera intencional.
+
+Como las migraciones iniciales se renombraron de marcas temporales a la
+secuencia `001` a `005`, las bases locales anteriores deben reconstruirse una
+sola vez. Este procedimiento está permitido únicamente mientras contengan
+datos de prueba:
+
+```bash
+docker compose down -v
+npm run docker:up
+```
 
 ## Reglas para cambios del esquema
 

@@ -139,12 +139,25 @@ permitida responde `409 Conflict`.
 Solo elimina físicamente torneos `draft`. Los demás estados se conservan como
 historial y responden `409 Conflict`.
 
+### Descargar reporte
+
+`GET /api/tournaments/:id/report`
+
+Genera un PDF con los datos generales, fechas, estado, modalidad, ocupación y
+todos los equipos actualmente inscritos. La respuesta utiliza
+`Content-Type: application/pdf` y propone un nombre de archivo con el ID del
+torneo y la fecha de generación.
+
+- `404`: torneo inexistente.
+- `500`: no se pudo reunir la información o generar el documento.
+
 ## Equipos
 
 ### Listar
 
-`GET /api/teams?page=1&limit=10`
+`GET /api/teams?search=halcones&page=1&limit=10`
 
+- `search`: texto opcional en nombre o descripción.
 - `page`: entero mayor o igual a 1; predeterminado `1`.
 - `limit`: entero entre 1 y 100; predeterminado `10`.
 - Orden actual: creación descendente.

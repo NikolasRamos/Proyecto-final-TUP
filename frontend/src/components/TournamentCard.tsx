@@ -1,3 +1,5 @@
+import { Link } from "react-router";
+
 import type { Tournament } from "../types/tournament";
 
 interface TournamentCardProps {
@@ -49,6 +51,13 @@ export default function TournamentCard({ tournament }: TournamentCardProps) {
         Comienza el {formatDate(tournament.startDate)} · Cupo para{" "}
         {tournament.maxParticipants} equipos
       </p>
+      <Link
+        className="resource-detail-link"
+        to={`/tournaments/${tournament.id}`}
+        aria-label={`Ver detalle de ${tournament.name}`}
+      >
+        Ver detalle →
+      </Link>
     </article>
   );
 }
