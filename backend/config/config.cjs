@@ -7,6 +7,8 @@ const sharedConfig = {
   host: process.env.DB_HOST,
   port: Number(process.env.DB_PORT || 5432),
   dialect: "postgres",
+  seederStorage: "sequelize",
+  seederStorageTableName: "SequelizeData",
 };
 
 module.exports = {

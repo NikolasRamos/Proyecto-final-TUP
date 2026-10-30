@@ -1,8 +1,8 @@
 # Sistema de Gestión de Torneos
 
-Sistema web para la **creación, administración y seguimiento de torneos**, permitiendo gestionar participantes, equipos, partidas, resultados y tablas de posiciones desde una única plataforma.
-
----
+Aplicación web para crear, administrar y seguir torneos, equipos e
+inscripciones desde una única plataforma. Es un proyecto académico del
+**Grupo 16** de la Tecnicatura Universitaria en Programación.
 
 ## Integrantes
 
@@ -10,415 +10,202 @@ Sistema web para la **creación, administración y seguimiento de torneos**, per
 - **Giuliano Tedeschi Gómez**
 - **Ramiro Olea**
 
----
+## Estado actual
 
-## Objetivo del proyecto
+El proyecto está en desarrollo. Actualmente incluye:
 
-El objetivo es desarrollar una aplicación web que permita organizar torneos de diferentes tipos de manera sencilla y centralizada.
+- API REST para torneos, equipos, integrantes e inscripciones.
+- Persistencia en PostgreSQL mediante Sequelize y migraciones.
+- Validaciones de entrada y reglas de negocio para estados, cupos y retiros.
+- Frontend en React con panel, creación, detalle, edición y eliminación de
+  torneos y equipos, además de búsqueda, filtros, ordenamiento, paginación e
+  inscripción y retiro de equipos desde el detalle del torneo, con reportes PDF
+  exportables.
+- Pruebas automatizadas del backend y del frontend.
 
-Los organizadores podrán crear y administrar torneos, registrar equipos y participantes, generar enfrentamientos, cargar resultados y consultar automáticamente las posiciones.
+Todavía están pendientes la autenticación e integración definitiva con
+usuarios, la gestión de partidas y resultados, las clasificaciones, las
+estadísticas y varias pantallas de administración.
 
-Los participantes podrán inscribirse en torneos, consultar sus partidas, resultados y posición dentro de la competición.
+El alcance completo y la diferencia entre lo implementado y lo planificado se
+detallan en [`docs/product-scope.md`](docs/product-scope.md).
 
----
+## Tecnologías principales
 
-## Tecnologías utilizadas
+| Área          | Tecnologías                                     |
+| ------------- | ----------------------------------------------- |
+| Frontend      | React, TypeScript, React Router, Vite y CSS     |
+| Backend       | Node.js, Express y Zod                          |
+| Persistencia  | PostgreSQL, Sequelize y Sequelize CLI           |
+| Calidad       | Vitest, Testing Library, Supertest y ESLint     |
+| Entorno local | npm, Docker Compose, Git y variables de entorno |
 
-### Frontend
+## Requisitos
 
-- **React** — Construcción de interfaces mediante componentes.
-- **React Router** — Navegación entre las pantallas de la aplicación.
-- **TypeScript** — Tipado y lógica del cliente.
-- **Vite** — Servidor de desarrollo y compilación del frontend.
-- **CSS3** — Diseño y estilos de la aplicación.
+- **Node.js 24.x LTS**. El equipo utiliza `24.21.0`, declarado en `.nvmrc`.
+- **npm 11 o superior**.
+- **Docker Desktop** o Docker Engine con Compose.
+- **Git**.
 
-### Backend
+## Puesta en marcha
 
-- **Node.js** — Entorno de ejecución.
-- **Express.js** — Framework para el desarrollo de la API REST.
-
-### Base de datos
-
-- **PostgreSQL** — Sistema gestor de base de datos.
-- **Sequelize** — ORM para la comunicación entre Node.js y PostgreSQL.
-- **pgAdmin** — Administración y visualización de la base de datos.
-
-### Herramientas
-
-- **Git** — Control de versiones.
-- **GitHub** — Repositorio y trabajo colaborativo.
-- **Docker** — Contenerización del proyecto.
-- **Postman** — Pruebas de la API.
-
----
-
-## Requisitos del entorno
-
-Para trabajar con el proyecto se necesita:
-
-- **Node.js 24.x LTS** (el equipo utiliza `24.21.0`).
-- **npm 11 o superior**, incluido con Node.js.
-- **Docker Desktop** con Docker Compose para ejecutar PostgreSQL.
-- **Git** para clonar y versionar el repositorio.
-
-La versión esperada de Node también está declarada en `package.json` y `.nvmrc`.
-
-### Servicios y configuración
-
-El proyecto utiliza los siguientes servicios locales:
-
-| Servicio      | Puerto predeterminado | Uso                   |
-| ------------- | --------------------- | --------------------- |
-| Frontend Vite | `5173`                | Interfaz web          |
-| API Express   | `3000`                | API REST              |
-| PostgreSQL    | `5432`                | Persistencia de datos |
-
-La configuración se carga desde un archivo `.env`. El repositorio incluye
-`.env.example` únicamente con valores de ejemplo; el archivo `.env` real está
-excluido por `.gitignore` y no debe versionarse.
-
-Variables disponibles:
-
-| Variable                            | Descripción                                       |
-| ----------------------------------- | ------------------------------------------------- |
-| `PORT`                              | Puerto de la API                                  |
-| `NODE_ENV`                          | Entorno de ejecución                              |
-| `CORS_ORIGIN`                       | Origen autorizado para el frontend                |
-| `DB_HOST`, `DB_PORT`                | Host y puerto de PostgreSQL                       |
-| `DB_NAME`, `DB_USER`, `DB_PASSWORD` | Credenciales locales de PostgreSQL                |
-| `JWT_SECRET`                        | Secreto local para firmar tokens de autenticación |
-
----
-
-## Cómo comenzar
-
-1. Clonar el repositorio y entrar en su carpeta:
+1. Clonar el repositorio y entrar en la carpeta:
 
    ```bash
    git clone https://github.com/NikolasRamos/Proyecto-final-TUP.git
    cd Proyecto-final-TUP
    ```
 
-2. Instalar las dependencias declaradas en el lockfile:
+2. Instalar exactamente las dependencias del lockfile:
 
    ```bash
-   npm install
+   npm ci
    ```
 
-3. Crear la configuración local a partir del ejemplo:
+3. Crear los archivos de configuración local.
 
    En PowerShell:
 
    ```powershell
    Copy-Item .env.example .env
+   Copy-Item frontend/.env.example frontend/.env
    ```
 
    En Linux o macOS:
 
    ```bash
    cp .env.example .env
+   cp frontend/.env.example frontend/.env
    ```
 
-   Luego se deben reemplazar `DB_PASSWORD` y `JWT_SECRET` dentro de `.env` por
-   valores locales seguros.
+   Reemplazar `DB_PASSWORD` y `JWT_SECRET` por valores locales. Ningún
+   archivo `.env` real debe subirse al repositorio.
 
-4. Levantar PostgreSQL:
+4. Levantar el sistema completo con Docker:
+
+   ```bash
+   npm run docker:up
+   ```
+
+   Compose inicia PostgreSQL, ejecuta las migraciones pendientes y, solamente
+   si finalizan correctamente, inicia la API y el frontend.
+
+5. Para desarrollar con recarga automática, se puede levantar solamente
+   PostgreSQL y ejecutar las aplicaciones con Node:
 
    ```bash
    docker compose up -d postgres
-   ```
-
-5. Ejecutar las migraciones disponibles:
-
-   ```bash
    npm run db:migrate
-   ```
-
-6. Iniciar el frontend y la API:
-
-   ```bash
    npm run dev
    ```
 
-El frontend quedará disponible en `http://localhost:5173` y la API en
-`http://localhost:3000`. El endpoint `GET /api/health` permite comprobar que la
-API está funcionando.
+Servicios locales:
 
-### Comandos útiles
+| Servicio   | Dirección                          |
+| ---------- | ---------------------------------- |
+| Frontend   | `http://localhost:5173`            |
+| API        | `http://localhost:3000`            |
+| Salud API  | `http://localhost:3000/api/health` |
+| PostgreSQL | `localhost:5432`                   |
 
-| Comando              | Acción                                       |
-| -------------------- | -------------------------------------------- |
-| `npm run dev`        | Inicia frontend y backend en modo desarrollo |
-| `npm run build`      | Comprueba TypeScript y compila el frontend   |
-| `npm start`          | Inicia solamente la API                      |
-| `npm test`           | Ejecuta las pruebas automatizadas            |
-| `npm run lint`       | Revisa la calidad estática del código        |
-| `npm run db:migrate` | Ejecuta las migraciones de Sequelize         |
-| `npm run db:seed`    | Ejecuta los datos iniciales de Sequelize     |
+## Datos de demostración
 
-### Dependencias
+Con el sistema y PostgreSQL encendidos, cargar el conjunto reproducible:
 
-Las dependencias necesarias durante la ejecución están declaradas en
-`dependencies` dentro de `package.json`. Las herramientas de compilación,
-desarrollo, migraciones, formato y pruebas están separadas en `devDependencies`.
-El archivo `package-lock.json` fija las versiones resueltas para que todo el
-equipo instale el mismo árbol de paquetes.
-
----
-
-## Arquitectura
-
-El sistema seguirá una arquitectura basada en una aplicación web cliente-servidor:
-
-```
-┌──────────────────────────────┐
-│           FRONTEND           │
-│    React + TypeScript        │
-└──────────────┬───────────────┘
-               │
-               │ HTTP / JSON
-               ▼
-┌──────────────────────────────┐
-│           BACKEND            │
-│       Node.js + Express      │
-│                              │
-│  Usuarios                    │
-│  Torneos                     │
-│  Equipos                     │
-│  Partidas                    │
-│  Resultados                  │
-│  Clasificaciones             │
-└──────────────┬───────────────┘
-               │
-               │ Sequelize
-               ▼
-┌──────────────────────────────┐
-│         PostgreSQL           │
-└──────────────────────────────┘
+```bash
+npm run db:seed
 ```
 
----
+La carga incluye 6 torneos, 16 equipos, 96 integrantes, inscripciones activas
+y retiros históricos. Los IDs de organizadores, capitanes e integrantes son
+temporales hasta integrar definitivamente el módulo de usuarios. Sequelize
+registra el seeder para evitar duplicados en ejecuciones posteriores.
 
-## Roles de usuario
+Para retirar solamente estos datos y conservar los registros creados
+manualmente:
 
-El sistema contará inicialmente con diferentes roles:
-
-### Administrador
-
-Podrá:
-
-- Gestionar usuarios.
-- Gestionar torneos.
-- Administrar categorías.
-- Consultar estadísticas.
-- Gestionar equipos y participantes.
-
-### Organizador
-
-Podrá:
-
-- Crear torneos.
-- Configurar las reglas del torneo.
-- Registrar equipos.
-- Generar enfrentamientos.
-- Cargar resultados.
-- Consultar tablas de posiciones.
-
-### Participante
-
-Podrá:
-
-- Crear su perfil.
-- Registrarse en torneos.
-- Consultar sus equipos.
-- Ver próximas partidas.
-- Consultar resultados.
-- Ver su posición en el torneo.
-
----
-
-## Funcionalidades principales
-
-### Gestión de usuarios
-
-- Registro de usuarios.
-- Inicio de sesión.
-- Gestión de perfiles.
-- Roles y permisos.
-
-### Gestión de torneos
-
-- Crear torneos.
-- Editar torneos.
-- Eliminar torneos.
-- Consultar torneos disponibles.
-- Configurar cantidad de participantes.
-- Definir fechas.
-- Definir modalidad.
-- Estados del torneo.
-
-### Gestión de equipos
-
-- Crear equipos.
-- Registrar jugadores.
-- Agregar y eliminar integrantes.
-- Inscribir equipos en torneos.
-- Consultar información de los equipos.
-
-### Gestión de partidas
-
-- Generación de enfrentamientos.
-- Consulta de próximas partidas.
-- Registro de resultados.
-- Actualización automática de posiciones.
-- Historial de partidas.
-
-### Clasificación
-
-El sistema permitirá calcular automáticamente información como:
-
-- Victorias.
-- Derrotas.
-- Empates.
-- Puntos.
-- Partidas jugadas.
-- Diferencia de puntos.
-- Posición en la tabla.
-
-### Estadísticas
-
-El sistema podrá mostrar información como:
-
-- Torneos activos.
-- Cantidad de participantes.
-- Partidas disputadas.
-- Equipos registrados.
-- Resultados.
-- Estadísticas de jugadores y equipos.
-
----
-
-## API REST
-
-El backend expondrá una API REST para la comunicación entre el frontend y el servidor.
-
-Ejemplos de endpoints:
-
-```
-GET    /api/torneos
-GET    /api/torneos/:id
-POST   /api/torneos
-PUT    /api/torneos/:id
-DELETE /api/torneos/:id
-
-GET    /api/equipos
-POST   /api/equipos
-PUT    /api/equipos/:id
-DELETE /api/equipos/:id
-
-GET    /api/partidas
-GET    /api/partidas/:id
-POST   /api/partidas/:id/resultado
-
-POST   /api/auth/register
-POST   /api/auth/login
+```bash
+npm run db:seed:undo
 ```
 
-Los endpoints podrán ampliarse a medida que avance el proyecto.
+Si PowerShell bloquea `npm.ps1`, se puede reemplazar `npm` por `npm.cmd`
+en los comandos anteriores.
 
----
+## Configuración mínima
 
-## Docker
+El backend lee las variables del archivo `.env` ubicado en la raíz:
 
-Docker será utilizado para facilitar la configuración y ejecución del entorno de desarrollo.
+| Variable                            | Propósito                            |
+| ----------------------------------- | ------------------------------------ |
+| `PORT`, `FRONTEND_PORT`             | Puertos publicados por Docker        |
+| `NODE_ENV`                          | Entorno de ejecución                 |
+| `CORS_ORIGIN`                       | Origen autorizado para el frontend   |
+| `DB_HOST`, `DB_PORT`                | Dirección de PostgreSQL              |
+| `DB_NAME`, `DB_USER`, `DB_PASSWORD` | Base de datos y credenciales locales |
+| `JWT_SECRET`                        | Secreto reservado para autenticación |
+| `VITE_API_URL`                      | URL pública de la API para React     |
 
-La aplicación podrá contar con diferentes contenedores para:
+El frontend lee `VITE_API_URL` desde `frontend/.env`. En desarrollo utiliza
+`http://localhost:3000` si la variable no está definida.
 
-- Backend.
-- PostgreSQL.
-- Herramientas relacionadas con la base de datos.
+La explicación completa de los archivos de entorno, Docker y procedimientos
+habituales está en [`docs/development.md`](docs/development.md).
 
-Esto permitirá que los integrantes puedan levantar el proyecto utilizando una configuración común.
+## Comandos frecuentes
 
----
+| Comando               | Acción                                     |
+| --------------------- | ------------------------------------------ |
+| `npm run dev`         | Inicia frontend y API                      |
+| `npm run dev:web`     | Inicia solamente el frontend               |
+| `npm run dev:api`     | Inicia solamente la API                    |
+| `npm start`           | Inicia la API sin recarga automática       |
+| `npm test`            | Ejecuta todas las pruebas una vez          |
+| `npm run test:watch`  | Ejecuta las pruebas en modo interactivo    |
+| `npm run lint`        | Revisa el código con ESLint                |
+| `npm run typecheck`   | Comprueba los tipos del frontend           |
+| `npm run build`       | Comprueba tipos y compila el frontend      |
+| `npm run format`      | Formatea el repositorio con Prettier       |
+| `npm run docker:up`   | Construye y levanta el sistema completo    |
+| `npm run docker:down` | Detiene los contenedores conservando datos |
+| `npm run docker:logs` | Sigue los registros de los servicios       |
+| `npm run db:migrate`  | Aplica las migraciones pendientes          |
 
-## Pruebas
+Antes de integrar cambios se recomienda ejecutar, en este orden:
 
-Se utilizará **Postman** para realizar pruebas sobre la API REST.
-
-Se comprobarán:
-
-- Respuestas HTTP.
-- Creación de recursos.
-- Actualización de recursos.
-- Eliminación de recursos.
-- Validaciones.
-- Autenticación.
-- Manejo de errores.
-- Relaciones entre entidades.
-
----
-
-## Estructura aproximada del proyecto
-
-```
-gestion-torneos/
-│
-├── backend/
-│   ├── config/
-│   ├── controllers/
-│   ├── models/
-│   ├── routes/
-│   ├── middlewares/
-│   ├── services/
-│   ├── migrations/
-│   ├── seeders/
-│   └── app.js
-│
-├── frontend/
-│   ├── src/
-│   │   ├── App.tsx
-│   │   ├── App.test.tsx
-│   │   ├── main.tsx
-│   │   └── styles.css
-│   ├── test/
-│   │   └── setup.ts
-│   ├── index.html
-│   ├── tsconfig.json
-│   └── vite.config.ts
-│
-├── .env.example
-├── docker-compose.yml
-├── eslint.config.js
-├── package.json
-├── package-lock.json
-├── vitest.config.ts
-└── README.md
+```bash
+npm run lint
+npm test
+npm run build
 ```
 
-La estructura podrá cambiar a medida que evolucione el proyecto.
+## Estructura principal
 
----
+```text
+Proyecto-final-TUP/
+├── backend/       API, reglas de negocio, persistencia y pruebas
+├── frontend/      Aplicación React y pruebas de interfaz
+├── docs/          Documentación técnica y decisiones
+├── postman/       Colección, ambiente local y guía de uso de la API
+├── output/        Entregables generados
+├── .dockerignore  Archivos excluidos de las imágenes
+├── docker-compose.yml  Orquestación del sistema local
+├── package.json   Dependencias y comandos compartidos
+└── README.md      Punto de entrada al proyecto
+```
 
-## Objetivo final
+## Documentación
 
-Al finalizar el desarrollo se espera contar con una aplicación web funcional que permita:
+| Documento                                                                | Contenido                                                              |
+| ------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
+| [`docs/product-scope.md`](docs/product-scope.md)                         | Objetivo, roles, alcance actual y funcionalidades planificadas         |
+| [`docs/architecture.md`](docs/architecture.md)                           | Componentes, capas, flujo de una petición y estructura del repositorio |
+| [`docs/api.md`](docs/api.md)                                             | Endpoints, parámetros, cuerpos, respuestas y errores                   |
+| [`docs/database.md`](docs/database.md)                                   | Tablas, relaciones, Docker y convención de migraciones                 |
+| [`docs/diagrama-entidad-relacion.md`](docs/diagrama-entidad-relacion.md) | Diagrama del esquema implementado y sus restricciones                  |
+| [`docs/development.md`](docs/development.md)                             | Entorno, scripts, pruebas y procedimientos de trabajo                  |
+| [`docs/design-patterns.md`](docs/design-patterns.md)                     | Patrones aplicados, descartados y candidatos futuros                   |
+| [`docs/decisiones-diseno.md`](docs/decisiones-diseno.md)                 | Diagnóstico, alternativas, decisiones, evidencia y trade-offs          |
+| [`postman/README.md`](postman/README.md)                                 | Importación, variables y recorrido recomendado de la colección         |
 
-1. Registrar e iniciar sesión como usuario.
-2. Crear y administrar torneos.
-3. Registrar equipos y participantes.
-4. Inscribir equipos en torneos.
-5. Generar enfrentamientos.
-6. Registrar resultados.
-7. Actualizar automáticamente las tablas de posiciones.
-8. Consultar el historial de partidas.
-9. Visualizar estadísticas.
-10. Administrar el sistema mediante diferentes roles.
-
----
-
-## Estado del proyecto
-
-**En desarrollo**
-
-El proyecto se encuentra en etapa inicial. Las funcionalidades serán incorporadas progresivamente durante el período de desarrollo.
+La documentación debe actualizarse junto con el código cuando cambien los
+comandos, contratos, variables o decisiones que describe.
