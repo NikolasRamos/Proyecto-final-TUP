@@ -40,15 +40,16 @@ todavía no están implementadas.
 
 ## Estado por módulo
 
-| Módulo                   | Estado                 | Alcance actual                                                                                            |
-| ------------------------ | ---------------------- | --------------------------------------------------------------------------------------------------------- |
-| Torneos                  | En desarrollo avanzado | CRUD, estados, búsqueda, filtros, orden y paginación en la API; creación y listado inicial en el frontend |
-| Equipos                  | Backend implementado   | CRUD, integrantes y protección del historial de inscripciones                                             |
-| Inscripciones            | Backend implementado   | Alta, retiro lógico, cupos, duplicados y listado paginado                                                 |
-| Usuarios y autenticación | Pendiente              | Los IDs numéricos se almacenan sin claves foráneas definitivas hacia `users`                              |
-| Partidas y resultados    | Pendiente              | Sin modelo, endpoints ni pantallas                                                                        |
-| Clasificaciones          | Pendiente              | Sin cálculo de posiciones                                                                                 |
-| Estadísticas             | Pendiente              | Solo existen espacios planificados en la interfaz                                                         |
+| Módulo                   | Estado                 | Alcance actual                                                                                          |
+| ------------------------ | ---------------------- | ------------------------------------------------------------------------------------------------------- |
+| Torneos                  | En desarrollo avanzado | CRUD y listado completo en API y frontend; el detalle permite abrir inscripciones                       |
+| Equipos                  | En desarrollo avanzado | CRUD y listado con búsqueda y paginación en API y frontend; integrantes disponibles todavía solo en API |
+| Inscripciones            | En desarrollo avanzado | Alta, retiro lógico, cupos, duplicados y listado en API y desde el detalle del torneo                   |
+| Reportes                 | Prototipo implementado | PDF por torneo con información general, ocupación y equipos activos                                     |
+| Usuarios y autenticación | Pendiente              | Los IDs numéricos se almacenan sin claves foráneas definitivas hacia `users`                            |
+| Partidas y resultados    | Pendiente              | Sin modelo, endpoints ni pantallas                                                                      |
+| Clasificaciones          | Pendiente              | Sin cálculo de posiciones                                                                               |
+| Estadísticas             | Pendiente              | Solo existen espacios planificados en la interfaz                                                       |
 
 ## Reglas implementadas
 
@@ -67,13 +68,13 @@ todavía no están implementadas.
 
 1. Registro, inicio de sesión, perfiles y permisos.
 2. Integración de organizadores, capitanes e integrantes con usuarios reales.
-3. Formularios completos para consultar, editar y eliminar torneos y equipos.
-4. Búsqueda, filtros y paginación completos en el frontend.
+3. Gestión de integrantes desde el frontend.
+4. Completar las transiciones posteriores al estado `open` desde el detalle del torneo.
 5. Generación de enfrentamientos según la modalidad.
 6. Registro de resultados e historial de partidas.
 7. Cálculo de victorias, derrotas, empates, puntos y posiciones.
 8. Estadísticas de torneos, equipos y participantes.
-9. Reportes exportables.
+9. Ampliar los reportes con resultados, posiciones y estadísticas.
 10. Despliegue conectado del frontend, la API y la base de datos.
 
 ## Fuera del alcance actual

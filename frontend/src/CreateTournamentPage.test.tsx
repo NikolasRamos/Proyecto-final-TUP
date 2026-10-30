@@ -10,7 +10,12 @@ import { createTournament } from "./api/tournaments.api";
 
 vi.mock("./api/tournaments.api", () => ({
   createTournament: vi.fn(),
+  deleteTournament: vi.fn(),
+  downloadTournamentReport: vi.fn(),
+  getTournament: vi.fn(),
   listTournaments: vi.fn(),
+  updateTournament: vi.fn(),
+  updateTournamentStatus: vi.fn(),
 }));
 
 const organizerId = 1;

@@ -5,6 +5,7 @@ import {
   listRegistrationsHandler,
   withdrawRegistrationHandler,
 } from "../controllers/registrations.controller.js";
+import { downloadTournamentReportHandler } from "../controllers/tournament-reports.controller.js";
 import {
   createTournamentHandler,
   deleteTournamentHandler,
@@ -17,6 +18,7 @@ import {
 const tournamentsRouter = Router();
 
 tournamentsRouter.get("/", listTournamentsHandler);
+tournamentsRouter.get("/:id/report", downloadTournamentReportHandler);
 tournamentsRouter.get("/:id", getTournamentByIdHandler);
 tournamentsRouter.post("/", createTournamentHandler);
 tournamentsRouter.put("/:id", updateTournamentHandler);

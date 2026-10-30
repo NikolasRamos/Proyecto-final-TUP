@@ -60,3 +60,50 @@ export function apiPost<TResponse, TBody>(
     body: JSON.stringify(body),
   });
 }
+
+export function apiPut<TResponse, TBody>(
+  path: string,
+  body: TBody,
+): Promise<TResponse> {
+  return apiRequest<TResponse>(path, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+}
+
+export function apiPatch<TResponse, TBody>(
+  path: string,
+  body: TBody,
+): Promise<TResponse> {
+  return apiRequest<TResponse>(path, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+}
+
+export function apiDelete<TResponse>(path: string): Promise<TResponse> {
+  return apiRequest<TResponse>(path, { method: "DELETE" });
+}
+
+export async function apiDownload(path: string): Promise<Blob> {
+  const response = await fetch(`${API_BASE_URL}${path}`, {
+    headers: { Accept: "application/pdf" },
+  });
+
+  if (!response.ok) {
+    const payload: unknown = await response.json().catch(() => null);
+    const errorResponse = isApiErrorResponse(payload)
+      ? payload
+      : { message: "No se pudo descargar el archivo" };
+
+    throw new ApiError(response.status, errorResponse);
+  }
+
+  return response.blob();
+}

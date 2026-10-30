@@ -10,11 +10,20 @@ import { listTournaments } from "./api/tournaments.api";
 
 vi.mock("./api/tournaments.api", () => ({
   createTournament: vi.fn(),
+  deleteTournament: vi.fn(),
+  downloadTournamentReport: vi.fn(),
+  getTournament: vi.fn(),
   listTournaments: vi.fn(),
+  updateTournament: vi.fn(),
+  updateTournamentStatus: vi.fn(),
 }));
 
 vi.mock("./api/teams.api", () => ({
+  createTeam: vi.fn(),
+  deleteTeam: vi.fn(),
+  getTeam: vi.fn(),
   listTeams: vi.fn(),
+  updateTeam: vi.fn(),
 }));
 
 describe("App", () => {
@@ -43,6 +52,11 @@ describe("App", () => {
     expect(screen.getByText("Panel interno")).toBeInTheDocument();
     expect(screen.getByText("Descripción X")).toBeInTheDocument();
     expect(screen.getByText("Partidas y resultados")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Módulos planificados" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Torneos", { selector: "li" })).toBeNull();
+    expect(screen.queryByText("Equipos", { selector: "li" })).toBeNull();
     expect(
       await screen.findByText("Todavía no hay torneos para mostrar."),
     ).toBeInTheDocument();

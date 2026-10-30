@@ -1,3 +1,5 @@
+import { Link } from "react-router";
+
 import type { Team } from "../types/team";
 
 interface TeamCardProps {
@@ -17,6 +19,13 @@ export default function TeamCard({ team }: TeamCardProps) {
       <p className="resource-meta">
         Capitán temporal: <code>{team.captainId}</code>
       </p>
+      <Link
+        className="resource-detail-link"
+        to={`/teams/${team.id}`}
+        aria-label={`Ver detalle de ${team.name}`}
+      >
+        Ver detalle →
+      </Link>
     </article>
   );
 }

@@ -132,7 +132,13 @@ ejecutar la nueva secuencia.
 
 ## Comandos
 
-Iniciar PostgreSQL:
+Iniciar todo el sistema y aplicar migraciones automáticamente:
+
+```bash
+npm run docker:up
+```
+
+Iniciar solamente PostgreSQL para desarrollo local con Node:
 
 ```bash
 docker compose up -d postgres
@@ -150,11 +156,25 @@ Aplicar migraciones:
 npm run db:migrate
 ```
 
-Ejecutar seeders cuando existan:
+Ejecutar el seeder de demostración:
 
 ```bash
 npm run db:seed
 ```
+
+El archivo `backend/seeders/001-demo-data.cjs` carga 6 torneos, 16 equipos,
+96 integrantes y sus inscripciones. `SequelizeData` registra su ejecución, por
+lo que repetir el comando no duplica registros.
+
+Retirar solamente los datos creados por los seeders:
+
+```bash
+npm run db:seed:undo
+```
+
+Los IDs de usuario son temporales y no tienen clave foránea hasta integrar el
+módulo de autenticación. Los registros manuales no forman parte del `down` del
+seeder.
 
 Detener PostgreSQL conservando los datos:
 
@@ -164,6 +184,16 @@ docker compose down
 
 El volumen `postgres_data` mantiene la información entre reinicios. Eliminar
 el volumen borra los datos locales y solo debe hacerse de manera intencional.
+
+Como las migraciones iniciales se renombraron de marcas temporales a la
+secuencia `001` a `005`, las bases locales anteriores deben reconstruirse una
+sola vez. Este procedimiento está permitido únicamente mientras contengan
+datos de prueba:
+
+```bash
+docker compose down -v
+npm run docker:up
+```
 
 ## Reglas para cambios del esquema
 

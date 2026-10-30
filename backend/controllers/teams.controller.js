@@ -22,7 +22,7 @@ export async function listTeamsHandler(request, response) {
 
   if (!validation.success) {
     return response.status(400).json({
-      message: "La paginacion del listado no es valida",
+      message: "Los filtros del listado no son validos",
       errors: validation.error.issues.map((issue) => ({
         field: issue.path.join("."),
         message: issue.message,

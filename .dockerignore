@@ -1,0 +1,12 @@
+.git
+.gitignore
+node_modules
+dist
+coverage
+output
+tmp
+*.log
+
+**/.env
+**/.env.*
+!**/.env.example

@@ -8,3 +8,16 @@ export interface Team {
   createdAt: string;
   updatedAt: string;
 }
+
+export interface CreateTeamInput {
+  name: string;
+  description?: string | null;
+  captainId: EntityId;
+}
+
+export type UpdateTeamInput = Omit<CreateTeamInput, "captainId">;
+
+export interface TeamResponse {
+  message: string;
+  data: Team;
+}

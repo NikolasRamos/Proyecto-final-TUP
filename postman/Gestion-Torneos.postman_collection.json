@@ -170,6 +170,21 @@
           "response": []
         },
         {
+          "name": "Descargar reporte PDF",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/pdf"
+              }
+            ],
+            "url": "{{baseUrl}}/api/tournaments/{{tournamentId}}/report",
+            "description": "Genera un PDF con la información general, ocupación y equipos activos del torneo. En Postman puede guardarse con Save Response to file."
+          },
+          "response": []
+        },
+        {
           "name": "Eliminar torneo",
           "request": {
             "method": "DELETE",
@@ -190,8 +205,8 @@
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/api/teams?page=1&limit=10",
-            "description": "Listado paginado de equipos."
+            "url": "{{baseUrl}}/api/teams?search=&page=1&limit=10",
+            "description": "Listado paginado de equipos. El parámetro opcional search permite buscar por nombre o descripción."
           },
           "response": []
         },
