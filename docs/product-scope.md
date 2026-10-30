@@ -47,8 +47,8 @@ todavía no están implementadas.
 | Inscripciones            | En desarrollo avanzado | Alta, retiro lógico, cupos, duplicados y listado en API y desde el detalle del torneo                   |
 | Reportes                 | Prototipo implementado | PDF por torneo con información general, ocupación y equipos activos                                     |
 | Usuarios y autenticación | Pendiente              | Los IDs numéricos se almacenan sin claves foráneas definitivas hacia `users`                            |
-| Partidas y resultados    | Pendiente              | Sin modelo, endpoints ni pantallas                                                                      |
-| Clasificaciones          | Pendiente              | Sin cálculo de posiciones                                                                               |
+| Partidas y resultados    | Base de datos iniciada | Migraciones y modelos disponibles; todavía sin endpoints, reglas de aplicación ni pantallas             |
+| Clasificaciones          | Base de datos iniciada | Tabla y modelo de posiciones disponibles; el cálculo automático todavía está pendiente                  |
 | Estadísticas             | Pendiente              | Solo existen espacios planificados en la interfaz                                                       |
 
 ## Reglas implementadas
@@ -83,8 +83,8 @@ No deben presentarse como funcionalidades terminadas:
 
 - autenticación mediante JWT;
 - roles y permisos efectivos;
-- partidas o resultados;
-- clasificaciones automáticas;
+- gestión de partidas o resultados mediante API o frontend;
+- cálculo de clasificaciones automáticas;
 - estadísticas reales;
 - integración referencial con la tabla `users`;
 - despliegue productivo.

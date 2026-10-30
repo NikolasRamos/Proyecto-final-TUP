@@ -1,8 +1,8 @@
 # Diagrama entidad-relación
 
 El diagrama representa el esquema implementado para torneos, equipos,
-integrantes e inscripciones después de simplificar los identificadores del
-prototipo a enteros autoincrementales.
+integrantes, inscripciones, partidos, resultados y posiciones. Todas las
+entidades del prototipo utilizan identificadores enteros autoincrementales.
 
 ```mermaid
 erDiagram
@@ -47,9 +47,51 @@ erDiagram
         timestamp updated_at
     }
 
+    MATCHES {
+        int id PK
+        int tournament_id FK
+        int home_team_id FK
+        int away_team_id FK
+        varchar status
+        varchar round "Opcional"
+        timestamp match_date "Opcional"
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    RESULTS {
+        int id PK
+        int match_id FK
+        int home_score
+        int away_score
+        timestamp created_at
+        timestamp updated_at
+    }
+
+    STANDINGS {
+        int id PK
+        int tournament_id FK
+        int team_id FK
+        int played
+        int won
+        int drawn
+        int lost
+        int goals_for
+        int goals_against
+        int goal_difference
+        int points
+        timestamp created_at
+        timestamp updated_at
+    }
+
     TOURNAMENTS ||--o{ TOURNAMENT_REGISTRATIONS : "recibe inscripciones"
     TEAMS ||--o{ TOURNAMENT_REGISTRATIONS : "se inscribe"
     TEAMS ||--o{ TEAM_MEMBERS : "tiene integrantes"
+    TOURNAMENTS ||--o{ MATCHES : "programa partidos"
+    TEAMS ||--o{ MATCHES : "disputa partidos"
+    MATCHES ||--o| RESULTS : "registra resultado"
+    TOURNAMENTS ||--o{ STANDINGS : "tiene posiciones"
+    TEAMS ||--o{ STANDINGS : "ocupa una posición"
 ```
 
 ## Restricciones relevantes
@@ -61,5 +103,9 @@ erDiagram
 - La combinación de torneo y equipo es única en
   `tournament_registrations`.
 - La combinación de equipo y usuario es única en `team_members`.
+- Cada partido relaciona un torneo con dos equipos diferentes.
+- `results.match_id` es único, por lo que cada partido tiene como máximo un
+  resultado.
+- La combinación de torneo y equipo es única en `standings`.
 - `organizer_id`, `captain_id` y `user_id` son referencias lógicas. Todavía no
   tienen claves foráneas porque el módulo `users` está pendiente de integración.
