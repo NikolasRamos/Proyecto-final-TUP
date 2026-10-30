@@ -24,7 +24,8 @@
     "docker:down": "docker compose down",
     "docker:logs": "docker compose logs -f postgres migrate api web",
     "db:migrate": "sequelize-cli db:migrate --config backend/config/config.cjs --migrations-path backend/migrations",
-    "db:seed": "sequelize-cli db:seed:all --config backend/config/config.cjs --seeders-path backend/seeders"
+    "db:seed": "sequelize-cli db:seed:all --config backend/config/config.cjs --seeders-path backend/seeders",
+    "db:seed:undo": "sequelize-cli db:seed:undo:all --config backend/config/config.cjs --seeders-path backend/seeders"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",

@@ -156,11 +156,25 @@ Aplicar migraciones:
 npm run db:migrate
 ```
 
-Ejecutar seeders cuando existan:
+Ejecutar el seeder de demostración:
 
 ```bash
 npm run db:seed
 ```
+
+El archivo `backend/seeders/001-demo-data.cjs` carga 6 torneos, 16 equipos,
+96 integrantes y sus inscripciones. `SequelizeData` registra su ejecución, por
+lo que repetir el comando no duplica registros.
+
+Retirar solamente los datos creados por los seeders:
+
+```bash
+npm run db:seed:undo
+```
+
+Los IDs de usuario son temporales y no tienen clave foránea hasta integrar el
+módulo de autenticación. Los registros manuales no forman parte del `down` del
+seeder.
 
 Detener PostgreSQL conservando los datos:
 

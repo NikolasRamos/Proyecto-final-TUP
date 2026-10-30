@@ -12,8 +12,6 @@ import type { Tournament } from "../types/tournament";
 
 const modules = [
   "Usuarios y roles",
-  "Torneos",
-  "Equipos",
   "Partidas y resultados",
   "Clasificaciones",
   "Estadísticas",

@@ -108,6 +108,26 @@ Servicios locales:
 | Salud API  | `http://localhost:3000/api/health` |
 | PostgreSQL | `localhost:5432`                   |
 
+## Datos de demostración
+
+Con el sistema y PostgreSQL encendidos, cargar el conjunto reproducible:
+
+```bash
+npm run db:seed
+```
+
+La carga incluye 6 torneos, 16 equipos, 96 integrantes, inscripciones activas
+y retiros históricos. Los IDs de organizadores, capitanes e integrantes son
+temporales hasta integrar definitivamente el módulo de usuarios. Sequelize
+registra el seeder para evitar duplicados en ejecuciones posteriores.
+
+Para retirar solamente estos datos y conservar los registros creados
+manualmente:
+
+```bash
+npm run db:seed:undo
+```
+
 Si PowerShell bloquea `npm.ps1`, se puede reemplazar `npm` por `npm.cmd`
 en los comandos anteriores.
 
@@ -175,16 +195,17 @@ Proyecto-final-TUP/
 
 ## Documentación
 
-| Documento                                                | Contenido                                                              |
-| -------------------------------------------------------- | ---------------------------------------------------------------------- |
-| [`docs/product-scope.md`](docs/product-scope.md)         | Objetivo, roles, alcance actual y funcionalidades planificadas         |
-| [`docs/architecture.md`](docs/architecture.md)           | Componentes, capas, flujo de una petición y estructura del repositorio |
-| [`docs/api.md`](docs/api.md)                             | Endpoints, parámetros, cuerpos, respuestas y errores                   |
-| [`docs/database.md`](docs/database.md)                   | Tablas, relaciones, Docker y convención de migraciones                 |
-| [`docs/development.md`](docs/development.md)             | Entorno, scripts, pruebas y procedimientos de trabajo                  |
-| [`docs/design-patterns.md`](docs/design-patterns.md)     | Patrones aplicados, descartados y candidatos futuros                   |
-| [`docs/decisiones-diseno.md`](docs/decisiones-diseno.md) | Diagnóstico, alternativas, decisiones, evidencia y trade-offs          |
-| [`postman/README.md`](postman/README.md)                 | Importación, variables y recorrido recomendado de la colección         |
+| Documento                                                                | Contenido                                                              |
+| ------------------------------------------------------------------------ | ---------------------------------------------------------------------- |
+| [`docs/product-scope.md`](docs/product-scope.md)                         | Objetivo, roles, alcance actual y funcionalidades planificadas         |
+| [`docs/architecture.md`](docs/architecture.md)                           | Componentes, capas, flujo de una petición y estructura del repositorio |
+| [`docs/api.md`](docs/api.md)                                             | Endpoints, parámetros, cuerpos, respuestas y errores                   |
+| [`docs/database.md`](docs/database.md)                                   | Tablas, relaciones, Docker y convención de migraciones                 |
+| [`docs/diagrama-entidad-relacion.md`](docs/diagrama-entidad-relacion.md) | Diagrama del esquema implementado y sus restricciones                  |
+| [`docs/development.md`](docs/development.md)                             | Entorno, scripts, pruebas y procedimientos de trabajo                  |
+| [`docs/design-patterns.md`](docs/design-patterns.md)                     | Patrones aplicados, descartados y candidatos futuros                   |
+| [`docs/decisiones-diseno.md`](docs/decisiones-diseno.md)                 | Diagnóstico, alternativas, decisiones, evidencia y trade-offs          |
+| [`postman/README.md`](postman/README.md)                                 | Importación, variables y recorrido recomendado de la colección         |
 
 La documentación debe actualizarse junto con el código cuando cambien los
 comandos, contratos, variables o decisiones que describe.

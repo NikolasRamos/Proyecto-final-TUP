@@ -296,6 +296,14 @@ con secciones fijas y funciones pequeñas de composición. Si se agregan varios
 tipos de informe o diseños configurables, Builder permitiría separar la
 construcción de cada variante y deberá reconsiderarse.
 
+Los datos de demostración se concentran en un seeder transaccional y reversible.
+Sequelize registra su ejecución en `SequelizeData`, evitando duplicados, y el
+`down` identifica únicamente los nombres definidos por la carga. Se eligió un
+seeder en lugar de incluir datos en las migraciones porque el esquema es
+obligatorio, mientras que la demostración debe poder agregarse y retirarse sin
+alterar la estructura ni los registros manuales. Los IDs de usuarios son
+temporales hasta integrar autenticación.
+
 ### Identificadores del prototipo (25 de octubre de 2026)
 
 Se evaluaron UUID, enteros autoincrementales y un UUID interno acompañado por

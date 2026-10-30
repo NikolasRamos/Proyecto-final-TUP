@@ -53,6 +53,11 @@ describe("App", () => {
     expect(screen.getByText("Descripción X")).toBeInTheDocument();
     expect(screen.getByText("Partidas y resultados")).toBeInTheDocument();
     expect(
+      screen.getByRole("heading", { name: "Módulos planificados" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Torneos", { selector: "li" })).toBeNull();
+    expect(screen.queryByText("Equipos", { selector: "li" })).toBeNull();
+    expect(
       await screen.findByText("Todavía no hay torneos para mostrar."),
     ).toBeInTheDocument();
   });
