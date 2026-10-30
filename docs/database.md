@@ -11,6 +11,11 @@ erDiagram
     TOURNAMENTS ||--o{ TOURNAMENT_REGISTRATIONS : recibe
     TEAMS ||--o{ TOURNAMENT_REGISTRATIONS : participa
     TEAMS ||--o{ TEAM_MEMBERS : contiene
+    TOURNAMENTS ||--o{ MATCHES : programa
+    TEAMS ||--o{ MATCHES : disputa
+    MATCHES ||--o| RESULTS : registra
+    TOURNAMENTS ||--o{ STANDINGS : clasifica
+    TEAMS ||--o{ STANDINGS : ocupa
 ```
 
 ### `tournaments`
@@ -43,6 +48,31 @@ Relaciona torneos y equipos con estado `registered` o `withdrawn`.
 - `tournament_id` referencia `tournaments.id`.
 - `team_id` referencia `teams.id`.
 - Ambas claves usan `ON DELETE RESTRICT` para conservar el historial.
+- La combinación `tournament_id + team_id` es única.
+
+### `matches`
+
+Almacena los partidos programados para un torneo, los equipos local y
+visitante, la ronda, la fecha y su estado.
+
+- `tournament_id` referencia `tournaments.id`.
+- `home_team_id` y `away_team_id` referencian `teams.id`.
+- Una restricción impide enfrentar un equipo contra sí mismo.
+
+### `results`
+
+Registra un único marcador por partido.
+
+- `match_id` referencia `matches.id` y es único.
+- Los marcadores local y visitante no pueden ser negativos.
+
+### `standings`
+
+Conserva los acumulados de cada equipo dentro de un torneo: partidos jugados,
+victorias, empates, derrotas, goles, diferencia y puntos.
+
+- `tournament_id` referencia `tournaments.id`.
+- `team_id` referencia `teams.id`.
 - La combinación `tournament_id + team_id` es única.
 
 ## Integración pendiente con usuarios
@@ -100,7 +130,7 @@ Ejemplo:
 La parte descriptiva ayuda a reconocer la finalidad del archivo; no define el
 nombre de la tabla. El número debe ser único, usar ceros a la izquierda y
 respetar las dependencias entre cambios. La próxima migración toma el número
-siguiente disponible; por ejemplo, después de `005` corresponde `006`.
+siguiente disponible; por ejemplo, después de `008` corresponde `009`.
 
 Si Sequelize CLI genera automáticamente un archivo con una marca temporal, se
 debe renombrar a esta convención antes de ejecutarlo o compartirlo.
