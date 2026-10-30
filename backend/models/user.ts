@@ -1,19 +1,18 @@
 import bcrypt from "bcrypt";
-import { DataTypes, Model } from "sequelize";
-
+import { DataTypes, Model, InferAttributes, InferCreationAttributes, CreationOptional } from "sequelize";
 import database from "../config/database.js";
 
 const SALT_ROUNDS = 10;
 
-export class User extends Model {
-  public idUsuario!: number;
-  public nombre!: string;
-  public email!: string;
-  public password!: string;
-  public idRol!: number;
-  public readonly createdAt!: Date;
-  public readonly updatedAt!: Date;
-  public readonly deletedAt!: Date | null;
+export class User extends Model<InferAttributes<User>, InferCreationAttributes<User>> {
+  declare idUsuario: CreationOptional<number>;
+  declare nombre: string;
+  declare email: string;
+  declare password: string;
+  declare idRol: number;
+  declare readonly createdAt: CreationOptional<Date>;
+  declare readonly updatedAt: CreationOptional<Date>;
+  declare readonly deletedAt: CreationOptional<Date | null>;
 
   async validPassword(candidate: string): Promise<boolean> {
     return bcrypt.compare(candidate, this.password);
@@ -65,6 +64,18 @@ User.init(
       validate: {
         notNull: { msg: "El rol es obligatorio" },
       },
+    },
+    createdAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+    },
+    updatedAt: {
+      type: DataTypes.DATE,
+      allowNull: false,
+    },
+    deletedAt: {
+      type: DataTypes.DATE,
+      allowNull: true,
     },
   },
   {
