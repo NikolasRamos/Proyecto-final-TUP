@@ -26,10 +26,11 @@
     "db:migrate": "sequelize-cli db:migrate --config backend/config/config.cjs --migrations-path backend/migrations",
     "db:seed": "sequelize-cli db:seed:all --config backend/config/config.cjs --seeders-path backend/seeders",
     "seed:roles": "node backend/seeders/roles.cjs",
-    "seed:users": "node backend/seeders/users.cjs"
+    "seed:users": "node backend/seeders/users.cjs",
     "db:seed:undo": "sequelize-cli db:seed:undo:all --config backend/config/config.cjs --seeders-path backend/seeders"
   },
   "dependencies": {
+    "@types/bcrypt": "^6.0.0",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",

@@ -1,11 +1,19 @@
 import { Request, Response } from "express";
 import User from "../models/user.js";
 import jwt from "jsonwebtoken";
+import bcrypt from "bcrypt";
 
 // --- REGISTRO ---
 export const register = async (req: Request, res: Response): Promise<Response> => {
     try {
         const { nombre, email, password, idRol } = req.body;
+
+        if (!nombre || !email || !password) {
+            return res.status(400).json({
+                success: false,
+                message: "Los campos (nombre, email, password) son obligatorios"
+            });
+        }
 
         const existingUser = await User.findOne({ where: { email } });
         if (existingUser) {
@@ -15,15 +23,23 @@ export const register = async (req: Request, res: Response): Promise<Response> =
             });
         }
 
+        const hashedPassword = await bcrypt.hash(password, 10);
+
         const newUser = await User.create({
             nombre,
             email,
-            password,
+            password: hashedPassword,
             idRol: idRol || 3
         });
 
-        const userResponse = newUser.toJSON();
-        delete userResponse.password;
+        const userResponse = {
+            idUsuario: newUser.idUsuario,
+            nombre: newUser.nombre,
+            email: newUser.email,
+            idRol: newUser.idRol,
+            createdAt: newUser.createdAt,
+            updatedAt: newUser.updatedAt
+        };
 
         return res.status(201).json({
             success: true,
