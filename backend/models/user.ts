@@ -6,7 +6,16 @@ import database from "../config/database.js";
 const SALT_ROUNDS = 10;
 
 export class User extends Model {
-  async validPassword(candidate) {
+  public idUsuario!: number;
+  public nombre!: string;
+  public email!: string;
+  public password!: string;
+  public idRol!: number;
+  public readonly createdAt!: Date;
+  public readonly updatedAt!: Date;
+  public readonly deletedAt!: Date | null;
+
+  async validPassword(candidate: string): Promise<boolean> {
     return bcrypt.compare(candidate, this.password);
   }
 }
