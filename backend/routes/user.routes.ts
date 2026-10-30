@@ -4,10 +4,9 @@ import { getAllUsers, getUserById, updateUser, deleteUser } from "../controllers
 
 const router = Router();
 
-router.get("/users", getAllUsers);
-
-router.get("/users/:id", validateUserExists, getUserById);
-router.put("/users/:id", validateUserExists, updateUser);
-router.delete("/users/:id", validateUserExists, deleteUser);
+router.get("/", getAllUsers);
+router.get("/:id", validateUserExists, getUserById);
+router.put("/:id", validateUserExists, updateUser);
+router.delete("/:id", validateUserExists, deleteUser);
 
 export default router;
