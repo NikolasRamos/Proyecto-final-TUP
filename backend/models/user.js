@@ -63,6 +63,7 @@ User.init(
     modelName: "User",
     tableName: "usuario",
     timestamps: true,
+    paranoid: true,
     hooks: {
       beforeCreate: async (user) => {
         user.password = await bcrypt.hash(user.password, SALT_ROUNDS);
