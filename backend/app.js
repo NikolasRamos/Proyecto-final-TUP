@@ -1,6 +1,7 @@
 import cors from "cors";
 import express from "express";
 import helmet from "helmet";
+import routes from "./routes/index.ts";
 
 import teamsRouter from "./routes/teams.routes.js";
 import tournamentsRouter from "./routes/tournaments.routes.js";
@@ -22,6 +23,7 @@ app.get("/api/health", (_request, response) => {
   });
 });
 
+app.use(routes);
 app.use("/api/tournaments", tournamentsRouter);
 app.use("/api/teams", teamsRouter);
 
