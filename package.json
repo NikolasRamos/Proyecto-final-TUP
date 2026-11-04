@@ -12,7 +12,7 @@
     "dev": "concurrently -k -n API,WEB -c yellow,cyan \"npm:dev:api\" \"npm:dev:web\"",
     "dev:api": "nodemon backend/server.js",
     "dev:web": "vite frontend",
-    "start": "node backend/server.js",
+    "start": "tsx backend/server.js",
     "typecheck": "tsc -p frontend/tsconfig.json",
     "build": "npm run typecheck && vite build frontend --outDir ../dist/frontend --emptyOutDir",
     "preview": "vite preview frontend",
