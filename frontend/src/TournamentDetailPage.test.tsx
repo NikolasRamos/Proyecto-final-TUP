@@ -94,7 +94,9 @@ describe("TournamentDetailPage", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Competencia de prueba")).toBeInTheDocument();
     expect(screen.getByText("Liga")).toBeInTheDocument();
+    expect(screen.getByText("Por equipos")).toBeInTheDocument();
     expect(screen.getByText("16 equipos")).toBeInTheDocument();
+    expect(screen.getByText("De 2 a 5 integrantes")).toBeInTheDocument();
     expect(screen.getByText("Usuario #1")).toBeInTheDocument();
     expect(getTournament).toHaveBeenCalledWith(101);
   });
@@ -149,7 +151,7 @@ describe("TournamentDetailPage", () => {
       await screen.findByRole("button", { name: "Editar torneo" }),
     );
     const nameInput = screen.getByLabelText("Nombre del torneo");
-    const capacityInput = screen.getByLabelText("Cupo máximo");
+    const capacityInput = screen.getByLabelText("Cupo máximo de equipos");
     await user.clear(nameInput);
     await user.type(nameInput, "Torneo Apertura renovado");
     await user.clear(capacityInput);
@@ -174,6 +176,69 @@ describe("TournamentDetailPage", () => {
     expect(
       screen.getByRole("heading", { name: "Torneo Apertura renovado" }),
     ).toBeInTheDocument();
+  });
+
+  it("permite convertir un torneo en borrador a participación individual", async () => {
+    const user = userEvent.setup();
+    const updatedTournament = {
+      ...tournament,
+      isTeamTournament: false,
+      minTeamMembers: null,
+      maxTeamMembers: null,
+    };
+    vi.mocked(updateTournament).mockResolvedValue({
+      message: "Torneo actualizado correctamente",
+      data: updatedTournament,
+    });
+    renderPage();
+
+    await user.click(
+      await screen.findByRole("button", { name: "Editar torneo" }),
+    );
+    await user.click(screen.getByLabelText("Individual"));
+
+    expect(
+      screen.getByLabelText("Cupo máximo de personas"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByLabelText("Mínimo de integrantes por equipo"),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Guardar cambios" }));
+
+    expect(updateTournament).toHaveBeenCalledWith(
+      101,
+      expect.objectContaining({
+        isTeamTournament: false,
+        minTeamMembers: null,
+        maxTeamMembers: null,
+      }),
+    );
+  });
+
+  it("valida los límites de integrantes antes de guardar", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(
+      await screen.findByRole("button", { name: "Editar torneo" }),
+    );
+    const minimumInput = screen.getByLabelText(
+      "Mínimo de integrantes por equipo",
+    );
+    const maximumInput = screen.getByLabelText(
+      "Máximo de integrantes por equipo",
+    );
+    await user.clear(minimumInput);
+    await user.type(minimumInput, "6");
+    await user.clear(maximumInput);
+    await user.type(maximumInput, "4");
+    await user.click(screen.getByRole("button", { name: "Guardar cambios" }));
+
+    expect(updateTournament).not.toHaveBeenCalled();
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "El máximo de integrantes no puede ser menor que el mínimo.",
+    );
   });
 
   it("impide guardar fechas inconsistentes", async () => {
@@ -226,6 +291,46 @@ describe("TournamentDetailPage", () => {
     ).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Eliminar torneo" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("bloquea las reglas de participación cuando el torneo está abierto", async () => {
+    const user = userEvent.setup();
+    vi.mocked(getTournament).mockResolvedValue({
+      data: { ...tournament, status: "open" },
+    });
+    renderPage();
+
+    await user.click(
+      await screen.findByRole("button", { name: "Editar torneo" }),
+    );
+
+    expect(screen.getByLabelText("Individual")).toBeDisabled();
+    expect(screen.getByLabelText("Por equipos")).toBeDisabled();
+    expect(screen.getByLabelText("Cupo máximo de equipos")).toBeDisabled();
+    expect(
+      screen.getByText(/quedó bloqueada al abrir las inscripciones/),
+    ).toBeInTheDocument();
+  });
+
+  it("muestra el detalle individual sin controles de equipos", async () => {
+    vi.mocked(getTournament).mockResolvedValue({
+      data: {
+        ...tournament,
+        isTeamTournament: false,
+        minTeamMembers: null,
+        maxTeamMembers: null,
+      },
+    });
+    renderPage();
+
+    expect(await screen.findByText("Individual")).toBeInTheDocument();
+    expect(screen.getByText("16 personas")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Inscripciones individuales" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Abrir inscripciones" }),
     ).not.toBeInTheDocument();
   });
 

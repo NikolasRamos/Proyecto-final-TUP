@@ -367,7 +367,10 @@ describe("PUT /api/tournaments/:id", () => {
       organizerId: validPayload.organizerId,
       status: "draft",
     };
-    updateTournament.mockResolvedValue(updatedTournament);
+    updateTournament.mockResolvedValue({
+      outcome: "updated",
+      tournament: updatedTournament,
+    });
 
     const response = await request(app)
       .put(`/api/tournaments/${tournamentId}`)
@@ -415,7 +418,7 @@ describe("PUT /api/tournaments/:id", () => {
 
   it("responde 404 cuando el torneo no existe", async () => {
     const tournamentId = nextTestId();
-    updateTournament.mockResolvedValue(null);
+    updateTournament.mockResolvedValue({ outcome: "not_found" });
 
     const response = await request(app)
       .put(`/api/tournaments/${tournamentId}`)
@@ -424,6 +427,46 @@ describe("PUT /api/tournaments/:id", () => {
     expect(response.status).toBe(404);
     expect(response.body).toEqual({
       message: "Torneo no encontrado",
+    });
+  });
+
+  it("conserva la compatibilidad con torneos anteriores sin limites", async () => {
+    const tournamentId = nextTestId();
+    const legacyPayload = {
+      ...updatePayload,
+      minTeamMembers: null,
+      maxTeamMembers: null,
+    };
+    const updatedTournament = {
+      id: tournamentId,
+      ...legacyPayload,
+      organizerId: validPayload.organizerId,
+      status: "open",
+    };
+    updateTournament.mockResolvedValue({
+      outcome: "updated",
+      tournament: updatedTournament,
+    });
+
+    const response = await request(app)
+      .put(`/api/tournaments/${tournamentId}`)
+      .send(legacyPayload);
+
+    expect(response.status).toBe(200);
+    expect(updateTournament).toHaveBeenCalledWith(tournamentId, legacyPayload);
+  });
+
+  it("responde 409 cuando se intenta cambiar una regla bloqueada", async () => {
+    updateTournament.mockResolvedValue({ outcome: "participation_locked" });
+
+    const response = await request(app)
+      .put(`/api/tournaments/${nextTestId()}`)
+      .send(updatePayload);
+
+    expect(response.status).toBe(409);
+    expect(response.body).toEqual({
+      message:
+        "La configuracion de participacion no puede cambiarse despues de abrir las inscripciones",
     });
   });
 

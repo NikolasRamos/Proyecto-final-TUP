@@ -124,20 +124,27 @@ export async function updateTournamentHandler(request, response) {
   }
 
   try {
-    const tournament = await updateTournament(
+    const result = await updateTournament(
       idValidation.data,
       dataValidation.data,
     );
 
-    if (!tournament) {
+    if (result.outcome === "not_found") {
       return response.status(404).json({
         message: "Torneo no encontrado",
       });
     }
 
+    if (result.outcome === "participation_locked") {
+      return response.status(409).json({
+        message:
+          "La configuracion de participacion no puede cambiarse despues de abrir las inscripciones",
+      });
+    }
+
     return response.status(200).json({
       message: "Torneo actualizado correctamente",
-      data: tournament,
+      data: result.tournament,
     });
   } catch {
     return response.status(500).json({

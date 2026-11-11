@@ -100,13 +100,17 @@ describe("tournaments service", () => {
     const tournamentData = { name: "Torneo actualizado" };
     const updatedTournament = { id: tournamentId, ...tournamentData };
     const tournament = {
+      status: "draft",
       update: vi.fn().mockResolvedValue(updatedTournament),
     };
     Tournament.findByPk.mockResolvedValue(tournament);
 
-    await expect(updateTournament(tournamentId, tournamentData)).resolves.toBe(
-      updatedTournament,
-    );
+    await expect(
+      updateTournament(tournamentId, tournamentData),
+    ).resolves.toEqual({
+      outcome: "updated",
+      tournament: updatedTournament,
+    });
     expect(Tournament.findByPk).toHaveBeenCalledWith(tournamentId);
     expect(tournament.update).toHaveBeenCalledWith(tournamentData);
   });
@@ -116,7 +120,55 @@ describe("tournaments service", () => {
 
     await expect(
       updateTournament(101, { name: "Torneo actualizado" }),
-    ).resolves.toBeNull();
+    ).resolves.toEqual({ outcome: "not_found" });
+  });
+
+  it("bloquea cambios de participacion cuando las inscripciones ya abrieron", async () => {
+    const tournament = {
+      status: "open",
+      maxParticipants: 16,
+      isTeamTournament: true,
+      minTeamMembers: 2,
+      maxTeamMembers: 5,
+      update: vi.fn(),
+    };
+    Tournament.findByPk.mockResolvedValue(tournament);
+
+    await expect(
+      updateTournament(101, {
+        maxParticipants: 20,
+        isTeamTournament: true,
+        minTeamMembers: 2,
+        maxTeamMembers: 5,
+      }),
+    ).resolves.toEqual({ outcome: "participation_locked" });
+    expect(tournament.update).not.toHaveBeenCalled();
+  });
+
+  it("permite editar otros datos de un torneo abierto", async () => {
+    const tournamentData = {
+      name: "Torneo actualizado",
+      maxParticipants: 16,
+      isTeamTournament: true,
+      minTeamMembers: 2,
+      maxTeamMembers: 5,
+    };
+    const updatedTournament = { id: 101, ...tournamentData, status: "open" };
+    const tournament = {
+      status: "open",
+      maxParticipants: 16,
+      isTeamTournament: true,
+      minTeamMembers: 2,
+      maxTeamMembers: 5,
+      update: vi.fn().mockResolvedValue(updatedTournament),
+    };
+    Tournament.findByPk.mockResolvedValue(tournament);
+
+    await expect(updateTournament(101, tournamentData)).resolves.toEqual({
+      outcome: "updated",
+      tournament: updatedTournament,
+    });
+    expect(tournament.update).toHaveBeenCalledWith(tournamentData);
   });
 
   it("actualiza una transicion de estado permitida", async () => {

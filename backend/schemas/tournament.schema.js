@@ -74,7 +74,11 @@ function validateTournamentDates(tournament, context) {
   }
 }
 
-function validateTournamentParticipation(tournament, context) {
+function validateTournamentParticipation(
+  tournament,
+  context,
+  { allowUnsetTeamLimits = false } = {},
+) {
   if (!tournament.isTeamTournament) {
     if (tournament.minTeamMembers !== null) {
       context.addIssue({
@@ -92,6 +96,14 @@ function validateTournamentParticipation(tournament, context) {
       });
     }
 
+    return;
+  }
+
+  if (
+    allowUnsetTeamLimits &&
+    tournament.minTeamMembers === null &&
+    tournament.maxTeamMembers === null
+  ) {
     return;
   }
 
@@ -129,6 +141,13 @@ function validateTournament(tournament, context) {
   validateTournamentParticipation(tournament, context);
 }
 
+function validateTournamentUpdate(tournament, context) {
+  validateTournamentDates(tournament, context);
+  validateTournamentParticipation(tournament, context, {
+    allowUnsetTeamLimits: true,
+  });
+}
+
 export const createTournamentSchema = z
   .object({
     ...tournamentFields,
@@ -138,7 +157,7 @@ export const createTournamentSchema = z
 
 export const updateTournamentSchema = z
   .object(tournamentFields)
-  .superRefine(validateTournament);
+  .superRefine(validateTournamentUpdate);
 
 export const updateTournamentStatusSchema = z.object({
   status: z.enum(TOURNAMENT_STATUSES, {

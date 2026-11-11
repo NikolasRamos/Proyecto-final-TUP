@@ -101,6 +101,40 @@ function validateDates(form: TournamentFormData) {
   return null;
 }
 
+function validateParticipation(form: TournamentFormData) {
+  if (!form.isTeamTournament) {
+    return null;
+  }
+
+  if (form.minTeamMembers === null || form.maxTeamMembers === null) {
+    return "Debés indicar el mínimo y el máximo de integrantes por equipo.";
+  }
+
+  if (form.minTeamMembers < 2 || form.maxTeamMembers < 2) {
+    return "Los equipos deben admitir al menos 2 integrantes.";
+  }
+
+  if (form.maxTeamMembers < form.minTeamMembers) {
+    return "El máximo de integrantes no puede ser menor que el mínimo.";
+  }
+
+  return null;
+}
+
+function formatTeamMemberLimits(tournament: Tournament) {
+  const { minTeamMembers, maxTeamMembers } = tournament;
+
+  if (minTeamMembers === null || maxTeamMembers === null) {
+    return "Sin límites definidos";
+  }
+
+  if (minTeamMembers === maxTeamMembers) {
+    return `${minTeamMembers} integrantes`;
+  }
+
+  return `De ${minTeamMembers} a ${maxTeamMembers} integrantes`;
+}
+
 function getRequestErrorMessage(error: unknown) {
   if (error instanceof ApiError) {
     return error.message;
@@ -182,6 +216,29 @@ export default function TournamentDetailPage() {
     setNotice(null);
   }
 
+  function updateParticipationType(isTeamTournament: boolean) {
+    setForm((current) => {
+      if (!current) {
+        return current;
+      }
+
+      return isTeamTournament
+        ? {
+            ...current,
+            isTeamTournament: true,
+            minTeamMembers: current.minTeamMembers ?? 2,
+            maxTeamMembers: current.maxTeamMembers ?? 2,
+          }
+        : {
+            ...current,
+            isTeamTournament: false,
+            minTeamMembers: null,
+            maxTeamMembers: null,
+          };
+    });
+    setNotice(null);
+  }
+
   function startEditing(tournament: Tournament) {
     setForm(toFormData(tournament));
     setNotice(null);
@@ -206,6 +263,14 @@ export default function TournamentDetailPage() {
 
     if (dateError) {
       setNotice({ type: "error", message: dateError });
+      return;
+    }
+
+    const participationError =
+      state.tournament.status === "draft" ? validateParticipation(form) : null;
+
+    if (participationError) {
+      setNotice({ type: "error", message: participationError });
       return;
     }
 
@@ -522,8 +587,60 @@ export default function TournamentDetailPage() {
                   </select>
                 </div>
 
+                <fieldset className="form-field participation-field field-full">
+                  <legend>Tipo de participación</legend>
+                  <div className="participation-options">
+                    <label className="participation-option">
+                      <input
+                        type="radio"
+                        name="detailParticipationType"
+                        value="individual"
+                        aria-label="Individual"
+                        checked={!form.isTeamTournament}
+                        onChange={() => updateParticipationType(false)}
+                        disabled={
+                          isSaving || state.tournament.status !== "draft"
+                        }
+                      />
+                      <span>
+                        <strong>Individual</strong>
+                        <small>
+                          Cada inscripción representa a una persona.
+                        </small>
+                      </span>
+                    </label>
+                    <label className="participation-option">
+                      <input
+                        type="radio"
+                        name="detailParticipationType"
+                        value="team"
+                        aria-label="Por equipos"
+                        checked={form.isTeamTournament}
+                        onChange={() => updateParticipationType(true)}
+                        disabled={
+                          isSaving || state.tournament.status !== "draft"
+                        }
+                      />
+                      <span>
+                        <strong>Por equipos</strong>
+                        <small>Cada inscripción representa a un equipo.</small>
+                      </span>
+                    </label>
+                  </div>
+                  {state.tournament.status !== "draft" && (
+                    <span className="field-hint">
+                      Esta configuración quedó bloqueada al abrir las
+                      inscripciones.
+                    </span>
+                  )}
+                </fieldset>
+
                 <div className="form-field">
-                  <label htmlFor="detail-max-participants">Cupo máximo</label>
+                  <label htmlFor="detail-max-participants">
+                    {form.isTeamTournament
+                      ? "Cupo máximo de equipos"
+                      : "Cupo máximo de personas"}
+                  </label>
                   <input
                     id="detail-max-participants"
                     type="number"
@@ -534,9 +651,63 @@ export default function TournamentDetailPage() {
                       updateField("maxParticipants", Number(event.target.value))
                     }
                     required
-                    disabled={isSaving}
+                    disabled={isSaving || state.tournament.status !== "draft"}
                   />
                 </div>
+
+                {form.isTeamTournament && (
+                  <>
+                    <div className="form-field">
+                      <label htmlFor="detail-min-team-members">
+                        Mínimo de integrantes por equipo
+                      </label>
+                      <input
+                        id="detail-min-team-members"
+                        type="number"
+                        min={2}
+                        step={1}
+                        value={form.minTeamMembers ?? ""}
+                        onChange={(event) =>
+                          updateField(
+                            "minTeamMembers",
+                            event.target.value === ""
+                              ? null
+                              : Number(event.target.value),
+                          )
+                        }
+                        required={state.tournament.status === "draft"}
+                        disabled={
+                          isSaving || state.tournament.status !== "draft"
+                        }
+                      />
+                    </div>
+
+                    <div className="form-field">
+                      <label htmlFor="detail-max-team-members">
+                        Máximo de integrantes por equipo
+                      </label>
+                      <input
+                        id="detail-max-team-members"
+                        type="number"
+                        min={2}
+                        step={1}
+                        value={form.maxTeamMembers ?? ""}
+                        onChange={(event) =>
+                          updateField(
+                            "maxTeamMembers",
+                            event.target.value === ""
+                              ? null
+                              : Number(event.target.value),
+                          )
+                        }
+                        required={state.tournament.status === "draft"}
+                        disabled={
+                          isSaving || state.tournament.status !== "draft"
+                        }
+                      />
+                    </div>
+                  </>
+                )}
 
                 <div className="form-field">
                   <label htmlFor="detail-registration-deadline">
@@ -614,9 +785,30 @@ export default function TournamentDetailPage() {
                   <dd>{modalityLabels[state.tournament.modality]}</dd>
                 </div>
                 <div>
-                  <dt>Cupo máximo</dt>
-                  <dd>{state.tournament.maxParticipants} equipos</dd>
+                  <dt>Tipo de participación</dt>
+                  <dd>
+                    {state.tournament.isTeamTournament
+                      ? "Por equipos"
+                      : "Individual"}
+                  </dd>
                 </div>
+                <div>
+                  <dt>
+                    {state.tournament.isTeamTournament
+                      ? "Cupo máximo de equipos"
+                      : "Cupo máximo de personas"}
+                  </dt>
+                  <dd>
+                    {state.tournament.maxParticipants}{" "}
+                    {state.tournament.isTeamTournament ? "equipos" : "personas"}
+                  </dd>
+                </div>
+                {state.tournament.isTeamTournament && (
+                  <div>
+                    <dt>Integrantes por equipo</dt>
+                    <dd>{formatTeamMemberLimits(state.tournament)}</dd>
+                  </div>
+                )}
                 <div>
                   <dt>Cierre de inscripción</dt>
                   <dd>{formatDate(state.tournament.registrationDeadline)}</dd>
@@ -652,7 +844,7 @@ export default function TournamentDetailPage() {
             </section>
           )}
 
-          {!isEditing && (
+          {!isEditing && state.tournament.isTeamTournament && (
             <TournamentRegistrationsPanel
               tournamentId={tournamentId}
               tournamentStatus={state.tournament.status}
@@ -660,6 +852,16 @@ export default function TournamentDetailPage() {
               isOpening={isOpeningRegistrations}
               onOpenRegistrations={handleOpenRegistrations}
             />
+          )}
+
+          {!isEditing && !state.tournament.isTeamTournament && (
+            <section className="detail-card" aria-label="Inscripciones">
+              <h2>Inscripciones individuales</h2>
+              <p className="detail-rule-note">
+                La gestión de participantes individuales se incorporará en el
+                próximo bloque de inscripciones.
+              </p>
+            </section>
           )}
         </>
       )}

@@ -59,10 +59,22 @@ export async function updateTournament(tournamentId, tournamentData) {
   const tournament = await Tournament.findByPk(tournamentId);
 
   if (!tournament) {
-    return null;
+    return { outcome: "not_found" };
   }
 
-  return tournament.update(tournamentData);
+  const participationChanged =
+    tournament.maxParticipants !== tournamentData.maxParticipants ||
+    tournament.isTeamTournament !== tournamentData.isTeamTournament ||
+    tournament.minTeamMembers !== tournamentData.minTeamMembers ||
+    tournament.maxTeamMembers !== tournamentData.maxTeamMembers;
+
+  if (tournament.status !== "draft" && participationChanged) {
+    return { outcome: "participation_locked" };
+  }
+
+  const updatedTournament = await tournament.update(tournamentData);
+
+  return { outcome: "updated", tournament: updatedTournament };
 }
 
 export async function updateTournamentStatus(tournamentId, nextStatus) {
