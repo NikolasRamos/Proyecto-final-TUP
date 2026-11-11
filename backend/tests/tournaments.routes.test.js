@@ -27,6 +27,9 @@ const validPayload = {
   description: "Competencia inicial de la temporada",
   modality: "league",
   maxParticipants: 16,
+  isTeamTournament: true,
+  minTeamMembers: 2,
+  maxTeamMembers: 5,
   registrationDeadline: "2026-11-01",
   startDate: "2026-11-05",
   endDate: "2026-12-10",
@@ -224,6 +227,86 @@ describe("POST /api/tournaments", () => {
     expect(createTournament).toHaveBeenCalledWith(validPayload);
   });
 
+  it("crea un torneo individual sin limites de equipo", async () => {
+    const individualPayload = {
+      ...validPayload,
+      isTeamTournament: false,
+      minTeamMembers: null,
+      maxTeamMembers: null,
+    };
+    const createdTournament = {
+      id: nextTestId(),
+      ...individualPayload,
+      status: "draft",
+    };
+    createTournament.mockResolvedValue(createdTournament);
+
+    const response = await request(app)
+      .post("/api/tournaments")
+      .send(individualPayload);
+
+    expect(response.status).toBe(201);
+    expect(createTournament).toHaveBeenCalledWith(individualPayload);
+  });
+
+  it("rechaza un torneo individual con limites de equipo", async () => {
+    const response = await request(app)
+      .post("/api/tournaments")
+      .send({
+        ...validPayload,
+        isTeamTournament: false,
+      });
+
+    expect(response.status).toBe(400);
+    expect(response.body.errors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ field: "minTeamMembers" }),
+        expect.objectContaining({ field: "maxTeamMembers" }),
+      ]),
+    );
+    expect(createTournament).not.toHaveBeenCalled();
+  });
+
+  it("rechaza un torneo por equipos sin limites", async () => {
+    const response = await request(app)
+      .post("/api/tournaments")
+      .send({
+        ...validPayload,
+        minTeamMembers: null,
+        maxTeamMembers: null,
+      });
+
+    expect(response.status).toBe(400);
+    expect(response.body.errors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ field: "minTeamMembers" }),
+        expect.objectContaining({ field: "maxTeamMembers" }),
+      ]),
+    );
+    expect(createTournament).not.toHaveBeenCalled();
+  });
+
+  it("rechaza un maximo de integrantes menor que el minimo", async () => {
+    const response = await request(app)
+      .post("/api/tournaments")
+      .send({
+        ...validPayload,
+        minTeamMembers: 5,
+        maxTeamMembers: 3,
+      });
+
+    expect(response.status).toBe(400);
+    expect(response.body.errors).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          field: "maxTeamMembers",
+          message: "El maximo de integrantes no puede ser menor que el minimo",
+        }),
+      ]),
+    );
+    expect(createTournament).not.toHaveBeenCalled();
+  });
+
   it("rechaza datos invalidos antes de llamar al servicio", async () => {
     const response = await request(app)
       .post("/api/tournaments")
@@ -264,6 +347,9 @@ describe("PUT /api/tournaments/:id", () => {
     description: "Descripcion actualizada",
     modality: validPayload.modality,
     maxParticipants: 20,
+    isTeamTournament: validPayload.isTeamTournament,
+    minTeamMembers: validPayload.minTeamMembers,
+    maxTeamMembers: validPayload.maxTeamMembers,
     registrationDeadline: validPayload.registrationDeadline,
     startDate: validPayload.startDate,
     endDate: validPayload.endDate,

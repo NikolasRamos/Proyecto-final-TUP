@@ -10,6 +10,9 @@ export interface Tournament {
   description: string | null;
   modality: TournamentModality;
   maxParticipants: number;
+  isTeamTournament: boolean;
+  minTeamMembers: number | null;
+  maxTeamMembers: number | null;
   registrationDeadline: string;
   startDate: string;
   endDate: string;
@@ -24,6 +27,9 @@ export interface CreateTournamentInput {
   description?: string | null;
   modality: TournamentModality;
   maxParticipants: number;
+  isTeamTournament: boolean;
+  minTeamMembers: number | null;
+  maxTeamMembers: number | null;
   registrationDeadline: string;
   startDate: string;
   endDate: string;

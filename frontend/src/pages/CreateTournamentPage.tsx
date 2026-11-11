@@ -14,6 +14,9 @@ interface TournamentFormData {
   description: string;
   modality: TournamentModality;
   maxParticipants: number;
+  isTeamTournament: boolean;
+  minTeamMembers: number;
+  maxTeamMembers: number;
   registrationDeadline: string;
   startDate: string;
   endDate: string;
@@ -31,6 +34,9 @@ const initialForm: TournamentFormData = {
   description: "",
   modality: "league",
   maxParticipants: 2,
+  isTeamTournament: true,
+  minTeamMembers: 2,
+  maxTeamMembers: 2,
   registrationDeadline: "",
   startDate: "",
   endDate: "",
@@ -44,6 +50,26 @@ function validateDates(form: TournamentFormData) {
 
   if (form.startDate > form.endDate) {
     return "La fecha de finalización no puede ser anterior al inicio.";
+  }
+
+  return null;
+}
+
+function validateParticipation(form: TournamentFormData) {
+  if (!form.isTeamTournament) {
+    return null;
+  }
+
+  if (!Number.isInteger(form.minTeamMembers) || form.minTeamMembers < 2) {
+    return "El mínimo de integrantes por equipo debe ser al menos 2.";
+  }
+
+  if (!Number.isInteger(form.maxTeamMembers) || form.maxTeamMembers < 2) {
+    return "El máximo de integrantes por equipo debe ser al menos 2.";
+  }
+
+  if (form.maxTeamMembers < form.minTeamMembers) {
+    return "El máximo de integrantes no puede ser menor que el mínimo.";
   }
 
   return null;
@@ -69,6 +95,17 @@ export default function CreateTournamentPage() {
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
+    const participationError = validateParticipation(form);
+
+    if (participationError) {
+      setSubmitState({
+        status: "error",
+        message: participationError,
+        details: [],
+      });
+      return;
+    }
+
     const dateError = validateDates(form);
 
     if (dateError) {
@@ -91,6 +128,8 @@ export default function CreateTournamentPage() {
       ...form,
       name: form.name.trim(),
       description: form.description.trim() || null,
+      minTeamMembers: form.isTeamTournament ? form.minTeamMembers : null,
+      maxTeamMembers: form.isTeamTournament ? form.maxTeamMembers : null,
       organizerId,
     };
 
@@ -198,8 +237,48 @@ export default function CreateTournamentPage() {
             </select>
           </div>
 
+          <fieldset className="form-field participation-field field-full">
+            <legend>Tipo de participación</legend>
+            <div className="participation-options">
+              <label className="participation-option">
+                <input
+                  type="radio"
+                  name="participationType"
+                  value="individual"
+                  aria-label="Individual"
+                  checked={!form.isTeamTournament}
+                  onChange={() => updateField("isTeamTournament", false)}
+                  disabled={isSubmitting}
+                />
+                <span>
+                  <strong>Individual</strong>
+                  <small>Cada inscripción representa a una persona.</small>
+                </span>
+              </label>
+              <label className="participation-option">
+                <input
+                  type="radio"
+                  name="participationType"
+                  value="team"
+                  aria-label="Por equipos"
+                  checked={form.isTeamTournament}
+                  onChange={() => updateField("isTeamTournament", true)}
+                  disabled={isSubmitting}
+                />
+                <span>
+                  <strong>Por equipos</strong>
+                  <small>Cada inscripción representa a un equipo.</small>
+                </span>
+              </label>
+            </div>
+          </fieldset>
+
           <div className="form-field">
-            <label htmlFor="maxParticipants">Cupo máximo</label>
+            <label htmlFor="maxParticipants">
+              {form.isTeamTournament
+                ? "Cupo máximo de equipos"
+                : "Cupo máximo de personas"}
+            </label>
             <input
               id="maxParticipants"
               name="maxParticipants"
@@ -213,7 +292,60 @@ export default function CreateTournamentPage() {
               required
               disabled={isSubmitting}
             />
+            <span className="field-hint">
+              {form.isTeamTournament
+                ? "Cantidad máxima de equipos que podrán inscribirse."
+                : "Cantidad máxima de personas que podrán inscribirse."}
+            </span>
           </div>
+
+          {form.isTeamTournament && (
+            <>
+              <div className="form-field">
+                <label htmlFor="minTeamMembers">
+                  Mínimo de integrantes por equipo
+                </label>
+                <input
+                  id="minTeamMembers"
+                  name="minTeamMembers"
+                  type="number"
+                  min={2}
+                  step={1}
+                  value={form.minTeamMembers}
+                  onChange={(event) =>
+                    updateField("minTeamMembers", Number(event.target.value))
+                  }
+                  required
+                  disabled={isSubmitting}
+                />
+              </div>
+
+              <div className="form-field">
+                <label htmlFor="maxTeamMembers">
+                  Máximo de integrantes por equipo
+                </label>
+                <input
+                  id="maxTeamMembers"
+                  name="maxTeamMembers"
+                  type="number"
+                  min={2}
+                  step={1}
+                  value={form.maxTeamMembers}
+                  onChange={(event) =>
+                    updateField("maxTeamMembers", Number(event.target.value))
+                  }
+                  aria-describedby="team-members-hint"
+                  required
+                  disabled={isSubmitting}
+                />
+              </div>
+
+              <span className="field-hint field-full" id="team-members-hint">
+                El capitán cuenta como integrante. El plantel específico se
+                seleccionará al inscribir el equipo.
+              </span>
+            </>
+          )}
 
           <div className="form-field">
             <label htmlFor="registrationDeadline">Cierre de inscripción</label>

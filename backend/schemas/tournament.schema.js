@@ -33,6 +33,23 @@ const tournamentFields = {
     .number()
     .int("La cantidad maxima de participantes debe ser un numero entero")
     .min(2, "El torneo debe admitir al menos 2 participantes"),
+  isTeamTournament: z.boolean({
+    error: "Debe indicar si el torneo es individual o por equipos",
+  }),
+  minTeamMembers: z
+    .number({
+      error: "El minimo de integrantes debe ser un numero",
+    })
+    .int("El minimo de integrantes debe ser un numero entero")
+    .min(2, "Un equipo debe admitir al menos 2 integrantes")
+    .nullable(),
+  maxTeamMembers: z
+    .number({
+      error: "El maximo de integrantes debe ser un numero",
+    })
+    .int("El maximo de integrantes debe ser un numero entero")
+    .min(2, "Un equipo debe admitir al menos 2 integrantes")
+    .nullable(),
   registrationDeadline: dateSchema,
   startDate: dateSchema,
   endDate: dateSchema,
@@ -57,16 +74,71 @@ function validateTournamentDates(tournament, context) {
   }
 }
 
+function validateTournamentParticipation(tournament, context) {
+  if (!tournament.isTeamTournament) {
+    if (tournament.minTeamMembers !== null) {
+      context.addIssue({
+        code: "custom",
+        path: ["minTeamMembers"],
+        message: "Un torneo individual no puede definir limites de equipo",
+      });
+    }
+
+    if (tournament.maxTeamMembers !== null) {
+      context.addIssue({
+        code: "custom",
+        path: ["maxTeamMembers"],
+        message: "Un torneo individual no puede definir limites de equipo",
+      });
+    }
+
+    return;
+  }
+
+  if (tournament.minTeamMembers === null) {
+    context.addIssue({
+      code: "custom",
+      path: ["minTeamMembers"],
+      message: "Debe indicar el minimo de integrantes por equipo",
+    });
+  }
+
+  if (tournament.maxTeamMembers === null) {
+    context.addIssue({
+      code: "custom",
+      path: ["maxTeamMembers"],
+      message: "Debe indicar el maximo de integrantes por equipo",
+    });
+  }
+
+  if (
+    tournament.minTeamMembers !== null &&
+    tournament.maxTeamMembers !== null &&
+    tournament.maxTeamMembers < tournament.minTeamMembers
+  ) {
+    context.addIssue({
+      code: "custom",
+      path: ["maxTeamMembers"],
+      message: "El maximo de integrantes no puede ser menor que el minimo",
+    });
+  }
+}
+
+function validateTournament(tournament, context) {
+  validateTournamentDates(tournament, context);
+  validateTournamentParticipation(tournament, context);
+}
+
 export const createTournamentSchema = z
   .object({
     ...tournamentFields,
     organizerId: entityIdSchema,
   })
-  .superRefine(validateTournamentDates);
+  .superRefine(validateTournament);
 
 export const updateTournamentSchema = z
   .object(tournamentFields)
-  .superRefine(validateTournamentDates);
+  .superRefine(validateTournament);
 
 export const updateTournamentStatusSchema = z.object({
   status: z.enum(TOURNAMENT_STATUSES, {

@@ -36,6 +36,9 @@ interface TournamentFormData {
   description: string;
   modality: TournamentModality;
   maxParticipants: number;
+  isTeamTournament: boolean;
+  minTeamMembers: number | null;
+  maxTeamMembers: number | null;
   registrationDeadline: string;
   startDate: string;
   endDate: string;
@@ -77,6 +80,9 @@ function toFormData(tournament: Tournament): TournamentFormData {
     description: tournament.description ?? "",
     modality: tournament.modality,
     maxParticipants: tournament.maxParticipants,
+    isTeamTournament: tournament.isTeamTournament,
+    minTeamMembers: tournament.minTeamMembers,
+    maxTeamMembers: tournament.maxTeamMembers,
     registrationDeadline: tournament.registrationDeadline,
     startDate: tournament.startDate,
     endDate: tournament.endDate,

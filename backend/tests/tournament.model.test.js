@@ -12,6 +12,9 @@ const validTournament = {
   description: "Competencia inicial de la temporada",
   modality: "league",
   maxParticipants: 16,
+  isTeamTournament: true,
+  minTeamMembers: 2,
+  maxTeamMembers: 5,
   registrationDeadline: "2026-11-01",
   startDate: "2026-11-05",
   endDate: "2026-12-10",
@@ -26,6 +29,16 @@ describe("Tournament", () => {
     expect(attributes.id.autoIncrement).toBe(true);
     expect(attributes.organizerId.type.key).toBe("INTEGER");
     expect(attributes.organizerId.field).toBe("organizer_id");
+  });
+
+  it("mapea las reglas de participacion a sus columnas", () => {
+    const attributes = Tournament.getAttributes();
+
+    expect(attributes.isTeamTournament.type.key).toBe("BOOLEAN");
+    expect(attributes.isTeamTournament.field).toBe("is_team_tournament");
+    expect(attributes.isTeamTournament.defaultValue).toBe(true);
+    expect(attributes.minTeamMembers.field).toBe("min_team_members");
+    expect(attributes.maxTeamMembers.field).toBe("max_team_members");
   });
 
   it("declara las modalidades y estados permitidos", () => {
@@ -48,6 +61,70 @@ describe("Tournament", () => {
 
     await expect(tournament.validate()).resolves.toBe(tournament);
     expect(tournament.status).toBe("draft");
+  });
+
+  it("acepta un torneo individual sin limites de equipo", async () => {
+    const tournament = Tournament.build({
+      ...validTournament,
+      isTeamTournament: false,
+      minTeamMembers: null,
+      maxTeamMembers: null,
+    });
+
+    await expect(tournament.validate()).resolves.toBe(tournament);
+  });
+
+  it("mantiene compatibles los torneos por equipos anteriores sin limites", async () => {
+    const tournament = Tournament.build({
+      ...validTournament,
+      minTeamMembers: null,
+      maxTeamMembers: null,
+    });
+
+    await expect(tournament.validate()).resolves.toBe(tournament);
+  });
+
+  it("rechaza limites de equipo en un torneo individual", async () => {
+    const tournament = Tournament.build({
+      ...validTournament,
+      isTeamTournament: false,
+    });
+
+    await expect(tournament.validate()).rejects.toThrow(
+      "Un torneo individual no puede definir limites de equipo",
+    );
+  });
+
+  it("rechaza un torneo por equipos con un solo limite definido", async () => {
+    const tournament = Tournament.build({
+      ...validTournament,
+      maxTeamMembers: null,
+    });
+
+    await expect(tournament.validate()).rejects.toThrow(
+      "Los limites minimo y maximo del equipo deben definirse juntos",
+    );
+  });
+
+  it("rechaza menos de dos integrantes por equipo", async () => {
+    const tournament = Tournament.build({
+      ...validTournament,
+      minTeamMembers: 1,
+    });
+
+    await expect(tournament.validate()).rejects.toThrow();
+  });
+
+  it("rechaza un maximo de integrantes menor que el minimo", async () => {
+    const tournament = Tournament.build({
+      ...validTournament,
+      minTeamMembers: 5,
+      maxTeamMembers: 3,
+    });
+
+    await expect(tournament.validate()).rejects.toThrow(
+      "El maximo de integrantes no puede ser menor que el minimo",
+    );
   });
 
   it("rechaza una modalidad desconocida", async () => {

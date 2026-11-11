@@ -57,6 +57,30 @@ Tournament.init(
         min: 2,
       },
     },
+    isTeamTournament: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
+      field: "is_team_tournament",
+    },
+    minTeamMembers: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      field: "min_team_members",
+      validate: {
+        isInt: true,
+        min: 2,
+      },
+    },
+    maxTeamMembers: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      field: "max_team_members",
+      validate: {
+        isInt: true,
+        min: 2,
+      },
+    },
     registrationDeadline: {
       type: DataTypes.DATEONLY,
       allowNull: false,
@@ -106,6 +130,34 @@ Tournament.init(
     underscored: true,
     timestamps: true,
     validate: {
+      participationRulesAreConsistent() {
+        const hasMinimum =
+          this.minTeamMembers !== null && this.minTeamMembers !== undefined;
+        const hasMaximum =
+          this.maxTeamMembers !== null && this.maxTeamMembers !== undefined;
+
+        if (!this.isTeamTournament && (hasMinimum || hasMaximum)) {
+          throw new Error(
+            "Un torneo individual no puede definir limites de equipo",
+          );
+        }
+
+        if (this.isTeamTournament && hasMinimum !== hasMaximum) {
+          throw new Error(
+            "Los limites minimo y maximo del equipo deben definirse juntos",
+          );
+        }
+
+        if (
+          this.isTeamTournament &&
+          hasMinimum &&
+          this.maxTeamMembers < this.minTeamMembers
+        ) {
+          throw new Error(
+            "El maximo de integrantes no puede ser menor que el minimo",
+          );
+        }
+      },
       datesAreConsistent() {
         if (
           this.registrationDeadline &&

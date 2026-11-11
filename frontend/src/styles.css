@@ -829,6 +829,64 @@ section[aria-labelledby="modules-title"] > h2 {
   font-weight: 800;
 }
 
+.participation-field {
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.participation-field legend {
+  margin-bottom: 0.45rem;
+  color: #26334b;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.participation-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.participation-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.9rem;
+  border: 1px solid #cbd4e5;
+  border-radius: 0.7rem;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.participation-option:has(input:checked) {
+  border-color: #3157d5;
+  background: #f4f6ff;
+  box-shadow: 0 0 0 0.15rem rgb(49 87 213 / 10%);
+}
+
+.form-field .participation-option input {
+  width: 1rem;
+  height: 1rem;
+  min-height: auto;
+  margin-top: 0.15rem;
+  padding: 0;
+  accent-color: #3157d5;
+}
+
+.participation-option span {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.participation-option small {
+  color: #6a768e;
+  font-size: 0.78rem;
+  font-weight: 500;
+  line-height: 1.4;
+}
+
 .form-field input,
 .form-field select,
 .form-field textarea {
@@ -920,6 +978,7 @@ section[aria-labelledby="modules-title"] > h2 {
   .summary-grid,
   .data-grid,
   .form-grid,
+  .participation-options,
   .detail-grid,
   .tournament-list-grid {
     grid-template-columns: 1fr;
