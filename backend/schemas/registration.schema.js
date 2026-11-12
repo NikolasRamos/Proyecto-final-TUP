@@ -5,6 +5,15 @@ import { entityIdSchema } from "./id.schema.js";
 
 export const createRegistrationSchema = z.object({
   teamId: entityIdSchema,
+  memberIds: z
+    .array(entityIdSchema, {
+      error: "Debe indicar los integrantes que participaran",
+    })
+    .min(1, "Debe seleccionar al menos un integrante")
+    .max(100, "No se pueden seleccionar mas de 100 integrantes")
+    .refine((memberIds) => new Set(memberIds).size === memberIds.length, {
+      message: "No puede seleccionar el mismo integrante mas de una vez",
+    }),
 });
 
 export const listRegistrationsQuerySchema = z.object({

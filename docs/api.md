@@ -243,7 +243,8 @@ Un usuario no puede pertenecer dos veces al mismo equipo.
 | `page`    | Entero mayor o igual a 1  | `1`            |
 | `limit`   | Entero entre 1 y 100      | `10`           |
 
-Cada elemento incluye la inscripción y datos básicos del equipo.
+Cada elemento incluye la inscripción, los datos básicos del equipo y
+`memberIds`, con los usuarios elegidos para representar al equipo.
 
 ### Inscribir equipo
 
@@ -251,13 +252,16 @@ Cada elemento incluye la inscripción y datos básicos del equipo.
 
 ```json
 {
-  "teamId": 1
+  "teamId": 1,
+  "memberIds": [1, 2]
 }
 ```
 
 El torneo debe existir, estar `open` y tener cupo. El equipo debe existir y no
 puede mantener dos inscripciones activas en el mismo torneo. Si estaba
-`withdrawn`, la operación reactiva el registro.
+`withdrawn`, la operación reactiva el registro y reemplaza su plantel anterior.
+Todos los valores de `memberIds` deben pertenecer al equipo y la cantidad
+seleccionada debe respetar `minTeamMembers` y `maxTeamMembers` del torneo.
 
 ### Retirar equipo
 

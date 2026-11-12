@@ -849,6 +849,8 @@ export default function TournamentDetailPage() {
               tournamentId={tournamentId}
               tournamentStatus={state.tournament.status}
               maxParticipants={state.tournament.maxParticipants}
+              minTeamMembers={state.tournament.minTeamMembers}
+              maxTeamMembers={state.tournament.maxTeamMembers}
               isOpening={isOpeningRegistrations}
               onOpenRegistrations={handleOpenRegistrations}
             />

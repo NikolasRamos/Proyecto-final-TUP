@@ -12,7 +12,7 @@ import {
   registerTeamInTournament,
   withdrawTeamFromTournament,
 } from "./api/registrations.api";
-import { listTeams } from "./api/teams.api";
+import { listTeamMembers, listTeams } from "./api/teams.api";
 import {
   deleteTournament,
   downloadTournamentReport,
@@ -33,6 +33,7 @@ vi.mock("./api/tournaments.api", () => ({
 }));
 
 vi.mock("./api/teams.api", () => ({
+  listTeamMembers: vi.fn(),
   listTeams: vi.fn(),
 }));
 
@@ -79,6 +80,22 @@ describe("TournamentDetailPage", () => {
     vi.mocked(listTeams).mockResolvedValue({
       data: [],
       pagination: { page: 1, limit: 100, total: 0, totalPages: 0 },
+    });
+    vi.mocked(listTeamMembers).mockResolvedValue({
+      data: [
+        {
+          id: 501,
+          userId: 1,
+          isCaptain: true,
+          joinedAt: "2026-10-01T10:00:00.000Z",
+        },
+        {
+          id: 502,
+          userId: 2,
+          isCaptain: false,
+          joinedAt: "2026-10-02T10:00:00.000Z",
+        },
+      ],
     });
     vi.mocked(listTournamentRegistrations).mockResolvedValue({
       data: [],
@@ -391,9 +408,11 @@ describe("TournamentDetailPage", () => {
       await screen.findByLabelText("Equipo a inscribir"),
       "201",
     );
+    await user.click(await screen.findByLabelText(/Usuario #1/));
+    await user.click(screen.getByLabelText(/Usuario #2/));
     await user.click(screen.getByRole("button", { name: "Inscribir equipo" }));
 
-    expect(registerTeamInTournament).toHaveBeenCalledWith(101, 201);
+    expect(registerTeamInTournament).toHaveBeenCalledWith(101, 201, [1, 2]);
     expect(
       await screen.findByText("Equipo inscrito correctamente"),
     ).toBeInTheDocument();
@@ -411,6 +430,7 @@ describe("TournamentDetailPage", () => {
           status: "registered",
           registeredAt: "2026-10-30T12:00:00.000Z",
           updatedAt: "2026-10-30T12:00:00.000Z",
+          memberIds: [1, 2],
           team: { id: 201, name: "Los Halcones" },
         },
       ],

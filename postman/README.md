@@ -44,7 +44,8 @@ colección.
 5. Consultar el equipo y sus integrantes.
 6. Agregar otro integrante.
 7. Cambiar el torneo de `draft` a `open`.
-8. Inscribir el equipo en el torneo.
+8. Inscribir el equipo en el torneo seleccionando `captainId` y `userId` como
+   integrantes del plantel.
 9. Listar los equipos inscritos.
 
 No conviene ejecutar toda la colección como si fuera una única prueba: algunas

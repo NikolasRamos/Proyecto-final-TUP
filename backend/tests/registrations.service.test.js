@@ -3,8 +3,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import database from "../config/database.js";
 import Team from "../models/Team.js";
+import TeamMember from "../models/TeamMember.js";
 import Tournament from "../models/Tournament.js";
 import TournamentRegistration from "../models/TournamentRegistration.js";
+import TournamentRegistrationMember from "../models/TournamentRegistrationMember.js";
 import {
   listTournamentRegistrations,
   registerTeamInTournament,
@@ -30,6 +32,12 @@ vi.mock("../models/Team.js", () => ({
   },
 }));
 
+vi.mock("../models/TeamMember.js", () => ({
+  default: {
+    findAll: vi.fn(),
+  },
+}));
+
 vi.mock("../models/Tournament.js", () => ({
   default: {
     findByPk: vi.fn(),
@@ -45,9 +53,21 @@ vi.mock("../models/TournamentRegistration.js", () => ({
   },
 }));
 
+vi.mock("../models/TournamentRegistrationMember.js", () => ({
+  default: {
+    bulkCreate: vi.fn(),
+    destroy: vi.fn(),
+    findAll: vi.fn(),
+  },
+}));
+
 describe("registrations service", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    TeamMember.findAll.mockResolvedValue([{ userId: 1 }, { userId: 2 }]);
+    TournamentRegistrationMember.bulkCreate.mockResolvedValue([]);
+    TournamentRegistrationMember.destroy.mockResolvedValue(0);
+    TournamentRegistrationMember.findAll.mockResolvedValue([]);
   });
 
   it("inscribe un equipo cuando el torneo esta abierto y tiene cupo", async () => {
@@ -61,7 +81,7 @@ describe("registrations service", () => {
     TournamentRegistration.count.mockResolvedValue(3);
     TournamentRegistration.create.mockResolvedValue(registration);
 
-    await expect(registerTeamInTournament(101, 201)).resolves.toEqual({
+    await expect(registerTeamInTournament(101, 201, [1, 2])).resolves.toEqual({
       outcome: "registered",
       registration,
     });
@@ -82,12 +102,66 @@ describe("registrations service", () => {
       { tournamentId: 101, teamId: 201 },
       { transaction },
     );
+    expect(TournamentRegistrationMember.bulkCreate).toHaveBeenCalledWith(
+      [
+        { registrationId: 301, userId: 1 },
+        { registrationId: 301, userId: 2 },
+      ],
+      { transaction },
+    );
+  });
+
+  it("rechaza integrantes que no pertenecen al equipo", async () => {
+    Tournament.findByPk.mockResolvedValue({
+      status: "open",
+      maxParticipants: 8,
+      isTeamTournament: true,
+      minTeamMembers: 2,
+      maxTeamMembers: 5,
+    });
+    Team.findByPk.mockResolvedValue({ id: 201 });
+
+    await expect(registerTeamInTournament(101, 201, [1, 99])).resolves.toEqual({
+      outcome: "member_not_in_team",
+    });
+    expect(TournamentRegistration.create).not.toHaveBeenCalled();
+  });
+
+  it("rechaza un plantel que no respeta los limites del torneo", async () => {
+    Tournament.findByPk.mockResolvedValue({
+      status: "open",
+      maxParticipants: 8,
+      isTeamTournament: true,
+      minTeamMembers: 2,
+      maxTeamMembers: 5,
+    });
+    Team.findByPk.mockResolvedValue({ id: 201 });
+
+    await expect(registerTeamInTournament(101, 201, [1])).resolves.toEqual({
+      outcome: "invalid_roster_size",
+      minimumMembers: 2,
+      maximumMembers: 5,
+    });
+    expect(TournamentRegistration.create).not.toHaveBeenCalled();
+  });
+
+  it("rechaza equipos en un torneo individual", async () => {
+    Tournament.findByPk.mockResolvedValue({
+      status: "open",
+      maxParticipants: 8,
+      isTeamTournament: false,
+    });
+
+    await expect(registerTeamInTournament(101, 201, [1, 2])).resolves.toEqual({
+      outcome: "individual_tournament",
+    });
+    expect(Team.findByPk).not.toHaveBeenCalled();
   });
 
   it("informa cuando el torneo no existe", async () => {
     Tournament.findByPk.mockResolvedValue(null);
 
-    await expect(registerTeamInTournament(101, 201)).resolves.toEqual({
+    await expect(registerTeamInTournament(101, 201, [1, 2])).resolves.toEqual({
       outcome: "tournament_not_found",
     });
     expect(Team.findByPk).not.toHaveBeenCalled();
@@ -99,7 +173,7 @@ describe("registrations service", () => {
       maxParticipants: 8,
     });
 
-    await expect(registerTeamInTournament(101, 201)).resolves.toEqual({
+    await expect(registerTeamInTournament(101, 201, [1, 2])).resolves.toEqual({
       outcome: "tournament_not_open",
     });
     expect(Team.findByPk).not.toHaveBeenCalled();
@@ -112,7 +186,7 @@ describe("registrations service", () => {
     });
     Team.findByPk.mockResolvedValue(null);
 
-    await expect(registerTeamInTournament(101, 201)).resolves.toEqual({
+    await expect(registerTeamInTournament(101, 201, [1, 2])).resolves.toEqual({
       outcome: "team_not_found",
     });
     expect(TournamentRegistration.findOne).not.toHaveBeenCalled();
@@ -129,7 +203,7 @@ describe("registrations service", () => {
       status: "registered",
     });
 
-    await expect(registerTeamInTournament(101, 201)).resolves.toEqual({
+    await expect(registerTeamInTournament(101, 201, [1, 2])).resolves.toEqual({
       outcome: "already_registered",
     });
     expect(TournamentRegistration.count).not.toHaveBeenCalled();
@@ -144,7 +218,7 @@ describe("registrations service", () => {
     TournamentRegistration.findOne.mockResolvedValue(null);
     TournamentRegistration.count.mockResolvedValue(4);
 
-    await expect(registerTeamInTournament(101, 201)).resolves.toEqual({
+    await expect(registerTeamInTournament(101, 201, [1, 2])).resolves.toEqual({
       outcome: "tournament_full",
     });
     expect(TournamentRegistration.create).not.toHaveBeenCalled();
@@ -162,7 +236,7 @@ describe("registrations service", () => {
     error.name = "SequelizeUniqueConstraintError";
     TournamentRegistration.create.mockRejectedValue(error);
 
-    await expect(registerTeamInTournament(101, 201)).resolves.toEqual({
+    await expect(registerTeamInTournament(101, 201, [1, 2])).resolves.toEqual({
       outcome: "already_registered",
     });
   });
@@ -184,7 +258,7 @@ describe("registrations service", () => {
     TournamentRegistration.findOne.mockResolvedValue(existingRegistration);
     TournamentRegistration.count.mockResolvedValue(2);
 
-    await expect(registerTeamInTournament(101, 201)).resolves.toEqual({
+    await expect(registerTeamInTournament(101, 201, [1, 2])).resolves.toEqual({
       outcome: "registered",
       registration: reactivatedRegistration,
     });
@@ -192,6 +266,10 @@ describe("registrations service", () => {
       { status: "registered" },
       { transaction },
     );
+    expect(TournamentRegistrationMember.destroy).toHaveBeenCalledWith({
+      where: { registrationId: 301 },
+      transaction,
+    });
     expect(TournamentRegistration.create).not.toHaveBeenCalled();
   });
 
@@ -286,6 +364,10 @@ describe("registrations service", () => {
       ],
     });
     Team.findAll.mockResolvedValue([{ id: 201, name: "Los Halcones" }]);
+    TournamentRegistrationMember.findAll.mockResolvedValue([
+      { registrationId: 301, userId: 1 },
+      { registrationId: 301, userId: 2 },
+    ]);
 
     await expect(
       listTournamentRegistrations(101, {
@@ -302,6 +384,7 @@ describe("registrations service", () => {
           status: "registered",
           registeredAt,
           updatedAt,
+          memberIds: [1, 2],
           team: { id: 201, name: "Los Halcones" },
         },
       ],
@@ -317,6 +400,15 @@ describe("registrations service", () => {
     expect(Team.findAll).toHaveBeenCalledWith({
       attributes: ["id", "name"],
       where: { id: { [Op.in]: [201] } },
+      raw: true,
+    });
+    expect(TournamentRegistrationMember.findAll).toHaveBeenCalledWith({
+      attributes: ["registrationId", "userId"],
+      where: { registrationId: { [Op.in]: [301] } },
+      order: [
+        ["registrationId", "ASC"],
+        ["createdAt", "ASC"],
+      ],
       raw: true,
     });
   });

@@ -372,7 +372,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"teamId\": {{teamId}}\n}",
+              "raw": "{\n  \"teamId\": {{teamId}},\n  \"memberIds\": [{{captainId}}, {{userId}}]\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -380,7 +380,7 @@
               }
             },
             "url": "{{baseUrl}}/api/tournaments/{{tournamentId}}/registrations",
-            "description": "Inscribe un equipo existente. El torneo debe estar en estado open y tener cupo."
+            "description": "Inscribe un equipo existente con el plantel seleccionado. El torneo debe estar en estado open, tener cupo y la cantidad de memberIds debe respetar sus límites."
           },
           "response": []
         },

@@ -31,10 +31,14 @@ export function listTournamentRegistrations(
   );
 }
 
-export function registerTeamInTournament(tournamentId: number, teamId: number) {
-  return apiPost<RegistrationResponse, { teamId: number }>(
+export function registerTeamInTournament(
+  tournamentId: number,
+  teamId: number,
+  memberIds: number[],
+) {
+  return apiPost<RegistrationResponse, { teamId: number; memberIds: number[] }>(
     `/api/tournaments/${tournamentId}/registrations`,
-    { teamId },
+    { teamId, memberIds },
   );
 }
 

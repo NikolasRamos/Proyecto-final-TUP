@@ -314,7 +314,7 @@ describe("API de recursos", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     await listTournamentRegistrations(101);
-    await registerTeamInTournament(101, 201);
+    await registerTeamInTournament(101, 201, [1, 2]);
     await withdrawTeamFromTournament(101, 201);
 
     expect(fetchMock).toHaveBeenNthCalledWith(
@@ -327,7 +327,7 @@ describe("API de recursos", () => {
       "http://localhost:3000/api/tournaments/101/registrations",
       expect.objectContaining({
         method: "POST",
-        body: JSON.stringify({ teamId: 201 }),
+        body: JSON.stringify({ teamId: 201, memberIds: [1, 2] }),
       }),
     );
     expect(fetchMock).toHaveBeenNthCalledWith(

@@ -7,9 +7,9 @@ import {
   registerTeamInTournament,
   withdrawTeamFromTournament,
 } from "../api/registrations.api";
-import { listTeams } from "../api/teams.api";
+import { listTeamMembers, listTeams } from "../api/teams.api";
 import type { TournamentRegistration } from "../types/registration";
-import type { Team } from "../types/team";
+import type { Team, TeamMember } from "../types/team";
 import type { TournamentStatus } from "../types/tournament";
 import ResourceListSkeleton from "./ResourceListSkeleton";
 
@@ -17,6 +17,8 @@ interface TournamentRegistrationsPanelProps {
   tournamentId: number;
   tournamentStatus: TournamentStatus;
   maxParticipants: number;
+  minTeamMembers: number | null;
+  maxTeamMembers: number | null;
   isOpening: boolean;
   onOpenRegistrations: () => Promise<void>;
 }
@@ -53,11 +55,17 @@ export default function TournamentRegistrationsPanel({
   tournamentId,
   tournamentStatus,
   maxParticipants,
+  minTeamMembers,
+  maxTeamMembers,
   isOpening,
   onOpenRegistrations,
 }: TournamentRegistrationsPanelProps) {
   const [state, setState] = useState<PanelState>({ status: "loading" });
   const [selectedTeamId, setSelectedTeamId] = useState("");
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([]);
+  const [selectedMemberIds, setSelectedMemberIds] = useState<number[]>([]);
+  const [isLoadingMembers, setIsLoadingMembers] = useState(false);
+  const [membersError, setMembersError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [withdrawingTeamId, setWithdrawingTeamId] = useState<number | null>(
     null,
@@ -119,6 +127,48 @@ export default function TournamentRegistrationsPanel({
     return state.teams.filter((team) => !registeredTeamIds.has(team.id));
   }, [state]);
 
+  const effectiveMinimum = minTeamMembers ?? 1;
+  const effectiveMaximum = maxTeamMembers ?? teamMembers.length;
+  const hasValidRoster =
+    selectedMemberIds.length >= effectiveMinimum &&
+    selectedMemberIds.length <= effectiveMaximum;
+
+  async function handleTeamSelection(value: string) {
+    setSelectedTeamId(value);
+    setSelectedMemberIds([]);
+    setTeamMembers([]);
+    setMembersError(null);
+    setNotice(null);
+
+    const teamId = Number(value);
+
+    if (!Number.isInteger(teamId) || teamId <= 0) {
+      return;
+    }
+
+    setIsLoadingMembers(true);
+
+    try {
+      const response = await listTeamMembers(teamId);
+      setTeamMembers(response.data);
+    } catch (error) {
+      setMembersError(
+        getErrorMessage(error, "No se pudieron cargar los integrantes."),
+      );
+    } finally {
+      setIsLoadingMembers(false);
+    }
+  }
+
+  function toggleMember(userId: number) {
+    setSelectedMemberIds((current) =>
+      current.includes(userId)
+        ? current.filter((memberId) => memberId !== userId)
+        : [...current, userId],
+    );
+    setNotice(null);
+  }
+
   async function handleRegistration(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const teamId = Number(selectedTeamId);
@@ -128,12 +178,26 @@ export default function TournamentRegistrationsPanel({
       return;
     }
 
+    if (!hasValidRoster) {
+      setNotice({
+        type: "error",
+        message: `Seleccioná entre ${effectiveMinimum} y ${effectiveMaximum} integrantes.`,
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     setNotice(null);
 
     try {
-      const response = await registerTeamInTournament(tournamentId, teamId);
+      const response = await registerTeamInTournament(
+        tournamentId,
+        teamId,
+        selectedMemberIds,
+      );
       setSelectedTeamId("");
+      setSelectedMemberIds([]);
+      setTeamMembers([]);
       setNotice({ type: "success", message: response.message });
       reloadRegistrations();
     } catch (error) {
@@ -216,10 +280,7 @@ export default function TournamentRegistrationsPanel({
             <select
               id="registration-team"
               value={selectedTeamId}
-              onChange={(event) => {
-                setSelectedTeamId(event.target.value);
-                setNotice(null);
-              }}
+              onChange={(event) => void handleTeamSelection(event.target.value)}
               disabled={isSubmitting || isFull || availableTeams.length === 0}
             >
               <option value="">Seleccioná un equipo</option>
@@ -230,10 +291,65 @@ export default function TournamentRegistrationsPanel({
               ))}
             </select>
           </div>
+
+          {selectedTeamId && (
+            <fieldset className="registration-roster">
+              <legend>Integrantes que participarán</legend>
+              <p className="field-hint">
+                Seleccioná entre {effectiveMinimum} y {effectiveMaximum}.
+                Elegidos: {selectedMemberIds.length}.
+              </p>
+
+              {isLoadingMembers && <p>Cargando integrantes…</p>}
+
+              {membersError && (
+                <p className="feedback-message feedback-error" role="alert">
+                  {membersError}
+                </p>
+              )}
+
+              {!isLoadingMembers &&
+                !membersError &&
+                teamMembers.length === 0 && (
+                  <p>Este equipo todavía no tiene integrantes disponibles.</p>
+                )}
+
+              {!isLoadingMembers && teamMembers.length > 0 && (
+                <div className="registration-roster-options">
+                  {teamMembers.map((member) => (
+                    <label
+                      key={member.id}
+                      className="registration-roster-option"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedMemberIds.includes(member.userId)}
+                        onChange={() => toggleMember(member.userId)}
+                        disabled={
+                          isSubmitting ||
+                          (!selectedMemberIds.includes(member.userId) &&
+                            selectedMemberIds.length >= effectiveMaximum)
+                        }
+                      />
+                      <span>
+                        Usuario #{member.userId}
+                        {member.isCaptain ? " · Capitán" : ""}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </fieldset>
+          )}
           <button
             className="primary-button"
             type="submit"
-            disabled={isSubmitting || isFull || availableTeams.length === 0}
+            disabled={
+              isSubmitting ||
+              isFull ||
+              availableTeams.length === 0 ||
+              !hasValidRoster
+            }
           >
             {isSubmitting ? "Inscribiendo…" : "Inscribir equipo"}
           </button>
@@ -287,6 +403,17 @@ export default function TournamentRegistrationsPanel({
                   {dateTimeFormatter.format(
                     new Date(registration.registeredAt),
                   )}
+                </p>
+                <p>
+                  Plantel: {registration.memberIds.length}{" "}
+                  {registration.memberIds.length === 1
+                    ? "integrante"
+                    : "integrantes"}{" "}
+                  (
+                  {registration.memberIds
+                    .map((memberId) => `Usuario #${memberId}`)
+                    .join(", ")}
+                  )
                 </p>
               </div>
               <div className="registration-actions">
