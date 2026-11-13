@@ -99,7 +99,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Torneo de apertura\",\n  \"description\": \"Competencia inicial de la temporada\",\n  \"modality\": \"league\",\n  \"maxParticipants\": 16,\n  \"registrationDeadline\": \"2026-11-01\",\n  \"startDate\": \"2026-11-05\",\n  \"endDate\": \"2026-12-10\",\n  \"organizerId\": {{organizerId}}\n}",
+              "raw": "{\n  \"name\": \"Torneo de apertura\",\n  \"description\": \"Competencia inicial de la temporada\",\n  \"modality\": \"league\",\n  \"maxParticipants\": 16,\n  \"isTeamTournament\": true,\n  \"minTeamMembers\": 2,\n  \"maxTeamMembers\": 5,\n  \"registrationDeadline\": \"2026-11-01\",\n  \"startDate\": \"2026-11-05\",\n  \"endDate\": \"2026-12-10\",\n  \"organizerId\": {{organizerId}}\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -133,7 +133,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Torneo de apertura actualizado\",\n  \"description\": \"Descripción actualizada desde Postman\",\n  \"modality\": \"league\",\n  \"maxParticipants\": 20,\n  \"registrationDeadline\": \"2026-11-01\",\n  \"startDate\": \"2026-11-05\",\n  \"endDate\": \"2026-12-10\"\n}",
+              "raw": "{\n  \"name\": \"Torneo de apertura actualizado\",\n  \"description\": \"Descripción actualizada desde Postman\",\n  \"modality\": \"league\",\n  \"maxParticipants\": 20,\n  \"isTeamTournament\": true,\n  \"minTeamMembers\": 2,\n  \"maxTeamMembers\": 5,\n  \"registrationDeadline\": \"2026-11-01\",\n  \"startDate\": \"2026-11-05\",\n  \"endDate\": \"2026-12-10\"\n}",
               "options": {
                 "raw": {
                   "language": "json"

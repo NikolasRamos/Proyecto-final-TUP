@@ -931,6 +931,43 @@ section[aria-labelledby="modules-title"] > h2 {
   line-height: 1.4;
 }
 
+.format-configuration {
+  min-width: 0;
+  margin: 0;
+  padding: 1rem;
+  border: 1px solid #d7deec;
+  border-radius: 0.85rem;
+  background: #f8faff;
+}
+
+.format-configuration legend {
+  padding: 0 0.35rem;
+  color: #26334b;
+  font-size: 0.9rem;
+  font-weight: 800;
+}
+
+.format-configuration-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.format-configuration-summary {
+  margin-top: 1rem;
+  padding: 0.8rem 0.9rem;
+  border-radius: 0.65rem;
+  background: #eaf0ff;
+  color: #263f91;
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.format-configuration-summary.summary-warning {
+  background: #fff4df;
+  color: #8a5700;
+}
+
 .form-field input,
 .form-field select,
 .form-field textarea {
@@ -969,6 +1006,11 @@ section[aria-labelledby="modules-title"] > h2 {
 .form-field textarea:disabled {
   background: #f1f3f8;
   cursor: wait;
+}
+
+.form-field input:read-only:not(:disabled) {
+  background: #f1f3f8;
+  color: #4e5c75;
 }
 
 .field-hint {
@@ -1022,6 +1064,7 @@ section[aria-labelledby="modules-title"] > h2 {
   .summary-grid,
   .data-grid,
   .form-grid,
+  .format-configuration-grid,
   .participation-options,
   .detail-grid,
   .tournament-list-grid {

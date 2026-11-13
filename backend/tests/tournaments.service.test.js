@@ -145,6 +145,36 @@ describe("tournaments service", () => {
     expect(tournament.update).not.toHaveBeenCalled();
   });
 
+  it("bloquea cambios de configuracion de grupos cuando las inscripciones ya abrieron", async () => {
+    const tournament = {
+      status: "open",
+      modality: "groups_playoff",
+      maxParticipants: 20,
+      playoffSpots: 8,
+      groupCount: 4,
+      maxParticipantsPerGroup: 5,
+      isTeamTournament: true,
+      minTeamMembers: 2,
+      maxTeamMembers: 5,
+      update: vi.fn(),
+    };
+    Tournament.findByPk.mockResolvedValue(tournament);
+
+    await expect(
+      updateTournament(101, {
+        modality: "groups_playoff",
+        maxParticipants: 24,
+        playoffSpots: 8,
+        groupCount: 4,
+        maxParticipantsPerGroup: 6,
+        isTeamTournament: true,
+        minTeamMembers: 2,
+        maxTeamMembers: 5,
+      }),
+    ).resolves.toEqual({ outcome: "participation_locked" });
+    expect(tournament.update).not.toHaveBeenCalled();
+  });
+
   it("permite editar otros datos de un torneo abierto", async () => {
     const tournamentData = {
       name: "Torneo actualizado",
@@ -169,6 +199,63 @@ describe("tournaments service", () => {
       tournament: updatedTournament,
     });
     expect(tournament.update).toHaveBeenCalledWith(tournamentData);
+  });
+
+  it("permite ajustar las rondas de un torneo Suizo abierto", async () => {
+    const tournamentData = {
+      name: "Suizo actualizado",
+      modality: "swiss",
+      maxParticipants: 16,
+      swissRounds: 5,
+      isTeamTournament: true,
+      minTeamMembers: 2,
+      maxTeamMembers: 5,
+    };
+    const updatedTournament = { id: 101, ...tournamentData, status: "open" };
+    const tournament = {
+      status: "open",
+      modality: "swiss",
+      maxParticipants: 16,
+      swissRounds: 4,
+      isTeamTournament: true,
+      minTeamMembers: 2,
+      maxTeamMembers: 5,
+      update: vi.fn().mockResolvedValue(updatedTournament),
+    };
+    Tournament.findByPk.mockResolvedValue(tournament);
+
+    await expect(updateTournament(101, tournamentData)).resolves.toEqual({
+      outcome: "updated",
+      tournament: updatedTournament,
+    });
+    expect(tournament.update).toHaveBeenCalledWith(tournamentData);
+  });
+
+  it("bloquea cambios de rondas Suizas cuando el torneo ya comenzo", async () => {
+    const tournamentData = {
+      modality: "swiss",
+      maxParticipants: 16,
+      swissRounds: 5,
+      isTeamTournament: true,
+      minTeamMembers: 2,
+      maxTeamMembers: 5,
+    };
+    const tournament = {
+      status: "in_progress",
+      modality: "swiss",
+      maxParticipants: 16,
+      swissRounds: 4,
+      isTeamTournament: true,
+      minTeamMembers: 2,
+      maxTeamMembers: 5,
+      update: vi.fn(),
+    };
+    Tournament.findByPk.mockResolvedValue(tournament);
+
+    await expect(updateTournament(101, tournamentData)).resolves.toEqual({
+      outcome: "participation_locked",
+    });
+    expect(tournament.update).not.toHaveBeenCalled();
   });
 
   it("actualiza una transicion de estado permitida", async () => {

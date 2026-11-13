@@ -42,7 +42,7 @@ todavía no están implementadas.
 
 | Módulo                   | Estado                 | Alcance actual                                                                                          |
 | ------------------------ | ---------------------- | ------------------------------------------------------------------------------------------------------- |
-| Torneos                  | En desarrollo avanzado | CRUD y listado completo en API y frontend; el detalle permite abrir inscripciones                       |
+| Torneos                  | En desarrollo avanzado | CRUD, catálogo de seis formatos y una Strategy de validación concreta para cada modalidad               |
 | Equipos                  | En desarrollo avanzado | CRUD y listado con búsqueda y paginación en API y frontend; integrantes disponibles todavía solo en API |
 | Inscripciones            | En desarrollo avanzado | Alta, retiro lógico, cupos, duplicados y listado en API y desde el detalle del torneo                   |
 | Reportes                 | Prototipo implementado | PDF por torneo con información general, ocupación y equipos activos                                     |
@@ -54,6 +54,22 @@ todavía no están implementadas.
 ## Reglas implementadas
 
 - Un torneo comienza en estado `draft`.
+- Los formatos disponibles son Liga, Eliminación simple, Grupos + Playoff,
+  Suizo, Free-for-all y Gauntlet.
+- Una Liga requiere al menos 3 participantes, tanto individual como por
+  equipos.
+- Eliminación simple requiere un cupo potencia de dos (`2`, `4`, `8`, `16`,
+  etc.) para generar una llave completa sin partidos libres.
+- Grupos + Playoff configura lugares de playoff, grupos y máximo por grupo desde
+  la creación o edición en borrador. El cupo total se deriva de la cantidad de
+  grupos y su límite; la configuración queda bloqueada al abrir inscripciones.
+- Suizo requiere al menos 4 participantes y permite definir sus rondas entre 1
+  y la cantidad de rivales distintos. La interfaz muestra una recomendación y
+  las rondas quedan bloqueadas al iniciar el torneo.
+- Free-for-all requiere al menos 3 participantes; la composición concreta de
+  cada partida se definirá al implementar los enfrentamientos.
+- Gauntlet requiere al menos 2 participantes; el orden de ingreso y la regla de
+  permanencia del ganador se implementarán con las partidas.
 - Las transiciones de estado siguen un flujo controlado.
 - Solo los torneos `draft` pueden eliminarse físicamente.
 - Un equipo registra automáticamente a su capitán como integrante.
@@ -70,7 +86,7 @@ todavía no están implementadas.
 2. Integración de organizadores, capitanes e integrantes con usuarios reales.
 3. Gestión de integrantes desde el frontend.
 4. Completar las transiciones posteriores al estado `open` desde el detalle del torneo.
-5. Generación de enfrentamientos según la modalidad.
+5. Extender las Strategies con la generación de enfrentamientos.
 6. Registro de resultados e historial de partidas.
 7. Cálculo de victorias, derrotas, empates, puntos y posiciones.
 8. Estadísticas de torneos, equipos y participantes.

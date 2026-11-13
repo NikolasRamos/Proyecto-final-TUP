@@ -41,11 +41,34 @@ describe("Tournament", () => {
     expect(attributes.maxTeamMembers.field).toBe("max_team_members");
   });
 
+  it("mapea la configuracion de Grupos + Playoff", () => {
+    const attributes = Tournament.getAttributes();
+
+    expect(attributes.playoffSpots.field).toBe("playoff_spots");
+    expect(attributes.groupCount.field).toBe("group_count");
+    expect(attributes.maxParticipantsPerGroup.field).toBe(
+      "max_participants_per_group",
+    );
+    expect(attributes.playoffSpots.defaultValue).toBeNull();
+    expect(attributes.groupCount.defaultValue).toBeNull();
+    expect(attributes.maxParticipantsPerGroup.defaultValue).toBeNull();
+  });
+
+  it("mapea la cantidad de rondas del formato Suizo", () => {
+    const attributes = Tournament.getAttributes();
+
+    expect(attributes.swissRounds.field).toBe("swiss_rounds");
+    expect(attributes.swissRounds.defaultValue).toBeNull();
+  });
+
   it("declara las modalidades y estados permitidos", () => {
     expect(TOURNAMENT_MODALITIES).toEqual([
       "league",
       "single_elimination",
-      "group_stage",
+      "groups_playoff",
+      "swiss",
+      "free_for_all",
+      "gauntlet",
     ]);
     expect(TOURNAMENT_STATUSES).toEqual([
       "draft",

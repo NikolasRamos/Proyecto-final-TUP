@@ -12,15 +12,32 @@ Facade, Observer, Strategy o Command.
 
 ## Patrones aplicados
 
-Actualmente no se implementó ningún patrón GoF formal. Los casos desarrollados
-hasta ahora se resuelven con servicios pequeños y explícitos, sin una repetición
-o variación suficiente que justifique agregar otra abstracción.
+| Fecha      | Patrón   | Categoría      | Ubicación                               | Problema                               | Beneficios                                                       | Costos                                                |
+| ---------- | -------- | -------------- | --------------------------------------- | -------------------------------------- | ---------------------------------------------------------------- | ----------------------------------------------------- |
+| 2026-11-11 | Strategy | Comportamiento | `backend/strategies/tournament-formats` | Cada formato necesita reglas distintas | Evita condicionales y permite ampliar formatos de manera aislada | Agrega interfaz, registro, implementaciones y pruebas |
 
-Cuando se aplique un patrón, se incorporará una entrada con este formato:
+### Strategy para formatos de torneo
 
-| Fecha | Patrón | Categoría | Ubicación | Problema | Beneficios | Costos |
-| ----- | ------ | --------- | --------- | -------- | ---------- | ------ |
-| —     | —      | —         | —         | —        | —          | —      |
+- **Interfaz común:** `TournamentFormatStrategy` define la operación
+  `validate(tournament)`.
+- **Estrategias aplicadas:** `LeagueTournamentStrategy` exige un mínimo de tres
+  participantes para Liga y `SingleEliminationTournamentStrategy` exige un
+  cupo potencia de dos para construir una llave completa.
+  `GroupsPlayoffTournamentStrategy` valida lugares de playoff, cantidad de
+  grupos, límite por grupo y cupo derivado. `SwissTournamentStrategy` valida el
+  mínimo de cuatro participantes y una cantidad de rondas compatible con los
+  rivales disponibles. `FreeForAllTournamentStrategy` exige al menos tres
+  participantes para distinguirlo de un enfrentamiento uno contra uno.
+  `GauntletTournamentStrategy` exige al menos dos participantes y deja aislada
+  la extensión futura de su orden de entrada.
+- **Selección:** `tournament-format-strategy.registry.js` obtiene la estrategia
+  mediante el identificador `modality`.
+- **Cliente:** React refleja las reglas de cupo para dar retroalimentación
+  inmediata, pero el backend conserva la validación autoritativa.
+- **Extensión:** las seis modalidades poseen una estrategia concreta. Las
+  estrategias podrán ampliarse al generar partidas sin modificar las demás.
+- **Costo actual:** las reglas se reflejan también en el frontend. Si se vuelven
+  configurables, será conveniente exponer metadatos desde la API.
 
 ## Decisiones evaluadas
 
@@ -64,13 +81,13 @@ Cuando se aplique un patrón, se incorporará una entrada con este formato:
 Estas posibilidades no representan patrones aplicados. Deben volver a
 evaluarse cuando aparezca el problema correspondiente.
 
-| Patrón   | Posible problema futuro                                         |
-| -------- | --------------------------------------------------------------- |
-| Strategy | Generar enfrentamientos con distintas modalidades de torneo.    |
-| Factory  | Seleccionar y construir la estrategia según la modalidad.       |
-| Observer | Actualizar posiciones, estadísticas y notificaciones.           |
-| Facade   | Coordinar inscripciones con pagos, cupos y aprobaciones.        |
-| Command  | Ejecutar acciones auditables, reintentables o en segundo plano. |
+| Patrón   | Posible problema futuro                                          |
+| -------- | ---------------------------------------------------------------- |
+| Strategy | Generar los enfrentamientos específicos de cada formato.         |
+| Factory  | Seleccionar la estrategia correspondiente al formato solicitado. |
+| Observer | Actualizar posiciones, estadísticas y notificaciones.            |
+| Facade   | Coordinar inscripciones con pagos, cupos y aprobaciones.         |
+| Command  | Ejecutar acciones auditables, reintentables o en segundo plano.  |
 
 ## Criterio de decisión
 

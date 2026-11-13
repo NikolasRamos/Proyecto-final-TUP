@@ -5,8 +5,20 @@ import database from "../config/database.js";
 export const TOURNAMENT_MODALITIES = Object.freeze([
   "league",
   "single_elimination",
-  "group_stage",
+  "groups_playoff",
+  "swiss",
+  "free_for_all",
+  "gauntlet",
 ]);
+
+export const TOURNAMENT_MODALITY_LABELS = Object.freeze({
+  league: "Liga",
+  single_elimination: "Eliminacion simple",
+  groups_playoff: "Grupos + Playoff",
+  swiss: "Suizo",
+  free_for_all: "Free-for-all",
+  gauntlet: "Gauntlet",
+});
 
 export const TOURNAMENT_STATUSES = Object.freeze([
   "draft",
@@ -55,6 +67,46 @@ Tournament.init(
       validate: {
         isInt: true,
         min: 2,
+      },
+    },
+    playoffSpots: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: null,
+      field: "playoff_spots",
+      validate: {
+        isInt: true,
+        min: 2,
+      },
+    },
+    groupCount: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: null,
+      field: "group_count",
+      validate: {
+        isInt: true,
+        min: 2,
+      },
+    },
+    maxParticipantsPerGroup: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: null,
+      field: "max_participants_per_group",
+      validate: {
+        isInt: true,
+        min: 2,
+      },
+    },
+    swissRounds: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: null,
+      field: "swiss_rounds",
+      validate: {
+        isInt: true,
+        min: 1,
       },
     },
     isTeamTournament: {

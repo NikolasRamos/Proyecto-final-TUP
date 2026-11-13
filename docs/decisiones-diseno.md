@@ -158,14 +158,15 @@ reescribir las ya ejecutadas, y debe obtener el usuario autenticado desde JWT.
 | Crear entidades                            | Sequelize directo; **Factory**; **Builder**                          | Sequelize más schemas de Zod                | Hay una sola forma de crear cada entidad y el cuerpo completo llega en una petición. Factory/Builder no resolverían variaciones reales. |
 | Comunicar reglas esperables                | Lanzar excepciones para todo; devolver resultados `outcome`          | Resultados explícitos                       | El controlador distingue estados esperables sin depender del texto de excepciones. El costo es más ramificación explícita.              |
 
-### Patrones revisados y no aplicados
+### Patrones aplicados, revisados y pendientes
 
 - **Facade (estructural):** reconsiderar si una inscripción coordina pagos,
   aprobación, lista de espera y notificaciones.
 - **Command (comportamiento):** reconsiderar si las acciones deben encolarse,
   reintentarse, auditarse o deshacerse.
-- **Strategy (comportamiento):** candidato futuro para generar enfrentamientos
-  de liga, eliminación directa o fase de grupos.
+- **Strategy (comportamiento):** aplicado a las reglas de creación de Liga,
+  Eliminación simple, Grupos + Playoff, Suizo, Free-for-all y Gauntlet;
+  pendiente para la generación de enfrentamientos.
 - **Factory (creacional):** podría seleccionar la estrategia de generación
   cuando existan varias implementaciones reales.
 - **Observer (comportamiento):** candidato para actualizar posiciones,
@@ -191,8 +192,8 @@ Se decidió mantener la solución actual con estas reglas:
 5. Retiro lógico mediante `withdrawn`, conservando el historial.
 6. Resultados `outcome` para situaciones esperables y excepciones para fallas
    inesperadas.
-7. Ningún patrón GoF formal hasta que exista un problema que justifique su
-   complejidad.
+7. Strategy se aplica donde ya existe una variación concreta: las validaciones
+   específicas de las seis modalidades disponibles.
 
 La decisión evita sobreingeniería y cubre las reglas actuales. Si el flujo
 incorpora pagos, aprobaciones, eventos o procesamiento en segundo plano, deberá
@@ -348,6 +349,120 @@ Casos importantes cubiertos:
 - validación de identificadores y paginación;
 - errores internos sin exponer detalles sensibles.
 
+### Catálogo definitivo de formatos (11 de noviembre de 2026)
+
+#### Código analizado
+
+- Catálogo y validación del backend:
+  [`backend/models/Tournament.js`](../backend/models/Tournament.js) y
+  [`backend/schemas/tournament.schema.js`](../backend/schemas/tournament.schema.js).
+- Contrato y etiquetas del frontend:
+  [`frontend/src/types/tournament.ts`](../frontend/src/types/tournament.ts).
+- Formularios, detalle y filtros:
+  [`CreateTournamentPage.tsx`](../frontend/src/pages/CreateTournamentPage.tsx),
+  [`TournamentDetailPage.tsx`](../frontend/src/pages/TournamentDetailPage.tsx) y
+  [`TournamentsPage.tsx`](../frontend/src/pages/TournamentsPage.tsx).
+- Compatibilidad de datos anteriores:
+  [`011-rename-group-stage-format.cjs`](../backend/migrations/011-rename-group-stage-format.cjs).
+
+#### Diagnóstico
+
+El catálogo anterior solo distinguía Liga, Eliminación directa y Fase de
+grupos. Ese contrato no alcanzaba para representar todos los formatos que el
+producto necesita ni proporcionaba claves estables para seleccionar futuras
+reglas intercambiables.
+
+Se definieron seis identificadores internos:
+
+| Identificador        | Nombre visible     |
+| -------------------- | ------------------ |
+| `league`             | Liga               |
+| `single_elimination` | Eliminación simple |
+| `groups_playoff`     | Grupos + Playoff   |
+| `swiss`              | Suizo              |
+| `free_for_all`       | Free-for-all       |
+| `gauntlet`           | Gauntlet           |
+
+Los valores internos no dependen del idioma ni del texto mostrado al usuario.
+Esto permite cambiar una etiqueta sin modificar datos persistidos, URLs o la
+selección futura de estrategias.
+
+#### Alternativas consideradas
+
+| Alternativa                                                        | Beneficio                                    | Costo o problema                                           |
+| ------------------------------------------------------------------ | -------------------------------------------- | ---------------------------------------------------------- |
+| Guardar directamente el nombre visible                             | Implementación inmediata                     | Acopla la base al idioma y dificulta renombrar etiquetas   |
+| Mantener `group_stage` y cambiar solo su texto                     | Evita una migración                          | El identificador no expresa que el formato incluye playoff |
+| Crear los seis identificadores estables y migrar el valor anterior | Contrato explícito y preparado para Strategy | Exige migración, actualización transversal y más pruebas   |
+
+Se eligió la tercera alternativa. La migración `011` cambia únicamente
+`group_stage` por `groups_playoff`; no elimina torneos ni modifica sus demás
+datos.
+
+#### Decisión
+
+El catálogo forma parte del modelo, schemas, frontend, filtros, reportes, datos
+de demostración, documentación y colección de Postman. Strategy ya se aplica a
+las seis modalidades mediante una interfaz común,
+`LeagueTournamentStrategy`, `SingleEliminationTournamentStrategy`,
+`GroupsPlayoffTournamentStrategy`, `SwissTournamentStrategy`,
+`FreeForAllTournamentStrategy`, `GauntletTournamentStrategy` y un registro que
+selecciona la implementación usando `modality`.
+
+Liga exige un mínimo de tres participantes, sean personas o equipos. No se
+exige paridad ni potencia de dos porque todos contra todos puede programarse con
+cualquier cantidad mayor o igual a tres. Eliminación simple acepta cupos de 2,
+4, 8, 16 y sucesivos, porque así la llave queda completa sin partidos libres.
+Permitir cantidades intermedias requerirá definir y generar `byes`; esa variante
+se reevaluará al implementar las partidas.
+
+Grupos + Playoff define `playoffSpots`, `groupCount` y
+`maxParticipantsPerGroup`. Los lugares del playoff deben ser potencia de dos y
+divisibles por la cantidad de grupos. Los clasificados por grupo se derivan de
+esa división y el cupo total se calcula multiplicando grupos por máximo del
+grupo. La aplicación no decide criterios deportivos ni desempates; esa libertad
+permanece en el coordinador. La creación y la edición en borrador calculan el
+cupo automáticamente, y la configuración queda bloqueada al abrir
+inscripciones. Los registros anteriores con configuración vacía conservan
+compatibilidad para editar datos no estructurales.
+
+Suizo admite cupos pares o impares desde cuatro participantes. Define
+`swissRounds`, con un mínimo de una ronda y un máximo de
+`maxParticipants - 1`, porque cada participante solo posee esa cantidad de
+rivales distintos. La interfaz recomienda `ceil(log2(maxParticipants))`, pero
+no la impone: el coordinador mantiene la decisión deportiva. Las rondas pueden
+ajustarse mientras el torneo está en `draft` u `open` y se bloquean desde
+`in_progress`. Los descansos, emparejamientos por puntaje, desempates y rivales
+repetidos se posponen deliberadamente al módulo de partidas. Free-for-all exige
+un mínimo de tres participantes porque con dos sería un enfrentamiento directo;
+la cantidad concreta de competidores y clasificados de cada encuentro se
+definirá con las partidas. Gauntlet exige al menos dos participantes. Aunque
+este límite coincide con el mínimo general, su Strategy propia permite agregar
+el orden de entrada y la permanencia del ganador sin condicionar otros formatos.
+
+#### Evidencia y trade-offs
+
+- Las rutas aceptan los seis valores y rechazan cualquier otro mediante Zod.
+- El formulario de creación y la edición utilizan el mismo catálogo de tipos y
+  etiquetas, reduciendo inconsistencias dentro del frontend.
+- Los listados pueden filtrar por cualquiera de los seis formatos.
+- Los reportes traducen los identificadores al nombre visible.
+- `tournament-format-strategies.test.js` verifica el contrato, el registro y las
+  reglas de las seis modalidades.
+- Las pruebas de rutas comprueban que la API rechaza una Liga con cupo 2, una
+  Eliminación simple con cupo 6, Grupos + Playoff sin configuración y Suizo sin
+  rondas, además de un Free-for-all con cupo 2, aunque la petición no provenga
+  del formulario.
+- La suite completa aprobó **24 archivos y 313 pruebas** después de completar
+  las Strategies de las seis modalidades.
+
+El beneficio principal es extender cada formato sin modificar un bloque
+central de condicionales. El costo es agregar clases, un registro y pruebas por
+estrategia, además de reflejar en React la regla necesaria para una respuesta
+inmediata. El backend continúa siendo la autoridad final. Más adelante se puede
+exponer un endpoint de metadatos si las reglas dinámicas necesitan evitar esa
+duplicación.
+
 ## Guion sugerido para la explicación grupal
 
 ### Demostración breve
@@ -393,9 +508,10 @@ ocultaría complejidad adicional en el estado actual.
 Las acciones son sincrónicas y no necesitan cola, reintento, deshacer ni
 auditoría de comandos.
 
-**¿Qué patrón usarían para las modalidades?**
-Strategy para encapsular cada algoritmo de generación de enfrentamientos y,
-si hace falta seleccionar la implementación, una Factory.
+**¿Qué patrón utilizan para los formatos?**
+Strategy encapsula las reglas de cada formato. Las seis modalidades poseen una
+implementación concreta y un registro selecciona la correspondiente mediante
+`modality`. El siguiente paso será extenderlas para generar partidas.
 
 **¿Qué cambiará al integrar usuarios?**
 Se agregarán claves foráneas mediante nuevas migraciones, asociaciones de

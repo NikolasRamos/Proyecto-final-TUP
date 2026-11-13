@@ -62,13 +62,34 @@ export async function updateTournament(tournamentId, tournamentData) {
     return { outcome: "not_found" };
   }
 
+  const formatConfigurationChanged = [
+    "playoffSpots",
+    "groupCount",
+    "maxParticipantsPerGroup",
+  ].some(
+    (field) =>
+      Object.hasOwn(tournamentData, field) &&
+      tournament[field] !== tournamentData[field],
+  );
+  const swissRoundsChanged =
+    Object.hasOwn(tournamentData, "swissRounds") &&
+    tournament.swissRounds !== tournamentData.swissRounds;
   const participationChanged =
+    tournament.modality !== tournamentData.modality ||
     tournament.maxParticipants !== tournamentData.maxParticipants ||
+    formatConfigurationChanged ||
     tournament.isTeamTournament !== tournamentData.isTeamTournament ||
     tournament.minTeamMembers !== tournamentData.minTeamMembers ||
     tournament.maxTeamMembers !== tournamentData.maxTeamMembers;
 
   if (tournament.status !== "draft" && participationChanged) {
+    return { outcome: "participation_locked" };
+  }
+
+  if (
+    ["in_progress", "finished", "cancelled"].includes(tournament.status) &&
+    swissRoundsChanged
+  ) {
     return { outcome: "participation_locked" };
   }
 

@@ -15,6 +15,13 @@ inscripciones desde una única plataforma. Es un proyecto académico del
 El proyecto está en desarrollo. Actualmente incluye:
 
 - API REST para torneos, equipos, integrantes e inscripciones.
+- Catálogo unificado de formatos: Liga, Eliminación simple, Grupos + Playoff,
+  Suizo, Free-for-all y Gauntlet. Strategy ya está aplicado a Liga, que exige
+  un mínimo de tres participantes, y a Eliminación simple, que utiliza cupos
+  potencia de dos para formar llaves completas. Grupos + Playoff permite
+  configurar lugares de playoff, cantidad de grupos y límite por grupo. Suizo
+  permite definir sus rondas y recomienda `ceil(log2(cupo))` como referencia.
+  Free-for-all exige al menos tres participantes y Gauntlet al menos dos.
 - Persistencia en PostgreSQL mediante Sequelize y migraciones.
 - Validaciones de entrada y reglas de negocio para estados, cupos y retiros.
 - Frontend en React con panel, creación, detalle, edición y eliminación de

@@ -51,18 +51,38 @@ Comprueba que Express responde.
 
 `GET /api/tournaments`
 
-| Parámetro  | Valores                                                 | Predeterminado |
-| ---------- | ------------------------------------------------------- | -------------- |
-| `search`   | Texto en nombre o descripción                           | Sin búsqueda   |
-| `status`   | `draft`, `open`, `in_progress`, `finished`, `cancelled` | Todos          |
-| `modality` | `league`, `single_elimination`, `group_stage`           | Todas          |
-| `page`     | Entero mayor o igual a 1                                | `1`            |
-| `limit`    | Entero entre 1 y 100                                    | `10`           |
-| `sortBy`   | `createdAt`, `name`, `startDate`                        | `createdAt`    |
-| `order`    | `asc`, `desc`                                           | `desc`         |
+| Parámetro  | Valores                                                                               | Predeterminado |
+| ---------- | ------------------------------------------------------------------------------------- | -------------- |
+| `search`   | Texto en nombre o descripción                                                         | Sin búsqueda   |
+| `status`   | `draft`, `open`, `in_progress`, `finished`, `cancelled`                               | Todos          |
+| `modality` | `league`, `single_elimination`, `groups_playoff`, `swiss`, `free_for_all`, `gauntlet` | Todas          |
+| `page`     | Entero mayor o igual a 1                                                              | `1`            |
+| `limit`    | Entero entre 1 y 100                                                                  | `10`           |
+| `sortBy`   | `createdAt`, `name`, `startDate`                                                      | `createdAt`    |
+| `order`    | `asc`, `desc`                                                                         | `desc`         |
 
 La búsqueda no distingue mayúsculas de minúsculas. El identificador funciona como
 segundo criterio de orden para mantener resultados estables entre páginas.
+
+Formatos disponibles:
+
+| Valor interno        | Nombre visible     |
+| -------------------- | ------------------ |
+| `league`             | Liga               |
+| `single_elimination` | Eliminación simple |
+| `groups_playoff`     | Grupos + Playoff   |
+| `swiss`              | Suizo              |
+| `free_for_all`       | Free-for-all       |
+| `gauntlet`           | Gauntlet           |
+
+Las restricciones particulares se incorporan mediante Strategy. Actualmente
+Liga exige al menos 3 participantes. Eliminación simple admite cupos potencia
+de dos desde 2 participantes (`2`, `4`, `8`, `16`, etc.) para formar una llave
+completa. Grupos + Playoff configura lugares de playoff, cantidad de grupos y
+máximo por grupo. Suizo requiere al menos 4 participantes y una cantidad de
+rondas entre 1 y `maxParticipants - 1`. Free-for-all exige al menos 3
+participantes y Gauntlet al menos 2. La generación específica de partidas de
+ambos formatos todavía está pendiente.
 
 ```http
 GET /api/tournaments?search=apertura&status=open&page=1&limit=10&sortBy=name&order=asc
@@ -86,6 +106,9 @@ GET /api/tournaments?search=apertura&status=open&page=1&limit=10&sortBy=name&ord
   "description": "Competencia inicial de la temporada",
   "modality": "league",
   "maxParticipants": 16,
+  "isTeamTournament": true,
+  "minTeamMembers": 2,
+  "maxTeamMembers": 5,
   "registrationDeadline": "2026-11-01",
   "startDate": "2026-11-05",
   "endDate": "2026-12-10",
@@ -97,12 +120,61 @@ Reglas principales:
 
 - el nombre tiene entre 3 y 120 caracteres;
 - el cupo mínimo es 2;
+- si el formato es `league`, el cupo mínimo es 3;
+- si el formato es `single_elimination`, el cupo debe ser potencia de dos;
+- si el formato es `groups_playoff`, se requieren `playoffSpots`, `groupCount`
+  y `maxParticipantsPerGroup`;
+- en Grupos + Playoff, `playoffSpots` debe ser potencia de dos y divisible por
+  `groupCount`;
+- el máximo por grupo debe superar los clasificados por grupo y
+  `maxParticipants` debe ser `groupCount * maxParticipantsPerGroup`;
+- si el formato es `swiss`, se requiere `swissRounds`, un entero entre 1 y la
+  cantidad de rivales distintos disponibles (`maxParticipants - 1`);
+- si el formato es `free_for_all`, el cupo mínimo es 3;
+- si el formato es `gauntlet`, el cupo mínimo es 2;
 - el cierre de inscripción no puede ser posterior al inicio;
 - la finalización no puede ser anterior al inicio;
 - `organizerId` debe ser un entero positivo;
 - el servidor genera el identificador y el estado inicial `draft`.
 
 Respuesta correcta: `201 Created`.
+
+Ejemplo de configuración de Grupos + Playoff:
+
+```json
+{
+  "modality": "groups_playoff",
+  "maxParticipants": 20,
+  "playoffSpots": 8,
+  "groupCount": 4,
+  "maxParticipantsPerGroup": 5
+}
+```
+
+En este caso clasifican 2 participantes por grupo. La API no decide todavía
+cómo se distribuyen las inscripciones ni aplica criterios de desempate.
+
+Ejemplo de configuración del sistema Suizo:
+
+```json
+{
+  "modality": "swiss",
+  "maxParticipants": 16,
+  "swissRounds": 5
+}
+```
+
+La interfaz recomienda `ceil(log2(maxParticipants))` rondas, pero el coordinador
+puede elegir otra cantidad válida. Los emparejamientos, descansos para cantidades
+impares, desempates y control de rivales repetidos pertenecen al futuro módulo
+de partidas.
+
+La misma configuración puede modificarse mediante `PUT` mientras el torneo esté
+en `draft`. Una vez abiertas las inscripciones, cambiar formato, cupo, grupos o
+lugares del playoff responde con conflicto. Los torneos anteriores que aún
+tengan los tres campos en `null` pueden seguir actualizando datos no
+estructurales. Las rondas Suizas pueden ajustarse en `draft` y `open`; quedan
+bloqueadas desde `in_progress` para no invalidar partidas generadas.
 
 ### Actualizar datos
 

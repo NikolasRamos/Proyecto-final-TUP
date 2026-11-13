@@ -143,8 +143,11 @@ const DEMO_TOURNAMENTS = [
     name: "Campeonato Regional de Vóley",
     description:
       "Competencia de vóley con fase de grupos y clasificación a las rondas finales.",
-    modality: "group_stage",
+    modality: "groups_playoff",
     maxParticipants: 16,
+    playoffSpots: 8,
+    groupCount: 4,
+    maxParticipantsPerGroup: 4,
     registrationDeadline: "2026-10-10",
     startDate: "2026-10-17",
     endDate: "2026-11-21",
@@ -179,8 +182,11 @@ const DEMO_TOURNAMENTS = [
     name: "Encuentro de Handball Metropolitano",
     description:
       "Torneo de handball con grupos iniciales y una fase final para definir al campeón.",
-    modality: "group_stage",
+    modality: "groups_playoff",
     maxParticipants: 12,
+    playoffSpots: 4,
+    groupCount: 4,
+    maxParticipantsPerGroup: 3,
     registrationDeadline: "2026-10-20",
     startDate: "2026-11-07",
     endDate: "2026-11-28",
@@ -285,7 +291,13 @@ async function upsertTournament(queryInterface, tournament, transaction) {
     tournament.name,
     transaction,
   );
-  const replacements = { ...tournament, tournamentId };
+  const replacements = {
+    playoffSpots: null,
+    groupCount: null,
+    maxParticipantsPerGroup: null,
+    ...tournament,
+    tournamentId,
+  };
 
   if (tournamentId) {
     await queryInterface.sequelize.query(
@@ -293,6 +305,9 @@ async function upsertTournament(queryInterface, tournament, transaction) {
        SET description = :description,
            modality = :modality,
            max_participants = :maxParticipants,
+           playoff_spots = :playoffSpots,
+           group_count = :groupCount,
+           max_participants_per_group = :maxParticipantsPerGroup,
            registration_deadline = :registrationDeadline,
            start_date = :startDate,
            end_date = :endDate,
@@ -306,14 +321,16 @@ async function upsertTournament(queryInterface, tournament, transaction) {
     const [rows] = await queryInterface.sequelize.query(
       `INSERT INTO tournaments (
          name, description, modality, max_participants,
+         playoff_spots, group_count, max_participants_per_group,
          registration_deadline, start_date, end_date, status,
          organizer_id, created_at, updated_at
        ) VALUES (
          :name, :description, :modality, :maxParticipants,
+         :playoffSpots, :groupCount, :maxParticipantsPerGroup,
          :registrationDeadline, :startDate, :endDate, :status,
          :organizerId, NOW(), NOW()
        ) RETURNING id`,
-      { replacements: tournament, transaction },
+      { replacements, transaction },
     );
     tournamentId = rows[0].id;
   }
