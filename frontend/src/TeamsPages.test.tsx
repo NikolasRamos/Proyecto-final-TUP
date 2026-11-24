@@ -19,6 +19,7 @@ vi.mock("./api/teams.api", () => ({
   createTeam: vi.fn(),
   deleteTeam: vi.fn(),
   getTeam: vi.fn(),
+  listTeamMembers: vi.fn(),
   listTeams: vi.fn(),
   updateTeam: vi.fn(),
 }));

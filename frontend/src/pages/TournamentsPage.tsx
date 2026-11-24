@@ -5,10 +5,12 @@ import { listTournaments } from "../api/tournaments.api";
 import ResourceListSkeleton from "../components/ResourceListSkeleton";
 import TournamentCard from "../components/TournamentCard";
 import type { Pagination } from "../types/api";
-import type {
-  Tournament,
-  TournamentModality,
-  TournamentStatus,
+import {
+  TOURNAMENT_MODALITIES,
+  TOURNAMENT_MODALITY_LABELS,
+  type Tournament,
+  type TournamentModality,
+  type TournamentStatus,
 } from "../types/tournament";
 
 const tournamentStatuses: TournamentStatus[] = [
@@ -19,24 +21,12 @@ const tournamentStatuses: TournamentStatus[] = [
   "cancelled",
 ];
 
-const tournamentModalities: TournamentModality[] = [
-  "league",
-  "single_elimination",
-  "group_stage",
-];
-
 const statusLabels: Record<TournamentStatus, string> = {
   draft: "Borrador",
   open: "Inscripción abierta",
   in_progress: "En curso",
   finished: "Finalizado",
   cancelled: "Cancelado",
-};
-
-const modalityLabels: Record<TournamentModality, string> = {
-  league: "Liga",
-  single_elimination: "Eliminación directa",
-  group_stage: "Fase de grupos",
 };
 
 type SortOption =
@@ -86,7 +76,7 @@ function isTournamentStatus(value: string | null): value is TournamentStatus {
 function isTournamentModality(
   value: string | null,
 ): value is TournamentModality {
-  return tournamentModalities.includes(value as TournamentModality);
+  return TOURNAMENT_MODALITIES.includes(value as TournamentModality);
 }
 
 function isSortOption(value: string | null): value is SortOption {
@@ -323,9 +313,9 @@ export default function TournamentsPage() {
               }
             >
               <option value="">Todas</option>
-              {tournamentModalities.map((tournamentModality) => (
+              {TOURNAMENT_MODALITIES.map((tournamentModality) => (
                 <option key={tournamentModality} value={tournamentModality}>
-                  {modalityLabels[tournamentModality]}
+                  {TOURNAMENT_MODALITY_LABELS[tournamentModality]}
                 </option>
               ))}
             </select>

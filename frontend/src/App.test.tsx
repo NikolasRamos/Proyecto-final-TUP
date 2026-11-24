@@ -22,6 +22,7 @@ vi.mock("./api/teams.api", () => ({
   createTeam: vi.fn(),
   deleteTeam: vi.fn(),
   getTeam: vi.fn(),
+  listTeamMembers: vi.fn(),
   listTeams: vi.fn(),
   updateTeam: vi.fn(),
 }));
@@ -85,6 +86,9 @@ describe("App", () => {
           description: "Competencia de prueba",
           modality: "league",
           maxParticipants: 16,
+          isTeamTournament: true,
+          minTeamMembers: 2,
+          maxTeamMembers: 5,
           registrationDeadline: "2026-11-01",
           startDate: "2026-11-05",
           endDate: "2026-12-10",

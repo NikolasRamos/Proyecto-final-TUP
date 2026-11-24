@@ -166,6 +166,9 @@ describe("API de recursos", () => {
       description: null,
       modality: "league" as const,
       maxParticipants: 16,
+      isTeamTournament: true,
+      minTeamMembers: 2,
+      maxTeamMembers: 5,
       registrationDeadline: "2026-11-01",
       startDate: "2026-11-05",
       endDate: "2026-12-10",
@@ -188,6 +191,9 @@ describe("API de recursos", () => {
       description: tournament.description,
       modality: tournament.modality,
       maxParticipants: tournament.maxParticipants,
+      isTeamTournament: tournament.isTeamTournament,
+      minTeamMembers: tournament.minTeamMembers,
+      maxTeamMembers: tournament.maxTeamMembers,
       registrationDeadline: tournament.registrationDeadline,
       startDate: tournament.startDate,
       endDate: tournament.endDate,
@@ -240,6 +246,9 @@ describe("API de recursos", () => {
       description: null,
       modality: "league" as const,
       maxParticipants: 20,
+      isTeamTournament: true,
+      minTeamMembers: 2,
+      maxTeamMembers: 5,
       registrationDeadline: "2026-11-01",
       startDate: "2026-11-05",
       endDate: "2026-12-10",
@@ -305,7 +314,7 @@ describe("API de recursos", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     await listTournamentRegistrations(101);
-    await registerTeamInTournament(101, 201);
+    await registerTeamInTournament(101, 201, [1, 2]);
     await withdrawTeamFromTournament(101, 201);
 
     expect(fetchMock).toHaveBeenNthCalledWith(
@@ -318,7 +327,7 @@ describe("API de recursos", () => {
       "http://localhost:3000/api/tournaments/101/registrations",
       expect.objectContaining({
         method: "POST",
-        body: JSON.stringify({ teamId: 201 }),
+        body: JSON.stringify({ teamId: 201, memberIds: [1, 2] }),
       }),
     );
     expect(fetchMock).toHaveBeenNthCalledWith(

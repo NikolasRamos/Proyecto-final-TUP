@@ -37,6 +37,7 @@ export async function createRegistrationHandler(request, response) {
     const result = await registerTeamInTournament(
       tournamentIdValidation.data,
       dataValidation.data.teamId,
+      dataValidation.data.memberIds,
     );
 
     if (result.outcome === "tournament_not_found") {
@@ -50,6 +51,25 @@ export async function createRegistrationHandler(request, response) {
     if (result.outcome === "tournament_not_open") {
       return response.status(409).json({
         message: "El torneo no esta abierto para inscripciones",
+      });
+    }
+
+    if (result.outcome === "individual_tournament") {
+      return response.status(409).json({
+        message: "Este torneo admite inscripciones individuales, no equipos",
+      });
+    }
+
+    if (result.outcome === "member_not_in_team") {
+      return response.status(400).json({
+        message:
+          "Todos los integrantes seleccionados deben pertenecer al equipo",
+      });
+    }
+
+    if (result.outcome === "invalid_roster_size") {
+      return response.status(409).json({
+        message: `El plantel debe tener entre ${result.minimumMembers} y ${result.maximumMembers} integrantes`,
       });
     }
 

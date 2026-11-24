@@ -4,6 +4,7 @@ node_modules/
 # Compilados y reportes
 dist/
 coverage/
+.vercel/
 
 # Variables de entorno y secretos
 .env
@@ -12,6 +13,8 @@ coverage/
 
 # Registros y archivos temporales
 *.log
+*.dump
+*.backup
 npm-debug.log*
 .DS_Store
 Thumbs.db

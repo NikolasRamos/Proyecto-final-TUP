@@ -15,6 +15,13 @@ inscripciones desde una única plataforma. Es un proyecto académico del
 El proyecto está en desarrollo. Actualmente incluye:
 
 - API REST para torneos, equipos, integrantes e inscripciones.
+- Catálogo unificado de formatos: Liga, Eliminación simple, Grupos + Playoff,
+  Suizo, Free-for-all y Gauntlet. Strategy ya está aplicado a Liga, que exige
+  un mínimo de tres participantes, y a Eliminación simple, que utiliza cupos
+  potencia de dos para formar llaves completas. Grupos + Playoff permite
+  configurar lugares de playoff, cantidad de grupos y límite por grupo. Suizo
+  permite definir sus rondas y recomienda `ceil(log2(cupo))` como referencia.
+  Free-for-all exige al menos tres participantes y Gauntlet al menos dos.
 - Persistencia en PostgreSQL mediante Sequelize y migraciones.
 - Validaciones de entrada y reglas de negocio para estados, cupos y retiros.
 - Frontend en React con panel, creación, detalle, edición y eliminación de
@@ -140,8 +147,10 @@ El backend lee las variables del archivo `.env` ubicado en la raíz:
 | `PORT`, `FRONTEND_PORT`             | Puertos publicados por Docker        |
 | `NODE_ENV`                          | Entorno de ejecución                 |
 | `CORS_ORIGIN`                       | Origen autorizado para el frontend   |
-| `DB_HOST`, `DB_PORT`                | Dirección de PostgreSQL              |
+| `DATABASE_URL`                      | Conexión PostgreSQL administrada     |
+| `DB_HOST`, `DB_PORT`                | Dirección de PostgreSQL local        |
 | `DB_NAME`, `DB_USER`, `DB_PASSWORD` | Base de datos y credenciales locales |
+| `DB_SSL`, `DB_POOL_MAX`             | SSL y límite de conexiones           |
 | `JWT_SECRET`                        | Secreto reservado para autenticación |
 | `VITE_API_URL`                      | URL pública de la API para React     |
 
@@ -153,22 +162,23 @@ habituales está en [`docs/development.md`](docs/development.md).
 
 ## Comandos frecuentes
 
-| Comando               | Acción                                     |
-| --------------------- | ------------------------------------------ |
-| `npm run dev`         | Inicia frontend y API                      |
-| `npm run dev:web`     | Inicia solamente el frontend               |
-| `npm run dev:api`     | Inicia solamente la API                    |
-| `npm start`           | Inicia la API sin recarga automática       |
-| `npm test`            | Ejecuta todas las pruebas una vez          |
-| `npm run test:watch`  | Ejecuta las pruebas en modo interactivo    |
-| `npm run lint`        | Revisa el código con ESLint                |
-| `npm run typecheck`   | Comprueba los tipos del frontend           |
-| `npm run build`       | Comprueba tipos y compila el frontend      |
-| `npm run format`      | Formatea el repositorio con Prettier       |
-| `npm run docker:up`   | Construye y levanta el sistema completo    |
-| `npm run docker:down` | Detiene los contenedores conservando datos |
-| `npm run docker:logs` | Sigue los registros de los servicios       |
-| `npm run db:migrate`  | Aplica las migraciones pendientes          |
+| Comando                     | Acción                                     |
+| --------------------------- | ------------------------------------------ |
+| `npm run dev`               | Inicia frontend y API                      |
+| `npm run dev:web`           | Inicia solamente el frontend               |
+| `npm run dev:api`           | Inicia solamente la API                    |
+| `npm start`                 | Inicia la API sin recarga automática       |
+| `npm test`                  | Ejecuta todas las pruebas una vez          |
+| `npm run test:watch`        | Ejecuta las pruebas en modo interactivo    |
+| `npm run lint`              | Revisa el código con ESLint                |
+| `npm run typecheck`         | Comprueba los tipos del frontend           |
+| `npm run build`             | Comprueba tipos y compila el frontend      |
+| `npm run format`            | Formatea el repositorio con Prettier       |
+| `npm run docker:up`         | Construye y levanta el sistema completo    |
+| `npm run docker:down`       | Detiene los contenedores conservando datos |
+| `npm run docker:logs`       | Sigue los registros de los servicios       |
+| `npm run db:migrate`        | Aplica las migraciones pendientes          |
+| `npm run db:migrate:status` | Muestra el estado de las migraciones       |
 
 Antes de integrar cambios se recomienda ejecutar, en este orden:
 
@@ -182,6 +192,7 @@ npm run build
 
 ```text
 Proyecto-final-TUP/
+├── api/           Entrada serverless de Express para Vercel
 ├── backend/       API, reglas de negocio, persistencia y pruebas
 ├── frontend/      Aplicación React y pruebas de interfaz
 ├── docs/          Documentación técnica y decisiones
@@ -190,6 +201,7 @@ Proyecto-final-TUP/
 ├── .dockerignore  Archivos excluidos de las imágenes
 ├── docker-compose.yml  Orquestación del sistema local
 ├── package.json   Dependencias y comandos compartidos
+├── vercel.json    Compilación y rutas del despliegue público
 └── README.md      Punto de entrada al proyecto
 ```
 
@@ -203,6 +215,7 @@ Proyecto-final-TUP/
 | [`docs/database.md`](docs/database.md)                                   | Tablas, relaciones, Docker y convención de migraciones                 |
 | [`docs/diagrama-entidad-relacion.md`](docs/diagrama-entidad-relacion.md) | Diagrama del esquema implementado y sus restricciones                  |
 | [`docs/development.md`](docs/development.md)                             | Entorno, scripts, pruebas y procedimientos de trabajo                  |
+| [`docs/deployment-vercel.md`](docs/deployment-vercel.md)                 | Despliegue en Vercel y migración segura de PostgreSQL                  |
 | [`docs/design-patterns.md`](docs/design-patterns.md)                     | Patrones aplicados, descartados y candidatos futuros                   |
 | [`docs/decisiones-diseno.md`](docs/decisiones-diseno.md)                 | Diagnóstico, alternativas, decisiones, evidencia y trade-offs          |
 | [`postman/README.md`](postman/README.md)                                 | Importación, variables y recorrido recomendado de la colección         |

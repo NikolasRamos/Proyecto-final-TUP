@@ -21,3 +21,10 @@ export interface TeamResponse {
   message: string;
   data: Team;
 }
+
+export interface TeamMember {
+  id: EntityId;
+  userId: EntityId;
+  isCaptain: boolean;
+  joinedAt: string;
+}

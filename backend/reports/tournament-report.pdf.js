@@ -1,5 +1,7 @@
 import PDFDocument from "pdfkit";
 
+import { TOURNAMENT_MODALITY_LABELS } from "../models/Tournament.js";
+
 const COLORS = {
   ink: "#172033",
   muted: "#65718A",
@@ -17,12 +19,6 @@ const statusLabels = {
   in_progress: "En curso",
   finished: "Finalizado",
   cancelled: "Cancelado",
-};
-
-const modalityLabels = {
-  league: "Liga",
-  single_elimination: "Eliminacion directa",
-  group_stage: "Fase de grupos",
 };
 
 const dateFormatter = new Intl.DateTimeFormat("es-AR", {
@@ -77,7 +73,10 @@ function drawInformationGrid(document, tournament) {
   const rows = [
     [
       ["Estado", statusLabels[tournament.status] ?? tournament.status],
-      ["Modalidad", modalityLabels[tournament.modality] ?? tournament.modality],
+      [
+        "Modalidad",
+        TOURNAMENT_MODALITY_LABELS[tournament.modality] ?? tournament.modality,
+      ],
     ],
     [
       ["Cierre de inscripcion", formatDate(tournament.registrationDeadline)],

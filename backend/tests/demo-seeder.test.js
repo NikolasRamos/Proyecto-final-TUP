@@ -27,7 +27,10 @@ describe("datos de demostración", () => {
     const validModalities = new Set([
       "league",
       "single_elimination",
-      "group_stage",
+      "groups_playoff",
+      "swiss",
+      "free_for_all",
+      "gauntlet",
     ]);
     const validStatuses = new Set([
       "draft",
@@ -46,6 +49,15 @@ describe("datos de demostración", () => {
         true,
       );
       expect(tournament.startDate <= tournament.endDate).toBe(true);
+
+      if (tournament.modality === "groups_playoff") {
+        expect(tournament.playoffSpots).toBeGreaterThanOrEqual(2);
+        expect(tournament.groupCount).toBeGreaterThanOrEqual(2);
+        expect(tournament.playoffSpots % tournament.groupCount).toBe(0);
+        expect(tournament.maxParticipants).toBe(
+          tournament.groupCount * tournament.maxParticipantsPerGroup,
+        );
+      }
     }
   });
 

@@ -37,20 +37,24 @@ describe("POST /api/tournaments/:tournamentId/registrations", () => {
 
     const response = await request(app)
       .post(`/api/tournaments/${tournamentId}/registrations`)
-      .send({ teamId });
+      .send({ teamId, memberIds: [1, 2] });
 
     expect(response.status).toBe(201);
     expect(response.body).toEqual({
       message: "Equipo inscrito correctamente",
       data: registration,
     });
-    expect(registerTeamInTournament).toHaveBeenCalledWith(tournamentId, teamId);
+    expect(registerTeamInTournament).toHaveBeenCalledWith(
+      tournamentId,
+      teamId,
+      [1, 2],
+    );
   });
 
   it("rechaza un identificador de torneo que no es un entero positivo", async () => {
     const response = await request(app)
       .post("/api/tournaments/invalid-id/registrations")
-      .send({ teamId: nextTestId() });
+      .send({ teamId: nextTestId(), memberIds: [1, 2] });
 
     expect(response.status).toBe(400);
     expect(response.body).toEqual({
@@ -62,7 +66,7 @@ describe("POST /api/tournaments/:tournamentId/registrations", () => {
   it("rechaza un identificador de equipo que no es un entero positivo", async () => {
     const response = await request(app)
       .post(`/api/tournaments/${nextTestId()}/registrations`)
-      .send({ teamId: "invalid-id" });
+      .send({ teamId: "invalid-id", memberIds: [1, 2] });
 
     expect(response.status).toBe(400);
     expect(response.body.message).toBe(
@@ -84,15 +88,54 @@ describe("POST /api/tournaments/:tournamentId/registrations", () => {
     ],
     ["already_registered", 409, "El equipo ya esta inscrito en el torneo"],
     ["tournament_full", 409, "El torneo alcanzo su cupo maximo"],
+    [
+      "individual_tournament",
+      409,
+      "Este torneo admite inscripciones individuales, no equipos",
+    ],
+    [
+      "member_not_in_team",
+      400,
+      "Todos los integrantes seleccionados deben pertenecer al equipo",
+    ],
   ])("responde correctamente para %s", async (outcome, status, message) => {
     registerTeamInTournament.mockResolvedValue({ outcome });
 
     const response = await request(app)
       .post(`/api/tournaments/${nextTestId()}/registrations`)
-      .send({ teamId: nextTestId() });
+      .send({ teamId: nextTestId(), memberIds: [1, 2] });
 
     expect(response.status).toBe(status);
     expect(response.body).toEqual({ message });
+  });
+
+  it("explica los limites cuando el plantel tiene un tamaño invalido", async () => {
+    registerTeamInTournament.mockResolvedValue({
+      outcome: "invalid_roster_size",
+      minimumMembers: 2,
+      maximumMembers: 5,
+    });
+
+    const response = await request(app)
+      .post(`/api/tournaments/${nextTestId()}/registrations`)
+      .send({ teamId: nextTestId(), memberIds: [1] });
+
+    expect(response.status).toBe(409);
+    expect(response.body).toEqual({
+      message: "El plantel debe tener entre 2 y 5 integrantes",
+    });
+  });
+
+  it("rechaza una inscripcion sin integrantes seleccionados", async () => {
+    const response = await request(app)
+      .post(`/api/tournaments/${nextTestId()}/registrations`)
+      .send({ teamId: nextTestId(), memberIds: [] });
+
+    expect(response.status).toBe(400);
+    expect(response.body.errors).toEqual(
+      expect.arrayContaining([expect.objectContaining({ field: "memberIds" })]),
+    );
+    expect(registerTeamInTournament).not.toHaveBeenCalled();
   });
 
   it("responde sin exponer detalles cuando falla la inscripcion", async () => {
@@ -102,7 +145,7 @@ describe("POST /api/tournaments/:tournamentId/registrations", () => {
 
     const response = await request(app)
       .post(`/api/tournaments/${nextTestId()}/registrations`)
-      .send({ teamId: nextTestId() });
+      .send({ teamId: nextTestId(), memberIds: [1, 2] });
 
     expect(response.status).toBe(500);
     expect(response.body).toEqual({

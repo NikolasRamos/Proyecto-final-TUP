@@ -5,8 +5,20 @@ import database from "../config/database.js";
 export const TOURNAMENT_MODALITIES = Object.freeze([
   "league",
   "single_elimination",
-  "group_stage",
+  "groups_playoff",
+  "swiss",
+  "free_for_all",
+  "gauntlet",
 ]);
+
+export const TOURNAMENT_MODALITY_LABELS = Object.freeze({
+  league: "Liga",
+  single_elimination: "Eliminacion simple",
+  groups_playoff: "Grupos + Playoff",
+  swiss: "Suizo",
+  free_for_all: "Free-for-all",
+  gauntlet: "Gauntlet",
+});
 
 export const TOURNAMENT_STATUSES = Object.freeze([
   "draft",
@@ -52,6 +64,70 @@ Tournament.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       field: "max_participants",
+      validate: {
+        isInt: true,
+        min: 2,
+      },
+    },
+    playoffSpots: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: null,
+      field: "playoff_spots",
+      validate: {
+        isInt: true,
+        min: 2,
+      },
+    },
+    groupCount: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: null,
+      field: "group_count",
+      validate: {
+        isInt: true,
+        min: 2,
+      },
+    },
+    maxParticipantsPerGroup: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: null,
+      field: "max_participants_per_group",
+      validate: {
+        isInt: true,
+        min: 2,
+      },
+    },
+    swissRounds: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      defaultValue: null,
+      field: "swiss_rounds",
+      validate: {
+        isInt: true,
+        min: 1,
+      },
+    },
+    isTeamTournament: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: true,
+      field: "is_team_tournament",
+    },
+    minTeamMembers: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      field: "min_team_members",
+      validate: {
+        isInt: true,
+        min: 2,
+      },
+    },
+    maxTeamMembers: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      field: "max_team_members",
       validate: {
         isInt: true,
         min: 2,
@@ -106,6 +182,34 @@ Tournament.init(
     underscored: true,
     timestamps: true,
     validate: {
+      participationRulesAreConsistent() {
+        const hasMinimum =
+          this.minTeamMembers !== null && this.minTeamMembers !== undefined;
+        const hasMaximum =
+          this.maxTeamMembers !== null && this.maxTeamMembers !== undefined;
+
+        if (!this.isTeamTournament && (hasMinimum || hasMaximum)) {
+          throw new Error(
+            "Un torneo individual no puede definir limites de equipo",
+          );
+        }
+
+        if (this.isTeamTournament && hasMinimum !== hasMaximum) {
+          throw new Error(
+            "Los limites minimo y maximo del equipo deben definirse juntos",
+          );
+        }
+
+        if (
+          this.isTeamTournament &&
+          hasMinimum &&
+          this.maxTeamMembers < this.minTeamMembers
+        ) {
+          throw new Error(
+            "El maximo de integrantes no puede ser menor que el minimo",
+          );
+        }
+      },
       datesAreConsistent() {
         if (
           this.registrationDeadline &&

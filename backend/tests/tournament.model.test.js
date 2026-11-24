@@ -12,6 +12,9 @@ const validTournament = {
   description: "Competencia inicial de la temporada",
   modality: "league",
   maxParticipants: 16,
+  isTeamTournament: true,
+  minTeamMembers: 2,
+  maxTeamMembers: 5,
   registrationDeadline: "2026-11-01",
   startDate: "2026-11-05",
   endDate: "2026-12-10",
@@ -28,11 +31,44 @@ describe("Tournament", () => {
     expect(attributes.organizerId.field).toBe("organizer_id");
   });
 
+  it("mapea las reglas de participacion a sus columnas", () => {
+    const attributes = Tournament.getAttributes();
+
+    expect(attributes.isTeamTournament.type.key).toBe("BOOLEAN");
+    expect(attributes.isTeamTournament.field).toBe("is_team_tournament");
+    expect(attributes.isTeamTournament.defaultValue).toBe(true);
+    expect(attributes.minTeamMembers.field).toBe("min_team_members");
+    expect(attributes.maxTeamMembers.field).toBe("max_team_members");
+  });
+
+  it("mapea la configuracion de Grupos + Playoff", () => {
+    const attributes = Tournament.getAttributes();
+
+    expect(attributes.playoffSpots.field).toBe("playoff_spots");
+    expect(attributes.groupCount.field).toBe("group_count");
+    expect(attributes.maxParticipantsPerGroup.field).toBe(
+      "max_participants_per_group",
+    );
+    expect(attributes.playoffSpots.defaultValue).toBeNull();
+    expect(attributes.groupCount.defaultValue).toBeNull();
+    expect(attributes.maxParticipantsPerGroup.defaultValue).toBeNull();
+  });
+
+  it("mapea la cantidad de rondas del formato Suizo", () => {
+    const attributes = Tournament.getAttributes();
+
+    expect(attributes.swissRounds.field).toBe("swiss_rounds");
+    expect(attributes.swissRounds.defaultValue).toBeNull();
+  });
+
   it("declara las modalidades y estados permitidos", () => {
     expect(TOURNAMENT_MODALITIES).toEqual([
       "league",
       "single_elimination",
-      "group_stage",
+      "groups_playoff",
+      "swiss",
+      "free_for_all",
+      "gauntlet",
     ]);
     expect(TOURNAMENT_STATUSES).toEqual([
       "draft",
@@ -48,6 +84,70 @@ describe("Tournament", () => {
 
     await expect(tournament.validate()).resolves.toBe(tournament);
     expect(tournament.status).toBe("draft");
+  });
+
+  it("acepta un torneo individual sin limites de equipo", async () => {
+    const tournament = Tournament.build({
+      ...validTournament,
+      isTeamTournament: false,
+      minTeamMembers: null,
+      maxTeamMembers: null,
+    });
+
+    await expect(tournament.validate()).resolves.toBe(tournament);
+  });
+
+  it("mantiene compatibles los torneos por equipos anteriores sin limites", async () => {
+    const tournament = Tournament.build({
+      ...validTournament,
+      minTeamMembers: null,
+      maxTeamMembers: null,
+    });
+
+    await expect(tournament.validate()).resolves.toBe(tournament);
+  });
+
+  it("rechaza limites de equipo en un torneo individual", async () => {
+    const tournament = Tournament.build({
+      ...validTournament,
+      isTeamTournament: false,
+    });
+
+    await expect(tournament.validate()).rejects.toThrow(
+      "Un torneo individual no puede definir limites de equipo",
+    );
+  });
+
+  it("rechaza un torneo por equipos con un solo limite definido", async () => {
+    const tournament = Tournament.build({
+      ...validTournament,
+      maxTeamMembers: null,
+    });
+
+    await expect(tournament.validate()).rejects.toThrow(
+      "Los limites minimo y maximo del equipo deben definirse juntos",
+    );
+  });
+
+  it("rechaza menos de dos integrantes por equipo", async () => {
+    const tournament = Tournament.build({
+      ...validTournament,
+      minTeamMembers: 1,
+    });
+
+    await expect(tournament.validate()).rejects.toThrow();
+  });
+
+  it("rechaza un maximo de integrantes menor que el minimo", async () => {
+    const tournament = Tournament.build({
+      ...validTournament,
+      minTeamMembers: 5,
+      maxTeamMembers: 3,
+    });
+
+    await expect(tournament.validate()).rejects.toThrow(
+      "El maximo de integrantes no puede ser menor que el minimo",
+    );
   });
 
   it("rechaza una modalidad desconocida", async () => {

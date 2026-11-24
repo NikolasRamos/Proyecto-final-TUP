@@ -1,6 +1,9 @@
 import { Link } from "react-router";
 
-import type { Tournament } from "../types/tournament";
+import {
+  TOURNAMENT_MODALITY_LABELS,
+  type Tournament,
+} from "../types/tournament";
 
 interface TournamentCardProps {
   tournament: Tournament;
@@ -12,12 +15,6 @@ const statusLabels: Record<Tournament["status"], string> = {
   in_progress: "En curso",
   finished: "Finalizado",
   cancelled: "Cancelado",
-};
-
-const modalityLabels: Record<Tournament["modality"], string> = {
-  league: "Liga",
-  single_elimination: "Eliminación directa",
-  group_stage: "Fase de grupos",
 };
 
 const dateFormatter = new Intl.DateTimeFormat("es-AR", {
@@ -36,7 +33,9 @@ export default function TournamentCard({ tournament }: TournamentCardProps) {
     <article className="resource-card">
       <div className="resource-card-heading">
         <div>
-          <p className="resource-kind">{modalityLabels[tournament.modality]}</p>
+          <p className="resource-kind">
+            {TOURNAMENT_MODALITY_LABELS[tournament.modality]}
+          </p>
           <h3>{tournament.name}</h3>
         </div>
         <span className={`status-badge status-${tournament.status}`}>

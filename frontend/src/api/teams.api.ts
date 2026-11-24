@@ -2,6 +2,7 @@ import type { PaginatedResponse } from "../types/api";
 import type {
   CreateTeamInput,
   Team,
+  TeamMember,
   TeamResponse,
   UpdateTeamInput,
 } from "../types/team";
@@ -44,4 +45,8 @@ export function updateTeam(teamId: number, team: UpdateTeamInput) {
 
 export function deleteTeam(teamId: number) {
   return apiDelete<{ message: string }>(`/api/teams/${teamId}`);
+}
+
+export function listTeamMembers(teamId: number) {
+  return apiGet<{ data: TeamMember[] }>(`/api/teams/${teamId}/members`);
 }

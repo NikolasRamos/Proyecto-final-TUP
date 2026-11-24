@@ -20,8 +20,40 @@ erDiagram
 
 ### `tournaments`
 
-Almacena nombre, descripción, modalidad, cupo, fechas, estado y
-`organizer_id`. Los identificadores son enteros autoincrementales.
+Almacena nombre, descripción, formato en la columna `modality`, cupo, fechas,
+estado y `organizer_id`. Los identificadores son enteros autoincrementales.
+
+La migración `012-add-groups-playoff-configuration.cjs` agrega:
+
+- `playoff_spots`: lugares disponibles en la fase eliminatoria;
+- `group_count`: cantidad de grupos;
+- `max_participants_per_group`: límite de participantes de cada grupo.
+
+Las tres columnas son opcionales para conservar torneos anteriores. Cuando se
+completan, la base exige que correspondan al formato `groups_playoff`, que los
+lugares sean potencia de dos, que los grupos los dividan exactamente y que el
+cupo total coincida con `group_count * max_participants_per_group`.
+
+La migración `013-add-swiss-rounds.cjs` agrega `swiss_rounds`. La columna es
+opcional para conservar torneos Suizos anteriores, pero cuando tiene un valor la
+base exige que la modalidad sea `swiss`, que exista al menos una ronda y que no
+supere `max_participants - 1`. Este último límite evita prometer más rondas que
+rivales distintos; la lógica concreta de emparejamientos se implementará con las
+partidas.
+
+Valores actuales de `modality`:
+
+- `league`;
+- `single_elimination`;
+- `groups_playoff`;
+- `swiss`;
+- `free_for_all`;
+- `gauntlet`.
+
+La migración `011-rename-group-stage-format.cjs` transforma el identificador
+anterior `group_stage` en `groups_playoff`. Se conserva el nombre de columna
+`modality` para no romper el contrato existente; en el dominio y la interfaz se
+presenta como formato del torneo.
 
 Índices principales:
 
