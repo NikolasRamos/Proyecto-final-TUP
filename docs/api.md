@@ -352,20 +352,63 @@ torneo está `open`.
 - Ambos endpoints normalizan el correo y excluyen la contraseña de la respuesta.
   Para emitir tokens, el servidor necesita configurar `JWT_SECRET`.
 
+### Asignar un rol a una cuenta nueva
+
+`PATCH /api/users/:id/role`
+
+Enviar `Authorization: Bearer <token>` de un administrador y un cuerpo JSON
+como `{"role":"organizador"}`. También se admite `administrador`. El servidor
+consulta el rol actual de quien realiza la operación en la base.
+
+La cuenta de destino debe tener el rol `participante`. El endpoint devuelve
+`200` con su identificador y nuevo rol. Repetir la misma asignación devuelve
+`200`. Si la cuenta ya tiene otro rol elevado o cambió durante la solicitud,
+devuelve `409`. La edición general de perfil queda separada de esta operación.
+
+Las rutas de usuarios y las operaciones que modifican roles requieren una
+sesión de administrador. Los tres roles base se conservan como parte de la
+configuración del sistema.
+
+#### Primera cuenta administradora
+
+Después de desplegar esta versión, registrar una cuenta del grupo y habilitarla
+desde una consola con acceso autorizado a PostgreSQL. Reemplazar el correo de
+ejemplo por el de la cuenta registrada, en minúsculas.
+
+```sql
+UPDATE usuario AS cuenta
+SET "idRol" = rol_admin."idRol", "updatedAt" = NOW()
+FROM rol AS rol_admin
+WHERE cuenta.email = 'cuenta-del-grupo@example.test'
+  AND cuenta."deletedAt" IS NULL
+  AND rol_admin.nombre = 'administrador'
+  AND NOT EXISTS (
+    SELECT 1 FROM usuario AS admin
+    WHERE admin."idRol" = rol_admin."idRol"
+      AND admin."deletedAt" IS NULL
+  )
+RETURNING cuenta."idUsuario";
+```
+
+La operación debe devolver una fila. A partir de ahí, usar la API de asignación
+con la cuenta administradora para habilitar otras cuentas del equipo.
+
 ## Códigos de error
 
 | Código | Uso general                                |
 | ------ | ------------------------------------------ |
 | `400`  | Identificador, parámetro o cuerpo inválido |
-| `401`  | Credenciales de inicio de sesión incorrectas |
+| `401`  | Credenciales incorrectas o sesión inválida |
+| `403`  | Permisos insuficientes                      |
 | `404`  | Recurso inexistente                        |
 | `409`  | Conflicto con una regla de negocio         |
 | `500`  | Error interno sin detalles sensibles       |
 
 ## Limitaciones actuales
 
-- El registro y el inicio de sesión están disponibles. Falta verificar el token
-  y exigir permisos en las rutas que necesiten una sesión.
+- El registro, el inicio de sesión y la administración de usuarios por rol
+  están disponibles en la API. La integración de sesiones con React, torneos
+  y equipos sigue pendiente.
 - Los identificadores de organizadores, capitanes e integrantes no comprueban todavía la
   existencia de un usuario.
 - Las rutas de partidas y resultados aún no están implementadas.

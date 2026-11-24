@@ -63,12 +63,18 @@ export const updateUser = async (req: Request, res: Response): Promise<Response>
         // Recupero el usuario del middleware
         const user = res.locals.user;
 
-        const { nombre, email, idRol } = req.body;
+        const { nombre, email, idRol } = req.body ?? {};
+
+        if (idRol !== undefined) {
+            return res.status(400).json({
+                success: false,
+                message: "Para asignar un rol usá la ruta de asignación de roles",
+            });
+        }
 
         await user.update({
             nombre: nombre ?? user.nombre,
-            email: email ?? user.email,
-            idRol: idRol ?? user.idRol
+            email: email ?? user.email
         });
 
         const userResponse = user.toJSON();
