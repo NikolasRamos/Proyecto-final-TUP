@@ -48,7 +48,7 @@ export async function requireSession(
 
   try {
     const user = await User.findByPk(userId, {
-      attributes: ["idUsuario", "idRol"],
+      attributes: ["idUsuario", "nombre", "email", "idRol"],
     });
     if (!user) return unauthorized(response);
     response.locals.authUser = user;

@@ -515,6 +515,43 @@
           "response": []
         },
         {
+          "name": "Consultar sesión actual",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Sesión activa de participante', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  const user = pm.response.json().data;",
+                  "  pm.expect(String(user.idUsuario)).to.eql(pm.variables.get('authUserId'));",
+                  "  pm.expect(user.role).to.eql('participante');",
+                  "  pm.expect(user).not.to.have.property('password');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authParticipantToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/auth/me",
+            "description": "Devuelve los datos y el rol actual de la cuenta autenticada. En el recorrido se usa el token del participante recién registrado."
+          },
+          "response": []
+        },
+        {
           "name": "Rechazar promoción sin permisos",
           "event": [
             {

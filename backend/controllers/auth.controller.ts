@@ -123,3 +123,33 @@ export async function login(
     });
   }
 }
+
+export async function getCurrentSession(
+  _request: Request,
+  response: Response,
+): Promise<Response> {
+  const user: User = response.locals.authUser;
+  const { idUsuario, nombre, email, idRol } = user;
+
+  response.set("Cache-Control", "private, no-store");
+
+  try {
+    const role = await Role.findByPk(idRol);
+    if (!role) {
+      return response.status(403).json({
+        success: false,
+        message: "La cuenta no tiene un rol disponible",
+      });
+    }
+
+    return response.status(200).json({
+      success: true,
+      data: { idUsuario, nombre, email, idRol, role: role.nombre },
+    });
+  } catch {
+    return response.status(500).json({
+      success: false,
+      message: "No se pudo consultar la sesión",
+    });
+  }
+}

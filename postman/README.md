@@ -48,9 +48,10 @@ Ejecutar **06 - Autenticación y roles** en este orden:
 
 1. Registrar participante y obtener su ID (`201`).
 2. Iniciar sesión como participante y guardar su token (`200`).
-3. Intentar asignar el rol de organizador con ese token (`403`).
-4. Iniciar sesión como administrador y guardar su token (`200`).
-5. Asignar el rol de organizador a la cuenta del paso 1 (`200`).
+3. Consultar la sesión del participante (`200`).
+4. Intentar asignar el rol de organizador con ese token (`403`).
+5. Iniciar sesión como administrador y guardar su token (`200`).
+6. Asignar el rol de organizador a la cuenta del paso 1 (`200`).
 
 Los scripts guardan `authUserId`, `authParticipantToken` y `authAdminToken`
 en el ambiente activo. Usar un correo nuevo para repetir la prueba desde el

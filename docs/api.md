@@ -349,6 +349,10 @@ torneo está `open`.
   Un correo ya registrado devuelve `409`.
 - `POST /api/auth/login` recibe `email` y `password`. Devuelve `200` con un
   JWT y los datos de la cuenta si las credenciales son correctas.
+- `GET /api/auth/me` recibe `Authorization: Bearer <token>` y devuelve la cuenta
+  autenticada con `idUsuario`, `nombre`, `email`, `idRol` y `role`. El nombre del
+  rol se lee de la base y refleja las asignaciones posteriores al login. Si la
+  sesión falta o ya no es válida, devuelve `401`.
 - Ambos endpoints normalizan el correo y excluyen la contraseña de la respuesta.
   Para emitir tokens, el servidor necesita configurar `JWT_SECRET`.
 

@@ -148,3 +148,57 @@ describe("Registro e inicio de sesión", () => {
     expect(response.body).not.toHaveProperty("token");
   });
 });
+
+describe("GET /api/auth/me", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+    vi.unstubAllEnvs();
+  });
+
+  it("devuelve solo los datos de la sesión y el rol actual de la base", async () => {
+    vi.stubEnv("JWT_SECRET", secret);
+    const user = User.build({ ...credentials, idUsuario: 42, idRol: 12 });
+    vi.spyOn(User, "findByPk").mockResolvedValue(user);
+    vi.spyOn(Role, "findByPk").mockResolvedValue(
+      Role.build({ idRol: 12, nombre: "organizador" }),
+    );
+    const token = jwt.sign({ idUsuario: 42, idRol: 30 }, secret, {
+      expiresIn: "1h",
+    });
+
+    const response = await request(app)
+      .get("/api/auth/me")
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(response.status).toBe(200);
+    expect(response.headers["cache-control"]).toBe("private, no-store");
+    expect(response.body).toEqual({
+      success: true,
+      data: {
+        idUsuario: 42,
+        nombre: credentials.nombre,
+        email: credentials.email,
+        idRol: 12,
+        role: "organizador",
+      },
+    });
+  });
+
+  it("requiere una sesión válida", async () => {
+    const response = await request(app).get("/api/auth/me");
+
+    expect(response.status).toBe(401);
+  });
+
+  it("rechaza una sesión cuya cuenta ya no está activa", async () => {
+    vi.stubEnv("JWT_SECRET", secret);
+    vi.spyOn(User, "findByPk").mockResolvedValue(null);
+    const token = jwt.sign({ idUsuario: 42 }, secret, { expiresIn: "1h" });
+
+    const response = await request(app)
+      .get("/api/auth/me")
+      .set("Authorization", `Bearer ${token}`);
+
+    expect(response.status).toBe(401);
+  });
+});
