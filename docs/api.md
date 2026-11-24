@@ -342,20 +342,32 @@ seleccionada debe respetar `minTeamMembers` y `maxTeamMembers` del torneo.
 Cambia el estado a `withdrawn` sin borrar la fila. Solo se permite mientras el
 torneo está `open`.
 
+## Autenticación
+
+- `POST /api/auth/register` recibe `nombre`, `email` y `password`. Devuelve
+  `201` con los datos de la cuenta. El servidor asigna el rol `participante`.
+  Un correo ya registrado devuelve `409`.
+- `POST /api/auth/login` recibe `email` y `password`. Devuelve `200` con un
+  JWT y los datos de la cuenta si las credenciales son correctas.
+- Ambos endpoints normalizan el correo y excluyen la contraseña de la respuesta.
+  Para emitir tokens, el servidor necesita configurar `JWT_SECRET`.
+
 ## Códigos de error
 
 | Código | Uso general                                |
 | ------ | ------------------------------------------ |
 | `400`  | Identificador, parámetro o cuerpo inválido |
+| `401`  | Credenciales de inicio de sesión incorrectas |
 | `404`  | Recurso inexistente                        |
 | `409`  | Conflicto con una regla de negocio         |
 | `500`  | Error interno sin detalles sensibles       |
 
 ## Limitaciones actuales
 
-- No existe autenticación ni autorización.
+- El registro y el inicio de sesión están disponibles. Falta verificar el token
+  y exigir permisos en las rutas que necesiten una sesión.
 - Los identificadores de organizadores, capitanes e integrantes no comprueban todavía la
   existencia de un usuario.
-- Las rutas de partidas, resultados y autenticación aún no están implementadas.
+- Las rutas de partidas y resultados aún no están implementadas.
 - Todavía no existe una especificación OpenAPI; este documento debe verificarse
   contra las pruebas y el comportamiento real.
