@@ -32,11 +32,14 @@ Crear `.env` en la raíz a partir de `.env.example`.
 | `FRONTEND_PORT` | Puerto publicado del frontend                   | `5173`                  |
 | `NODE_ENV`      | Entorno de ejecución                            | `development`           |
 | `CORS_ORIGIN`   | Origen autorizado por CORS                      | `http://localhost:5173` |
+| `DATABASE_URL`  | URL completa para PostgreSQL administrado       | Vacía en local          |
 | `DB_HOST`       | Host de PostgreSQL                              | `localhost`             |
 | `DB_PORT`       | Puerto de PostgreSQL                            | `5432`                  |
 | `DB_NAME`       | Base de datos                                   | `gestion_torneos`       |
 | `DB_USER`       | Usuario local                                   | `torneos`               |
 | `DB_PASSWORD`   | Contraseña local                                | Debe reemplazarse       |
+| `DB_SSL`        | Habilitar SSL para una base administrada        | `false`                 |
+| `DB_POOL_MAX`   | Máximo de conexiones por instancia              | `5`                     |
 | `JWT_SECRET`    | Firma futura de tokens                          | Debe reemplazarse       |
 | `VITE_API_URL`  | URL pública de la API usada al construir Docker | `http://localhost:3000` |
 
@@ -123,25 +126,26 @@ npm run docker:up
 
 ## Scripts disponibles
 
-| Script                 | Propósito                                   |
-| ---------------------- | ------------------------------------------- |
-| `npm run dev`          | Iniciar frontend y API con recarga          |
-| `npm run dev:web`      | Iniciar Vite                                |
-| `npm run dev:api`      | Iniciar Express con Nodemon                 |
-| `npm start`            | Iniciar Express sin Nodemon                 |
-| `npm run typecheck`    | Validar TypeScript sin compilar             |
-| `npm run build`        | Validar tipos y generar `dist/frontend`     |
-| `npm run preview`      | Previsualizar la compilación del frontend   |
-| `npm test`             | Ejecutar Vitest una vez                     |
-| `npm run test:watch`   | Ejecutar Vitest observando cambios          |
-| `npm run lint`         | Ejecutar ESLint                             |
-| `npm run format`       | Aplicar Prettier                            |
-| `npm run docker:up`    | Construir y levantar todo el sistema        |
-| `npm run docker:down`  | Detener contenedores conservando el volumen |
-| `npm run docker:logs`  | Seguir los registros de todos los servicios |
-| `npm run db:migrate`   | Aplicar migraciones pendientes              |
-| `npm run db:seed`      | Cargar los datos de demostración            |
-| `npm run db:seed:undo` | Retirar solamente los datos de demostración |
+| Script                      | Propósito                                   |
+| --------------------------- | ------------------------------------------- |
+| `npm run dev`               | Iniciar frontend y API con recarga          |
+| `npm run dev:web`           | Iniciar Vite                                |
+| `npm run dev:api`           | Iniciar Express con Nodemon                 |
+| `npm start`                 | Iniciar Express sin Nodemon                 |
+| `npm run typecheck`         | Validar TypeScript sin compilar             |
+| `npm run build`             | Validar tipos y generar `dist/frontend`     |
+| `npm run preview`           | Previsualizar la compilación del frontend   |
+| `npm test`                  | Ejecutar Vitest una vez                     |
+| `npm run test:watch`        | Ejecutar Vitest observando cambios          |
+| `npm run lint`              | Ejecutar ESLint                             |
+| `npm run format`            | Aplicar Prettier                            |
+| `npm run docker:up`         | Construir y levantar todo el sistema        |
+| `npm run docker:down`       | Detener contenedores conservando el volumen |
+| `npm run docker:logs`       | Seguir los registros de todos los servicios |
+| `npm run db:migrate`        | Aplicar migraciones pendientes              |
+| `npm run db:migrate:status` | Consultar las migraciones aplicadas         |
+| `npm run db:seed`           | Cargar los datos de demostración            |
+| `npm run db:seed:undo`      | Retirar solamente los datos de demostración |
 
 ## Verificación antes de integrar
 
@@ -183,3 +187,6 @@ Actualizar este documento en el mismo cambio que:
 - modifique un comando;
 - incorpore un servicio externo;
 - cambie el procedimiento de pruebas o compilación.
+
+El procedimiento de producción y el traslado desde Render están documentados
+en [deployment-vercel.md](deployment-vercel.md).

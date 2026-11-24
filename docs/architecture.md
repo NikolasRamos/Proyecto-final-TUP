@@ -114,7 +114,8 @@ Proyecto-final-TUP/
 - `organizerId`, `captainId` y `userId` son enteros positivos, pero aún no
   referencian la tabla `users`.
 - El frontend consume la API mediante `VITE_API_URL` y utiliza
-  `http://localhost:3000` como valor local predeterminado.
+  `http://localhost:3000` como valor local predeterminado. En Vercel utiliza
+  rutas relativas para compartir el mismo dominio con la API.
 - Docker Compose espera que PostgreSQL esté saludable, ejecuta las migraciones
   en un contenedor de una sola ejecución y solo después habilita la API y el
   frontend servido por Nginx.
@@ -126,3 +127,4 @@ Proyecto-final-TUP/
 - [Análisis y decisiones del bloque](decisiones-diseno.md)
 - [Modelo de datos y migraciones](database.md)
 - [Contrato de la API](api.md)
+- [Despliegue y migración a Vercel](deployment-vercel.md)
