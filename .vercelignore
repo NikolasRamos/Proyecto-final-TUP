@@ -1,0 +1,16 @@
+# Configuración privada, respaldos y artefactos locales.
+.env*
+**/.env*
+.vercel/
+**/node_modules/
+**/dist/
+**/coverage/
+**/*.dump
+**/*.backup
+**/*.log
+
+# Material del equipo que no usa la compilación.
+/docs/
+/output/
+/postman/
+/tmp/

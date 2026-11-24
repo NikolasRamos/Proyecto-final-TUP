@@ -1,9 +1,9 @@
 # Despliegue y migración de Render a Vercel
 
-Esta guía describe el procedimiento seguro para publicar el prototipo en
-Vercel y trasladar PostgreSQL desde Render a Neon. El objetivo es conservar
-los datos, comprobar la nueva instalación y mantener Render disponible hasta
-terminar la validación.
+Para la entrega del prototipo, crear una base nueva en Neon con los datos de
+demostración del repositorio. Las instrucciones de respaldo y restauración
+quedan disponibles si en otro despliegue se necesitan conservar los datos de
+Render.
 
 ## Arquitectura objetivo
 
@@ -35,7 +35,43 @@ propio backend automáticamente.
 - Los archivos `*.dump` y `*.backup` están ignorados por Git para evitar subir
   copias de la base de datos al repositorio.
 
-## 1. Requisitos previos
+## Entrega del prototipo con una base nueva
+
+1. Crear un proyecto en Neon y usar su base vacía. En **Connect**, obtener la
+   conexión directa para preparar el esquema y la conexión con pool para
+   configurar la variable `DATABASE_URL` del backend en Vercel.
+2. En PowerShell 7, desde la raíz del repositorio y con las dependencias
+   instaladas, ejecutar los comandos siguientes. Pegar la conexión directa
+   únicamente cuando la terminal la solicite.
+
+   ```powershell
+   $env:DATABASE_URL = Read-Host -MaskInput "Conexión directa de Neon"
+   $env:DB_SSL = "true"
+   npm.cmd run db:migrate -- --env production
+   ```
+
+   Si la migración terminó correctamente, cargar los datos de demostración y
+   verificar el estado del esquema.
+
+   ```powershell
+   npm.cmd run db:seed:demo -- --env production
+   npm.cmd run db:migrate:status -- --env production
+   Remove-Item Env:DATABASE_URL
+   Remove-Item Env:DB_SSL
+   ```
+
+   `db:seed:demo` carga torneos, equipos, integrantes, inscripciones y roles.
+   El cargador general `db:seed` también crea cuentas de prueba con una
+   contraseña conocida, por eso se reserva para entornos locales.
+3. Configurar las variables indicadas en el paso 7 y validar la publicación
+   con el paso 8. Confirmar que se ven los torneos y equipos de ejemplo.
+
+Para este recorrido se puede desplegar desde la copia local autorizando
+Vercel CLI, incluso si la cuenta de Vercel todavía no tiene acceso a la
+integración de GitHub. La URL pública se comparte después de validar la
+aplicación y su conexión con Neon.
+
+## 1. Requisitos previos para conservar datos de Render
 
 - Acceso al proyecto y a PostgreSQL en Render.
 - Acceso al repositorio Git del grupo.

@@ -1,7 +1,7 @@
 import cors from "cors";
 import express from "express";
 import helmet from "helmet";
-import routes from "./routes/index.ts";
+import routes from "./routes/index.js";
 
 import teamsRouter from "./routes/teams.routes.js";
 import tournamentsRouter from "./routes/tournaments.routes.js";
