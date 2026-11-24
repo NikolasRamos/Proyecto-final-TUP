@@ -410,9 +410,9 @@ con la cuenta administradora para habilitar otras cuentas del equipo.
 
 ## Limitaciones actuales
 
-- El registro, el inicio de sesión y la administración de usuarios por rol
-  están disponibles en la API. La integración de sesiones con React, torneos
-  y equipos sigue pendiente.
+- El registro y la administración de usuarios por rol están disponibles en la
+  API. React ya permite iniciar y cerrar sesión. La integración de la sesión
+  con las operaciones de torneos y equipos sigue pendiente.
 - Los identificadores de organizadores, capitanes e integrantes no comprueban todavía la
   existencia de un usuario.
 - Las rutas de partidas y resultados aún no están implementadas.
