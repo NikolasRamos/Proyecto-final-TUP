@@ -1,102 +1,155 @@
-import { Request, Response } from "express";
-import User from "../models/user.js";
+import type { Request, Response } from "express";
 import jwt from "jsonwebtoken";
-import bcrypt from "bcrypt";
+import { col, fn, UniqueConstraintError, where } from "sequelize";
 
-// --- REGISTRO ---
-export const register = async (req: Request, res: Response): Promise<Response> => {
-    try {
-        const { nombre, email, password, idRol } = req.body;
+import Role from "../models/role.js";
+import User from "../models/user.js";
+import { loginSchema, registerSchema } from "../schemas/auth.schema.js";
 
-        if (!nombre || !email || !password) {
-            return res.status(400).json({
-                success: false,
-                message: "Los campos (nombre, email, password) son obligatorios"
-            });
-        }
+function emailMatches(email: string) {
+  return where(fn("lower", col("email")), email);
+}
 
-        const existingUser = await User.findOne({ where: { email } });
-        if (existingUser) {
-            return res.status(400).json({
-                success: false,
-                message: "El correo electronico ya se encuentra registrado."
-            });
-        }
+function duplicateEmail(response: Response): Response {
+  return response.status(409).json({
+    success: false,
+    message: "El correo electrónico ya se encuentra registrado",
+  });
+}
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+export async function register(
+  request: Request,
+  response: Response,
+): Promise<Response> {
+  const validation = registerSchema.safeParse(request.body);
 
-        const newUser = await User.create({
-            nombre,
-            email,
-            password: hashedPassword,
-            idRol: idRol || 3
-        });
+  if (!validation.success) {
+    return response.status(400).json({
+      success: false,
+      message: validation.error.issues[0].message,
+    });
+  }
 
-        const userResponse = {
-            idUsuario: newUser.idUsuario,
-            nombre: newUser.nombre,
-            email: newUser.email,
-            idRol: newUser.idRol,
-            createdAt: newUser.createdAt,
-            updatedAt: newUser.updatedAt
-        };
+  const { nombre, email, password } = validation.data;
 
-        return res.status(201).json({
-            success: true,
-            message: "Usuario registrado con exito",
-            data: userResponse
-        });
+  try {
+    const existingUser = await User.findOne({
+      attributes: ["idUsuario"],
+      where: emailMatches(email),
+      paranoid: false,
+    });
 
-    } catch (error: unknown) {
-        const errorMessage = error instanceof Error ? error.message : "Error desconocido";
-        return res.status(500).json({
-            success: false,
-            message: "Error al registrar el usuario",
-            error: errorMessage
-        });
+    if (existingUser) return duplicateEmail(response);
+
+    const role = await Role.findOne({ where: { nombre: "participante" } });
+
+    if (!role) {
+      return response.status(500).json({
+        success: false,
+        message: "El registro de usuarios no está disponible",
+      });
     }
-};
 
-// --- LOGIN ---
-export const login = async (req: Request, res: Response): Promise<Response> => {
-    try {
-        const { email, password } = req.body;
+    const user = await User.create({
+      nombre,
+      email,
+      password,
+      idRol: role.idRol,
+    });
+    const { idUsuario, idRol, createdAt, updatedAt } = user;
 
-        const user = await User.findOne({ where: { email } });
+    return response.status(201).json({
+      success: true,
+      message: "Usuario registrado con éxito",
+      data: { idUsuario, nombre, email, idRol, createdAt, updatedAt },
+    });
+  } catch (error) {
+    if (error instanceof UniqueConstraintError) return duplicateEmail(response);
 
-        if (!user || !(await user.validPassword(password))) {
-            return res.status(401).json({
-                success: false,
-                message: "Credenciales invalidas (correo o contraseña incorrectos)"
-            });
-        }
+    return response.status(500).json({
+      success: false,
+      message: "Error al registrar el usuario",
+    });
+  }
+}
 
-        // Genero el Token JWT
-        const secret = process.env.JWT_SECRET || "reemplazar_con_secreto_aleatorio";
-        const token = jwt.sign(
-            { idUsuario: user.idUsuario, idRol: user.idRol },
-            secret,
-            { expiresIn: "8h" }
-        );
+export async function login(
+  request: Request,
+  response: Response,
+): Promise<Response> {
+  const validation = loginSchema.safeParse(request.body);
 
-        return res.status(200).json({
-            success: true,
-            message: "Inicio de sesion exitoso",
-            token,
-            data: {
-                idUsuario: user.idUsuario,
-                nombre: user.nombre,
-                email: user.email,
-                idRol: user.idRol
-            }
-        });
+  if (!validation.success) {
+    return response.status(400).json({
+      success: false,
+      message: validation.error.issues[0].message,
+    });
+  }
 
-    } catch (error: unknown) {
-        const errorMessage = error instanceof Error ? error.message : "Error desconocido";
-        return res.status(500).json({
-            success: false,
-            message: "Error en el inicio de sesion",
-            error: errorMessage
-        });
+  const { email, password } = validation.data;
+  const secret = process.env.JWT_SECRET?.trim();
+
+  if (!secret) {
+    return response.status(500).json({
+      success: false,
+      message: "El inicio de sesión no está disponible",
+    });
+  }
+
+  try {
+    const users = await User.findAll({ where: emailMatches(email), limit: 2 });
+    const [user] = users;
+
+    if (users.length !== 1 || !(await user.validPassword(password))) {
+      return response.status(401).json({
+        success: false,
+        message: "Correo o contraseña incorrectos",
+      });
     }
-};
+
+    const { idUsuario, idRol, nombre, email: userEmail } = user;
+    const token = jwt.sign({ idUsuario, idRol }, secret, { expiresIn: "8h" });
+
+    return response.status(200).json({
+      success: true,
+      message: "Inicio de sesión exitoso",
+      token,
+      data: { idUsuario, nombre, email: userEmail, idRol },
+    });
+  } catch {
+    return response.status(500).json({
+      success: false,
+      message: "Error en el inicio de sesión",
+    });
+  }
+}
+
+export async function getCurrentSession(
+  _request: Request,
+  response: Response,
+): Promise<Response> {
+  const user: User = response.locals.authUser;
+  const { idUsuario, nombre, email, idRol } = user;
+
+  response.set("Cache-Control", "private, no-store");
+
+  try {
+    const role = await Role.findByPk(idRol);
+    if (!role) {
+      return response.status(403).json({
+        success: false,
+        message: "La cuenta no tiene un rol disponible",
+      });
+    }
+
+    return response.status(200).json({
+      success: true,
+      data: { idUsuario, nombre, email, idRol, role: role.nombre },
+    });
+  } catch {
+    return response.status(500).json({
+      success: false,
+      message: "No se pudo consultar la sesión",
+    });
+  }
+}

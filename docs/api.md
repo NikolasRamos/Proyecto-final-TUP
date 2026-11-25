@@ -342,20 +342,79 @@ seleccionada debe respetar `minTeamMembers` y `maxTeamMembers` del torneo.
 Cambia el estado a `withdrawn` sin borrar la fila. Solo se permite mientras el
 torneo está `open`.
 
+## Autenticación
+
+- `POST /api/auth/register` recibe `nombre`, `email` y `password`. Devuelve
+  `201` con los datos de la cuenta. El servidor asigna el rol `participante`.
+  Un correo ya registrado devuelve `409`.
+- `POST /api/auth/login` recibe `email` y `password`. Devuelve `200` con un
+  JWT y los datos de la cuenta si las credenciales son correctas.
+- `GET /api/auth/me` recibe `Authorization: Bearer <token>` y devuelve la cuenta
+  autenticada con `idUsuario`, `nombre`, `email`, `idRol` y `role`. El nombre del
+  rol se lee de la base y refleja las asignaciones posteriores al login. Si la
+  sesión falta o ya no es válida, devuelve `401`.
+- Ambos endpoints normalizan el correo y excluyen la contraseña de la respuesta.
+  Para emitir tokens, el servidor necesita configurar `JWT_SECRET`.
+
+### Asignar un rol a una cuenta nueva
+
+`PATCH /api/users/:id/role`
+
+Enviar `Authorization: Bearer <token>` de un administrador y un cuerpo JSON
+como `{"role":"organizador"}`. También se admite `administrador`. El servidor
+consulta el rol actual de quien realiza la operación en la base.
+
+La cuenta de destino debe tener el rol `participante`. El endpoint devuelve
+`200` con su identificador y nuevo rol. Repetir la misma asignación devuelve
+`200`. Si la cuenta ya tiene otro rol elevado o cambió durante la solicitud,
+devuelve `409`. La edición general de perfil queda separada de esta operación.
+
+Las rutas de usuarios y las operaciones que modifican roles requieren una
+sesión de administrador. Los tres roles base se conservan como parte de la
+configuración del sistema.
+
+#### Primera cuenta administradora
+
+Después de desplegar esta versión, registrar una cuenta del grupo y habilitarla
+desde una consola con acceso autorizado a PostgreSQL. Reemplazar el correo de
+ejemplo por el de la cuenta registrada, en minúsculas.
+
+```sql
+UPDATE usuario AS cuenta
+SET "idRol" = rol_admin."idRol", "updatedAt" = NOW()
+FROM rol AS rol_admin
+WHERE cuenta.email = 'cuenta-del-grupo@example.test'
+  AND cuenta."deletedAt" IS NULL
+  AND rol_admin.nombre = 'administrador'
+  AND NOT EXISTS (
+    SELECT 1 FROM usuario AS admin
+    WHERE admin."idRol" = rol_admin."idRol"
+      AND admin."deletedAt" IS NULL
+  )
+RETURNING cuenta."idUsuario";
+```
+
+La operación debe devolver una fila. A partir de ahí, usar la API de asignación
+con la cuenta administradora para habilitar otras cuentas del equipo.
+
 ## Códigos de error
 
 | Código | Uso general                                |
 | ------ | ------------------------------------------ |
 | `400`  | Identificador, parámetro o cuerpo inválido |
+| `401`  | Credenciales incorrectas o sesión inválida |
+| `403`  | Permisos insuficientes                      |
 | `404`  | Recurso inexistente                        |
 | `409`  | Conflicto con una regla de negocio         |
 | `500`  | Error interno sin detalles sensibles       |
 
 ## Limitaciones actuales
 
-- No existe autenticación ni autorización.
+- El registro y la administración de usuarios por rol están disponibles en la
+  API. React ya permite iniciar y cerrar sesión. La integración de la sesión
+  con las operaciones de torneos y equipos sigue pendiente.
 - Los identificadores de organizadores, capitanes e integrantes no comprueban todavía la
   existencia de un usuario.
-- Las rutas de partidas, resultados y autenticación aún no están implementadas.
+- Las rutas de partidas y resultados aún no están implementadas.
 - Todavía no existe una especificación OpenAPI; este documento debe verificarse
   contra las pruebas y el comportamiento real.
