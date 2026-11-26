@@ -14,8 +14,18 @@ function findActiveCaptain(captainId, transaction) {
   });
 }
 
-function lockTeam(teamId, transaction) {
+export function lockTeam(teamId, transaction) {
   return Team.findByPk(teamId, { transaction, lock: transaction.LOCK.UPDATE });
+}
+
+export async function linkTeamMember(teamId, userId, transaction) {
+  const [member] = await TeamMember.findOrCreate({
+    where: { teamId, userId },
+    defaults: { accountLinked: true },
+    transaction,
+  });
+  if (!member.accountLinked)
+    await member.update({ accountLinked: true }, { transaction });
 }
 
 export function createTeam(teamData) {
@@ -32,6 +42,7 @@ export function createTeam(teamData) {
       {
         teamId: team.id,
         userId: team.captainId,
+        accountLinked: true,
       },
       { transaction },
     );
@@ -48,10 +59,7 @@ export function assignTeamCaptain(teamId, captainId) {
     const captain = await findActiveCaptain(captainId, transaction);
     if (!captain) return { outcome: "captain_not_found" };
 
-    await TeamMember.findOrCreate({
-      where: { teamId, userId: captain.idUsuario },
-      transaction,
-    });
+    await linkTeamMember(teamId, captain.idUsuario, transaction);
     await team.update(
       { captainId: captain.idUsuario, captainAccountId: captain.idUsuario },
       { transaction },

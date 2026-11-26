@@ -321,6 +321,29 @@ activa o retirada, la API responde `409 Conflict`.
 
 ## Integrantes de equipos
 
+### Solicitudes, invitaciones y Mis equipos
+
+Estas rutas usan el token de la cuenta que realiza la acción.
+
+| Método y ruta | Uso |
+| --- | --- |
+| `GET /api/teams/mine` | Lista los equipos de la cuenta por membresía vinculada, con `page` y `limit`. |
+| `GET /api/teams/:teamId/membership` | Indica si la cuenta ya integra el equipo, tiene un trámite pendiente o puede pedir ingreso. |
+| `POST /api/teams/:teamId/join-requests` | Crea la solicitud de la cuenta participante al capitán del equipo. |
+| `POST /api/teams/:teamId/invitations` | El capitán invita a una cuenta activa mediante `{ "email": "participante@example.test" }`. |
+| `GET /api/teams/membership-requests` | Lista trámites de la cuenta con `box=received` o `box=sent`, `page` y `limit`. |
+| `PATCH /api/teams/:teamId/membership-requests/:requestId` | El destinatario envía `{ "status": "accepted" }` o `{ "status": "rejected" }`. |
+
+Aceptar vincula la membresía a una cuenta activa en la misma transacción. Puede
+haber un solo trámite pendiente entre un equipo y una cuenta. Un `403` indica
+falta de permiso y un `409` indica duplicación o un trámite ya respondido.
+Repetir la misma respuesta devuelve el resultado original. Las invitaciones ya
+emitidas pertenecen al equipo y pueden responderse aunque cambie su capitán.
+
+La migración `015` vincula las membresías previas respaldadas por una asignación
+de capitán. Las demás membresías numéricas se vinculan al aceptar una solicitud
+o invitación. En **Mis equipos** se consultan membresías vinculadas vigentes.
+
 ### Listar integrantes
 
 `GET /api/teams/:teamId/members`

@@ -38,6 +38,11 @@
       "key": "userId",
       "value": "2",
       "type": "string"
+    },
+    {
+      "key": "membershipRequestId",
+      "value": "1",
+      "type": "string"
     }
   ],
   "item": [
@@ -807,6 +812,127 @@
             },
             "url": "{{baseUrl}}/api/users/{{authUserId}}/role",
             "description": "Promueve la cuenta nueva indicada por authUserId. Requiere el token obtenido con la cuenta administradora."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "07 - Solicitudes e invitaciones",
+      "description": "Usá teamActorToken para la cuenta que pide ingreso, invita o responde. Para responder, copiá el campo data.id de la solicitud.",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{teamActorToken}}",
+            "type": "string"
+          }
+        ]
+      },
+      "item": [
+        {
+          "name": "Mis equipos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/teams/mine?page=1"
+          },
+          "response": []
+        },
+        {
+          "name": "Estado de mi membresía",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/teams/{{teamId}}/membership"
+          },
+          "response": []
+        },
+        {
+          "name": "Pedir ingreso",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/teams/{{teamId}}/join-requests"
+          },
+          "response": []
+        },
+        {
+          "name": "Invitar a una cuenta",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{authEmail}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/teams/{{teamId}}/invitations"
+          },
+          "response": []
+        },
+        {
+          "name": "Ver solicitudes recibidas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/teams/membership-requests?box=received"
+          },
+          "response": []
+        },
+        {
+          "name": "Ver solicitudes enviadas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/teams/membership-requests?box=sent"
+          },
+          "response": []
+        },
+        {
+          "name": "Responder solicitud o invitación",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"accepted\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/teams/{{teamId}}/membership-requests/{{membershipRequestId}}"
           },
           "response": []
         }

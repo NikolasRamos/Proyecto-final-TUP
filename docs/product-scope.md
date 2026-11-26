@@ -43,8 +43,10 @@ equipos. El borrado de equipos corresponde a su capitán o a un administrador.
 - Buscar y consultar los torneos vigentes y los equipos registrados.
 - Crear un equipo propio y quedar registrado como capitán y primer integrante.
 - Borrar un equipo que capitanea si está libre de historial de inscripciones.
-- Las solicitudes de ingreso, las invitaciones y la bandeja de notificaciones
-  están planificadas.
+- Pedir ingreso a un equipo o responder una invitación en **Solicitudes**.
+- Invitar a una cuenta registrada y responder solicitudes en equipos que capitanea.
+- Ver sus membresías vinculadas en **Mis equipos**.
+- La bandeja de notificaciones está planificada.
 
 ## Estado por módulo
 

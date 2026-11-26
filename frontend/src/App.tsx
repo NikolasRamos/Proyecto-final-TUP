@@ -11,9 +11,11 @@ import DashboardPage from "./pages/DashboardPage";
 import CreateTeamPage from "./pages/CreateTeamPage";
 import CreateTournamentPage from "./pages/CreateTournamentPage";
 import LoginPage from "./pages/LoginPage";
+import MyTeamsPage from "./pages/MyTeamsPage";
 import NotFoundPage from "./pages/NotFoundPage";
 import RegisterPage from "./pages/RegisterPage";
 import TeamDetailPage from "./pages/TeamDetailPage";
+import TeamRequestsPage from "./pages/TeamRequestsPage";
 import TeamsPage from "./pages/TeamsPage";
 import TournamentDetailPage from "./pages/TournamentDetailPage";
 import TournamentsPage from "./pages/TournamentsPage";
@@ -24,6 +26,16 @@ export default function App() {
       <SessionBar />
       <AppRoutes />
     </AuthProvider>
+  );
+}
+
+function RequireSession() {
+  const { session } = useAuthSession();
+  if (session.status === "checking") return null;
+  return session.status === "signedIn" ? (
+    <Outlet />
+  ) : (
+    <Navigate to="/login" replace />
   );
 }
 
@@ -56,6 +68,10 @@ function AppRoutes() {
       <Route path="/teams/:id" element={<TeamDetailPage />} />
       <Route path="/tournaments" element={<TournamentsPage />} />
       <Route path="/tournaments/:id" element={<TournamentDetailPage />} />
+      <Route element={<RequireSession />}>
+        <Route path="/my-teams" element={<MyTeamsPage />} />
+        <Route path="/team-requests" element={<TeamRequestsPage />} />
+      </Route>
       <Route element={<RequireCreationAccess resource="teams" />}>
         <Route path="/teams/new" element={<CreateTeamPage />} />
       </Route>

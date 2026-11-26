@@ -30,6 +30,11 @@ TeamMember.init(
         min: 1,
       },
     },
+    accountLinked: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
   },
   {
     sequelize: database,

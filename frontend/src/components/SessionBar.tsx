@@ -29,6 +29,12 @@ export default function SessionBar() {
         )}
         {session.status === "signedIn" && (
           <>
+            <Link className="secondary-link" to="/my-teams">
+              Mis equipos
+            </Link>
+            <Link className="secondary-link" to="/team-requests">
+              Solicitudes
+            </Link>
             <p className="session-identity">
               <strong>{session.user.nombre}</strong>
               <span className="session-role">{session.user.role}</span>

@@ -32,6 +32,12 @@ describe("Acceso público a torneos y equipos", () => {
     ...managementRoutes,
     ["post", "/api/teams"],
     ["delete", "/api/teams/1"],
+    ["get", "/api/teams/mine"],
+    ["get", "/api/teams/membership-requests"],
+    ["get", "/api/teams/1/membership"],
+    ["post", "/api/teams/1/join-requests"],
+    ["post", "/api/teams/1/invitations"],
+    ["patch", "/api/teams/1/membership-requests/1"],
   ])("exige iniciar sesión para %s %s", async (method, path) => {
     await request(app)[method](path).expect(401);
   });
@@ -130,7 +136,7 @@ describe("Acceso de participantes", () => {
       { transaction },
     );
     expect(addMember).toHaveBeenCalledWith(
-      { teamId: 42, userId: 1 },
+      { teamId: 42, userId: 1, accountLinked: true },
       { transaction },
     );
   });

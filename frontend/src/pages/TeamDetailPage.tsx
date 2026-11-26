@@ -9,6 +9,7 @@ import {
 } from "../auth/auth-session";
 import ResourceListSkeleton from "../components/ResourceListSkeleton";
 import TeamCaptainForm from "../components/TeamCaptainForm";
+import TeamMembershipPanel from "../components/TeamMembershipPanel";
 import type { Team, UpdateTeamInput } from "../types/team";
 
 interface TeamFormData {
@@ -433,6 +434,20 @@ export default function TeamDetailPage() {
               </dl>
             </section>
           )}
+          {session.status === "signedIn" &&
+            !isEditing &&
+            captainFormTeamId !== teamId &&
+            (session.user.role === "participante" ||
+              session.user.idUsuario === state.team.captainAccountId) && (
+              <TeamMembershipPanel
+                key={`${teamId}:${state.team.captainAccountId}`}
+                teamId={teamId}
+                token={session.token}
+                isCaptain={
+                  session.user.idUsuario === state.team.captainAccountId
+                }
+              />
+            )}
         </>
       )}
     </main>

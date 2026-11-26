@@ -1,6 +1,14 @@
 import { Router } from "express";
 
 import {
+  decideMembershipRequestHandler,
+  getTeamMembershipStateHandler,
+  inviteMemberHandler,
+  listMembershipRequestsHandler,
+  listMyTeamsHandler,
+  requestMembershipHandler,
+} from "../controllers/team-membership-requests.controller.js";
+import {
   addTeamMemberHandler,
   assignTeamCaptainHandler,
   createTeamHandler,
@@ -24,6 +32,29 @@ import {
 const teamsRouter = Router();
 
 teamsRouter.get("/", listTeamsHandler);
+teamsRouter.get("/mine", requireSession, listMyTeamsHandler);
+teamsRouter.get(
+  "/membership-requests",
+  requireSession,
+  listMembershipRequestsHandler,
+);
+teamsRouter.get(
+  "/:teamId/membership",
+  requireSession,
+  getTeamMembershipStateHandler,
+);
+teamsRouter.post(
+  "/:teamId/join-requests",
+  requireSession,
+  loadCompetitionRole,
+  requestMembershipHandler,
+);
+teamsRouter.post("/:teamId/invitations", requireSession, inviteMemberHandler);
+teamsRouter.patch(
+  "/:teamId/membership-requests/:requestId",
+  requireSession,
+  decideMembershipRequestHandler,
+);
 teamsRouter.get("/:id", getTeamByIdHandler);
 teamsRouter.post("/", requireTeamCreator, createTeamHandler);
 teamsRouter.put("/:id", requireCompetitionManager, updateTeamHandler);

@@ -70,7 +70,7 @@ describe("teams service", () => {
       { transaction: expect.any(Object) },
     );
     expect(TeamMember.create).toHaveBeenCalledWith(
-      { teamId: 201, userId: 1 },
+      { teamId: 201, userId: 1, accountLinked: true },
       { transaction: expect.any(Object) },
     );
   });
@@ -79,6 +79,7 @@ describe("teams service", () => {
     const team = { update: vi.fn() };
     Team.findByPk.mockResolvedValue(team);
     User.findByPk.mockResolvedValue({ idUsuario: 7 });
+    TeamMember.findOrCreate.mockResolvedValue([{ accountLinked: true }]);
 
     await expect(assignTeamCaptain(201, 7)).resolves.toEqual({
       outcome: "assigned",
@@ -91,6 +92,7 @@ describe("teams service", () => {
     });
     expect(TeamMember.findOrCreate).toHaveBeenCalledWith({
       where: { teamId: 201, userId: 7 },
+      defaults: { accountLinked: true },
       transaction,
     });
     expect(team.update).toHaveBeenCalledWith(
