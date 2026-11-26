@@ -16,6 +16,7 @@ export async function requireSession(
   response: Response,
   next: NextFunction,
 ): Promise<Response | void> {
+  response.set("Cache-Control", "private, no-store");
   const authorization = request.get("Authorization");
   const token = authorization?.match(/^Bearer\s+(\S+)$/i)?.[1];
   if (!token) return unauthorized(response);
@@ -60,6 +61,20 @@ export async function requireSession(
   }
 
   next();
+}
+
+export function allowGuest(
+  request: Request,
+  response: Response,
+  next: NextFunction,
+) {
+  response.set("Cache-Control", "private, no-store").vary("Authorization");
+  if (request.get("Authorization") === undefined) {
+    next();
+    return;
+  }
+
+  return requireSession(request, response, next);
 }
 
 export async function requireAdministrator(

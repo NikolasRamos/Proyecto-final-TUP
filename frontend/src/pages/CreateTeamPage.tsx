@@ -3,6 +3,7 @@ import { Link } from "react-router";
 
 import { ApiError } from "../api/client";
 import { createTeam } from "../api/teams.api";
+import { useAuthSession } from "../auth/auth-session";
 import type { EntityId } from "../types/id";
 import type { CreateTeamInput } from "../types/team";
 
@@ -25,6 +26,7 @@ const initialForm: TeamFormData = {
 };
 
 export default function CreateTeamPage() {
+  const { session } = useAuthSession();
   const [form, setForm] = useState(initialForm);
   const [submitState, setSubmitState] = useState<SubmitState>({
     status: "idle",
@@ -43,6 +45,7 @@ export default function CreateTeamPage() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (session.status !== "signedIn") return;
     const captainId = Number(form.captainId);
 
     if (!Number.isInteger(captainId) || captainId <= 0) {
@@ -63,7 +66,7 @@ export default function CreateTeamPage() {
     setSubmitState({ status: "submitting" });
 
     try {
-      const response = await createTeam(payload);
+      const response = await createTeam(payload, session.token);
       setSubmitState({
         status: "success",
         message: response.message,

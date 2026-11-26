@@ -31,7 +31,7 @@ export async function getCurrentSession(
   signal?: AbortSignal,
 ): Promise<SessionUser> {
   const response = await apiGet<{ data: SessionUser }>("/api/auth/me", {
-    headers: { Authorization: `Bearer ${token}` },
+    token,
     cache: "no-store",
     signal,
   });

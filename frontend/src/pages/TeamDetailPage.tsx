@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router";
 
 import { ApiError } from "../api/client";
 import { deleteTeam, getTeam, updateTeam } from "../api/teams.api";
+import { useAuthSession } from "../auth/auth-session";
 import ResourceListSkeleton from "../components/ResourceListSkeleton";
 import type { Team, UpdateTeamInput } from "../types/team";
 
@@ -46,6 +47,8 @@ function getRequestErrorMessage(error: unknown) {
 }
 
 export default function TeamDetailPage() {
+  const { session } = useAuthSession();
+  const token = session.status === "signedIn" ? session.token : undefined;
   const { id = "" } = useParams();
   const navigate = useNavigate();
   const teamId = Number(id);
@@ -110,7 +113,7 @@ export default function TeamDetailPage() {
   async function handleUpdate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!form || state.status !== "success") {
+    if (!token || !form || state.status !== "success") {
       return;
     }
 
@@ -123,7 +126,7 @@ export default function TeamDetailPage() {
     setNotice(null);
 
     try {
-      const response = await updateTeam(teamId, payload);
+      const response = await updateTeam(teamId, payload, token);
       setResult({ status: "success", requestKey, team: response.data });
       setForm(toFormData(response.data));
       setIsEditing(false);
@@ -147,11 +150,13 @@ export default function TeamDetailPage() {
   }
 
   async function handleDelete() {
+    if (!token) return;
+
     setIsDeleting(true);
     setNotice(null);
 
     try {
-      const response = await deleteTeam(teamId);
+      const response = await deleteTeam(teamId, token);
       navigate("/teams", {
         replace: true,
         state: { feedback: response.message },
@@ -210,7 +215,7 @@ export default function TeamDetailPage() {
               <span className="eyebrow">Equipo #{state.team.id}</span>
               <h1>{state.team.name}</h1>
             </div>
-            {!isEditing && (
+            {token && !isEditing && (
               <div className="detail-actions">
                 <button
                   className="secondary-button"

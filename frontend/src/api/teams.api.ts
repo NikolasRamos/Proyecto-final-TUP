@@ -31,22 +31,32 @@ export function listTeams({
   return apiGet<PaginatedResponse<Team>>(`/api/teams?${query.toString()}`);
 }
 
-export function createTeam(team: CreateTeamInput) {
-  return apiPost<TeamResponse, CreateTeamInput>("/api/teams", team);
+export function createTeam(team: CreateTeamInput, token: string) {
+  return apiPost<TeamResponse, CreateTeamInput>("/api/teams", team, token);
 }
 
 export function getTeam(teamId: number) {
   return apiGet<{ data: Team }>(`/api/teams/${teamId}`);
 }
 
-export function updateTeam(teamId: number, team: UpdateTeamInput) {
-  return apiPut<TeamResponse, UpdateTeamInput>(`/api/teams/${teamId}`, team);
+export function updateTeam(
+  teamId: number,
+  team: UpdateTeamInput,
+  token: string,
+) {
+  return apiPut<TeamResponse, UpdateTeamInput>(
+    `/api/teams/${teamId}`,
+    team,
+    token,
+  );
 }
 
-export function deleteTeam(teamId: number) {
-  return apiDelete<{ message: string }>(`/api/teams/${teamId}`);
+export function deleteTeam(teamId: number, token: string) {
+  return apiDelete<{ message: string }>(`/api/teams/${teamId}`, token);
 }
 
-export function listTeamMembers(teamId: number) {
-  return apiGet<{ data: TeamMember[] }>(`/api/teams/${teamId}/members`);
+export function listTeamMembers(teamId: number, token: string) {
+  return apiGet<{ data: TeamMember[] }>(`/api/teams/${teamId}/members`, {
+    token,
+  });
 }

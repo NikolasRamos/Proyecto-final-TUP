@@ -9,6 +9,7 @@ import {
   updateTournament,
   updateTournamentStatus,
 } from "../api/tournaments.api";
+import { useAuthSession } from "../auth/auth-session";
 import ResourceListSkeleton from "../components/ResourceListSkeleton";
 import TournamentRegistrationsPanel from "../components/TournamentRegistrationsPanel";
 import {
@@ -254,6 +255,9 @@ function getRequestErrorMessage(error: unknown) {
 }
 
 export default function TournamentDetailPage() {
+  const { session } = useAuthSession();
+  const token = session.status === "signedIn" ? session.token : undefined;
+  const isCheckingSession = session.status === "checking";
   const { id = "" } = useParams();
   const navigate = useNavigate();
   const tournamentId = Number(id);
@@ -278,13 +282,13 @@ export default function TournamentDetailPage() {
       : { status: "loading", requestKey };
 
   useEffect(() => {
-    if (!hasValidId) {
+    if (!hasValidId || isCheckingSession) {
       return;
     }
 
     let active = true;
 
-    void getTournament(tournamentId)
+    void getTournament(tournamentId, token)
       .then((response) => {
         if (!active) {
           return;
@@ -312,7 +316,7 @@ export default function TournamentDetailPage() {
     return () => {
       active = false;
     };
-  }, [hasValidId, requestKey, tournamentId]);
+  }, [hasValidId, isCheckingSession, requestKey, token, tournamentId]);
 
   function updateField<Key extends keyof TournamentFormData>(
     field: Key,
@@ -422,7 +426,7 @@ export default function TournamentDetailPage() {
   async function handleUpdate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!form || state.status !== "success") {
+    if (!token || !form || state.status !== "success") {
       return;
     }
 
@@ -476,7 +480,7 @@ export default function TournamentDetailPage() {
     setNotice(null);
 
     try {
-      const response = await updateTournament(tournamentId, payload);
+      const response = await updateTournament(tournamentId, payload, token);
       setResult({
         status: "success",
         requestKey,
@@ -507,11 +511,13 @@ export default function TournamentDetailPage() {
   }
 
   async function handleDelete() {
+    if (!token) return;
+
     setIsDeleting(true);
     setNotice(null);
 
     try {
-      const response = await deleteTournament(tournamentId);
+      const response = await deleteTournament(tournamentId, token);
       navigate("/tournaments", {
         replace: true,
         state: { feedback: response.message },
@@ -531,7 +537,7 @@ export default function TournamentDetailPage() {
   }
 
   async function handleOpenRegistrations() {
-    if (state.status !== "success") {
+    if (!token || state.status !== "success") {
       return;
     }
 
@@ -539,7 +545,11 @@ export default function TournamentDetailPage() {
     setNotice(null);
 
     try {
-      const response = await updateTournamentStatus(tournamentId, "open");
+      const response = await updateTournamentStatus(
+        tournamentId,
+        "open",
+        token,
+      );
       setResult({
         status: "success",
         requestKey,
@@ -562,7 +572,7 @@ export default function TournamentDetailPage() {
   }
 
   async function handleReportDownload() {
-    if (state.status !== "success") {
+    if (!token || state.status !== "success") {
       return;
     }
 
@@ -570,7 +580,7 @@ export default function TournamentDetailPage() {
     setNotice(null);
 
     try {
-      const report = await downloadTournamentReport(tournamentId);
+      const report = await downloadTournamentReport(tournamentId, token);
       const url = URL.createObjectURL(report);
       const link = document.createElement("a");
       const date = new Date().toISOString().slice(0, 10);
@@ -668,7 +678,7 @@ export default function TournamentDetailPage() {
               </span>
             </div>
 
-            {!isEditing && (
+            {token && !isEditing && (
               <div className="detail-actions">
                 <button
                   className="secondary-button"
@@ -1277,7 +1287,7 @@ export default function TournamentDetailPage() {
                 </div>
               </dl>
 
-              {state.tournament.status !== "draft" && (
+              {token && state.tournament.status !== "draft" && (
                 <p className="detail-rule-note">
                   Este torneo conserva su historial y ya no puede eliminarse
                   porque dejó de estar en borrador.
@@ -1286,8 +1296,9 @@ export default function TournamentDetailPage() {
             </section>
           )}
 
-          {!isEditing && state.tournament.isTeamTournament && (
+          {token && !isEditing && state.tournament.isTeamTournament && (
             <TournamentRegistrationsPanel
+              token={token}
               tournamentId={tournamentId}
               tournamentStatus={state.tournament.status}
               maxParticipants={state.tournament.maxParticipants}
@@ -1298,7 +1309,7 @@ export default function TournamentDetailPage() {
             />
           )}
 
-          {!isEditing && !state.tournament.isTeamTournament && (
+          {token && !isEditing && !state.tournament.isTeamTournament && (
             <section className="detail-card" aria-label="Inscripciones">
               <h2>Inscripciones individuales</h2>
               <p className="detail-rule-note">

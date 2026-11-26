@@ -5,6 +5,7 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { testToken } from "../test/signed-in";
 import App from "./App";
 import { ApiError } from "./api/client";
 import {
@@ -14,6 +15,11 @@ import {
   listTeams,
   updateTeam,
 } from "./api/teams.api";
+
+vi.mock("./auth/AuthProvider", async () => {
+  const { SignedInTestProvider } = await import("../test/signed-in");
+  return { default: SignedInTestProvider };
+});
 
 vi.mock("./api/teams.api", () => ({
   createTeam: vi.fn(),
@@ -116,11 +122,14 @@ describe("pantallas principales de equipos", () => {
     await user.type(screen.getByLabelText("ID del capitán"), "1");
     await user.click(screen.getByRole("button", { name: "Crear equipo" }));
 
-    expect(createTeam).toHaveBeenCalledWith({
-      name: "Los Halcones",
-      description: "Equipo de prueba",
-      captainId: 1,
-    });
+    expect(createTeam).toHaveBeenCalledWith(
+      {
+        name: "Los Halcones",
+        description: "Equipo de prueba",
+        captainId: 1,
+      },
+      testToken,
+    );
     expect(
       await screen.findByText("Equipo creado correctamente"),
     ).toBeInTheDocument();
@@ -168,10 +177,14 @@ describe("pantallas principales de equipos", () => {
     );
     await user.click(screen.getByRole("button", { name: "Guardar cambios" }));
 
-    expect(updateTeam).toHaveBeenCalledWith(201, {
-      name: "Halcones renovados",
-      description: "Descripción actualizada",
-    });
+    expect(updateTeam).toHaveBeenCalledWith(
+      201,
+      {
+        name: "Halcones renovados",
+        description: "Descripción actualizada",
+      },
+      testToken,
+    );
     expect(
       await screen.findByText("Equipo actualizado correctamente"),
     ).toBeInTheDocument();
@@ -192,7 +205,7 @@ describe("pantallas principales de equipos", () => {
     ).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Sí, eliminar" }));
 
-    expect(deleteTeam).toHaveBeenCalledWith(201);
+    expect(deleteTeam).toHaveBeenCalledWith(201, testToken);
     expect(
       await screen.findByText("Equipo eliminado correctamente"),
     ).toBeInTheDocument();

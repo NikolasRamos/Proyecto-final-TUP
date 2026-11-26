@@ -14,6 +14,7 @@ import type { TournamentStatus } from "../types/tournament";
 import ResourceListSkeleton from "./ResourceListSkeleton";
 
 interface TournamentRegistrationsPanelProps {
+  token: string;
   tournamentId: number;
   tournamentStatus: TournamentStatus;
   maxParticipants: number;
@@ -52,6 +53,7 @@ function getErrorMessage(error: unknown, fallback: string) {
 }
 
 export default function TournamentRegistrationsPanel({
+  token,
   tournamentId,
   tournamentStatus,
   maxParticipants,
@@ -77,7 +79,7 @@ export default function TournamentRegistrationsPanel({
     let active = true;
 
     void Promise.all([
-      listTournamentRegistrations(tournamentId),
+      listTournamentRegistrations(tournamentId, token),
       listTeams({ page: 1, limit: 100 }),
     ])
       .then(([registrationsResponse, teamsResponse]) => {
@@ -108,7 +110,7 @@ export default function TournamentRegistrationsPanel({
     return () => {
       active = false;
     };
-  }, [reloadVersion, tournamentId]);
+  }, [reloadVersion, token, tournamentId]);
 
   function reloadRegistrations() {
     setState({ status: "loading" });
@@ -149,7 +151,7 @@ export default function TournamentRegistrationsPanel({
     setIsLoadingMembers(true);
 
     try {
-      const response = await listTeamMembers(teamId);
+      const response = await listTeamMembers(teamId, token);
       setTeamMembers(response.data);
     } catch (error) {
       setMembersError(
@@ -194,6 +196,7 @@ export default function TournamentRegistrationsPanel({
         tournamentId,
         teamId,
         selectedMemberIds,
+        token,
       );
       setSelectedTeamId("");
       setSelectedMemberIds([]);
@@ -215,7 +218,11 @@ export default function TournamentRegistrationsPanel({
     setNotice(null);
 
     try {
-      const response = await withdrawTeamFromTournament(tournamentId, teamId);
+      const response = await withdrawTeamFromTournament(
+        tournamentId,
+        teamId,
+        token,
+      );
       setNotice({ type: "success", message: response.message });
       reloadRegistrations();
     } catch (error) {

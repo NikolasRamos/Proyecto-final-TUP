@@ -5,6 +5,7 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { testToken } from "../test/signed-in";
 import App from "./App";
 import { ApiError } from "./api/client";
 import {
@@ -21,6 +22,11 @@ import {
   updateTournament,
   updateTournamentStatus,
 } from "./api/tournaments.api";
+
+vi.mock("./auth/AuthProvider", async () => {
+  const { SignedInTestProvider } = await import("../test/signed-in");
+  return { default: SignedInTestProvider };
+});
 
 vi.mock("./api/tournaments.api", () => ({
   createTournament: vi.fn(),
@@ -131,7 +137,7 @@ describe("TournamentDetailPage", () => {
     expect(screen.getByText("16 equipos")).toBeInTheDocument();
     expect(screen.getByText("De 2 a 5 integrantes")).toBeInTheDocument();
     expect(screen.getByText("Usuario #1")).toBeInTheDocument();
-    expect(getTournament).toHaveBeenCalledWith(101);
+    expect(getTournament).toHaveBeenCalledWith(101, testToken);
   });
 
   it("descarga el reporte exportable del torneo", async () => {
@@ -157,7 +163,7 @@ describe("TournamentDetailPage", () => {
       await screen.findByRole("button", { name: "Exportar reporte" }),
     );
 
-    expect(downloadTournamentReport).toHaveBeenCalledWith(101);
+    expect(downloadTournamentReport).toHaveBeenCalledWith(101, testToken);
     expect(createObjectURL).toHaveBeenCalledWith(report);
     expect(click).toHaveBeenCalledOnce();
     expect(revokeObjectURL).toHaveBeenCalledWith("blob:reporte");
@@ -191,22 +197,26 @@ describe("TournamentDetailPage", () => {
     await user.type(capacityInput, "20");
     await user.click(screen.getByRole("button", { name: "Guardar cambios" }));
 
-    expect(updateTournament).toHaveBeenCalledWith(101, {
-      name: "Torneo Apertura renovado",
-      description: "Competencia de prueba",
-      modality: "league",
-      maxParticipants: 20,
-      playoffSpots: null,
-      groupCount: null,
-      maxParticipantsPerGroup: null,
-      swissRounds: null,
-      isTeamTournament: true,
-      minTeamMembers: 2,
-      maxTeamMembers: 5,
-      registrationDeadline: "2026-11-01",
-      startDate: "2026-11-05",
-      endDate: "2026-12-10",
-    });
+    expect(updateTournament).toHaveBeenCalledWith(
+      101,
+      {
+        name: "Torneo Apertura renovado",
+        description: "Competencia de prueba",
+        modality: "league",
+        maxParticipants: 20,
+        playoffSpots: null,
+        groupCount: null,
+        maxParticipantsPerGroup: null,
+        swissRounds: null,
+        isTeamTournament: true,
+        minTeamMembers: 2,
+        maxTeamMembers: 5,
+        registrationDeadline: "2026-11-01",
+        startDate: "2026-11-05",
+        endDate: "2026-12-10",
+      },
+      testToken,
+    );
     expect(
       await screen.findByText("Torneo actualizado correctamente"),
     ).toBeInTheDocument();
@@ -286,6 +296,7 @@ describe("TournamentDetailPage", () => {
         groupCount: 4,
         maxParticipantsPerGroup: 6,
       }),
+      testToken,
     );
   });
 
@@ -356,6 +367,7 @@ describe("TournamentDetailPage", () => {
         maxParticipants: 16,
         swissRounds: 6,
       }),
+      testToken,
     );
   });
 
@@ -408,6 +420,7 @@ describe("TournamentDetailPage", () => {
         minTeamMembers: null,
         maxTeamMembers: null,
       }),
+      testToken,
     );
   });
 
@@ -469,7 +482,7 @@ describe("TournamentDetailPage", () => {
     ).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Sí, eliminar" }));
 
-    expect(deleteTournament).toHaveBeenCalledWith(101);
+    expect(deleteTournament).toHaveBeenCalledWith(101, testToken);
     expect(
       await screen.findByText("Torneo eliminado correctamente"),
     ).toBeInTheDocument();
@@ -561,7 +574,7 @@ describe("TournamentDetailPage", () => {
       await screen.findByRole("button", { name: "Abrir inscripciones" }),
     );
 
-    expect(updateTournamentStatus).toHaveBeenCalledWith(101, "open");
+    expect(updateTournamentStatus).toHaveBeenCalledWith(101, "open", testToken);
     expect(
       await screen.findByText("Estado del torneo actualizado correctamente"),
     ).toBeInTheDocument();
@@ -609,7 +622,12 @@ describe("TournamentDetailPage", () => {
     await user.click(screen.getByLabelText(/Usuario #2/));
     await user.click(screen.getByRole("button", { name: "Inscribir equipo" }));
 
-    expect(registerTeamInTournament).toHaveBeenCalledWith(101, 201, [1, 2]);
+    expect(registerTeamInTournament).toHaveBeenCalledWith(
+      101,
+      201,
+      [1, 2],
+      testToken,
+    );
     expect(
       await screen.findByText("Equipo inscrito correctamente"),
     ).toBeInTheDocument();
@@ -649,7 +667,11 @@ describe("TournamentDetailPage", () => {
     expect(await screen.findByText("Los Halcones")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Retirar" }));
 
-    expect(withdrawTeamFromTournament).toHaveBeenCalledWith(101, 201);
+    expect(withdrawTeamFromTournament).toHaveBeenCalledWith(
+      101,
+      201,
+      testToken,
+    );
     expect(
       await screen.findByText("Equipo retirado correctamente"),
     ).toBeInTheDocument();

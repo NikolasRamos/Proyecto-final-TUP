@@ -60,6 +60,11 @@ credenciales y tokens vacíos.
 
 ## Orden recomendado para una demostración
 
+Las búsquedas de torneos vigentes y equipos se pueden ejecutar como invitado.
+Las solicitudes de gestión usan `authAdminToken`. Para obtener el token, ejecutá
+**06 - Autenticación y roles → Iniciar sesión como administrador** con una
+cuenta administradora del ambiente seleccionado.
+
 1. Comprobar la API.
 2. Crear un torneo.
 3. Consultar el torneo creado.

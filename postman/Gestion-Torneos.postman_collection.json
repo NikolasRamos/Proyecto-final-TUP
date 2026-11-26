@@ -60,14 +60,27 @@
     {
       "name": "02 - Torneos",
       "description": "Creación, consulta, modificación, cambio de estado y eliminación de torneos.",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{authAdminToken}}",
+            "type": "string"
+          }
+        ]
+      },
       "item": [
         {
           "name": "Listar torneos",
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/api/tournaments?search=apertura&status=draft&modality=league&page=1&limit=10&sortBy=createdAt&order=desc",
-            "description": "Listado con ejemplos de búsqueda, filtros, paginación y ordenamiento. Se pueden desactivar o eliminar parámetros en la pestaña Params."
+            "url": "{{baseUrl}}/api/tournaments?search=apertura&status=open&modality=league&page=1&limit=10&sortBy=createdAt&order=desc",
+            "description": "Consulta pública de torneos vigentes. Se pueden ajustar la búsqueda, el estado, la modalidad, el orden y la paginación desde Params.",
+            "auth": {
+              "type": "noauth"
+            }
           },
           "response": []
         },
@@ -199,6 +212,16 @@
     {
       "name": "03 - Equipos",
       "description": "Creación, consulta, modificación y eliminación de equipos.",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{authAdminToken}}",
+            "type": "string"
+          }
+        ]
+      },
       "item": [
         {
           "name": "Listar equipos",
@@ -206,7 +229,10 @@
             "method": "GET",
             "header": [],
             "url": "{{baseUrl}}/api/teams?search=&page=1&limit=10",
-            "description": "Listado paginado de equipos. El parámetro opcional search permite buscar por nombre o descripción."
+            "description": "Listado paginado de equipos. El parámetro opcional search permite buscar por nombre o descripción.",
+            "auth": {
+              "type": "noauth"
+            }
           },
           "response": []
         },
@@ -256,7 +282,10 @@
             "method": "GET",
             "header": [],
             "url": "{{baseUrl}}/api/teams/{{teamId}}",
-            "description": "Consulta el equipo indicado por la variable teamId."
+            "description": "Consulta el equipo indicado por la variable teamId.",
+            "auth": {
+              "type": "noauth"
+            }
           },
           "response": []
         },
@@ -299,6 +328,16 @@
     {
       "name": "04 - Integrantes",
       "description": "Administración de integrantes pertenecientes a un equipo.",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{authAdminToken}}",
+            "type": "string"
+          }
+        ]
+      },
       "item": [
         {
           "name": "Listar integrantes del equipo",
@@ -349,6 +388,16 @@
     {
       "name": "05 - Inscripciones",
       "description": "Inscripción, listado y retiro de equipos en torneos.",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{authAdminToken}}",
+            "type": "string"
+          }
+        ]
+      },
       "item": [
         {
           "name": "Listar equipos inscritos",

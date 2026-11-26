@@ -3,6 +3,7 @@ import { Link } from "react-router";
 
 import { listTeams } from "../api/teams.api";
 import { listTournaments } from "../api/tournaments.api";
+import { useAuthSession } from "../auth/auth-session";
 import ModuleGrid from "../components/ModuleGrid";
 import ResourceListSkeleton from "../components/ResourceListSkeleton";
 import TeamCard from "../components/TeamCard";
@@ -37,6 +38,8 @@ function getErrorMessage(error: unknown) {
 }
 
 export default function DashboardPage() {
+  const { session } = useAuthSession();
+  const token = session.status === "signedIn" ? session.token : undefined;
   const [tournaments, setTournaments] =
     useState<ResourceState<Tournament>>(createInitialState);
   const [teams, setTeams] = useState<ResourceState<Team>>(createInitialState);
@@ -44,68 +47,75 @@ export default function DashboardPage() {
   useEffect(() => {
     let active = true;
 
-    void Promise.allSettled([listTournaments(), listTeams()]).then(
-      ([tournamentsResult, teamsResult]) => {
-        if (!active) {
-          return;
-        }
+    void Promise.allSettled([
+      listTournaments(undefined, token),
+      listTeams(),
+    ]).then(([tournamentsResult, teamsResult]) => {
+      if (!active) {
+        return;
+      }
 
-        if (tournamentsResult.status === "fulfilled") {
-          setTournaments({
-            status: "success",
-            items: tournamentsResult.value.data,
-            total: tournamentsResult.value.pagination.total,
-          });
-        } else {
-          setTournaments({
-            status: "error",
-            items: [],
-            total: 0,
-            message: getErrorMessage(tournamentsResult.reason),
-          });
-        }
+      if (tournamentsResult.status === "fulfilled") {
+        setTournaments({
+          status: "success",
+          items: tournamentsResult.value.data,
+          total: tournamentsResult.value.pagination.total,
+        });
+      } else {
+        setTournaments({
+          status: "error",
+          items: [],
+          total: 0,
+          message: getErrorMessage(tournamentsResult.reason),
+        });
+      }
 
-        if (teamsResult.status === "fulfilled") {
-          setTeams({
-            status: "success",
-            items: teamsResult.value.data,
-            total: teamsResult.value.pagination.total,
-          });
-        } else {
-          setTeams({
-            status: "error",
-            items: [],
-            total: 0,
-            message: getErrorMessage(teamsResult.reason),
-          });
-        }
-      },
-    );
+      if (teamsResult.status === "fulfilled") {
+        setTeams({
+          status: "success",
+          items: teamsResult.value.data,
+          total: teamsResult.value.pagination.total,
+        });
+      } else {
+        setTeams({
+          status: "error",
+          items: [],
+          total: 0,
+          message: getErrorMessage(teamsResult.reason),
+        });
+      }
+    });
 
     return () => {
       active = false;
     };
-  }, []);
+  }, [token]);
 
   return (
     <main className="app-shell">
       <section className="hero" aria-labelledby="page-title">
-        <span className="eyebrow">Panel interno</span>
+        {token && <span className="eyebrow">Panel interno</span>}
         <h1 id="page-title">Título X</h1>
         <p>Descripción X</p>
         <div className="hero-actions">
-          <Link className="primary-link" to="/tournaments/new">
-            Crear torneo
+          <Link
+            className="primary-link"
+            to={token ? "/tournaments/new" : "/tournaments"}
+          >
+            {token ? "Crear torneo" : "Buscar torneos"}
           </Link>
-          <Link className="secondary-button" to="/teams/new">
-            Crear equipo
+          <Link
+            className="secondary-button"
+            to={token ? "/teams/new" : "/teams"}
+          >
+            {token ? "Crear equipo" : "Buscar equipos"}
           </Link>
         </div>
       </section>
 
       <section className="summary-grid" aria-label="Resumen del sistema">
         <article className="summary-card">
-          <span>Torneos registrados</span>
+          <span>{token ? "Torneos registrados" : "Torneos vigentes"}</span>
           {tournaments.status === "loading" ? (
             <span className="summary-skeleton" aria-hidden="true" />
           ) : (
@@ -191,10 +201,12 @@ export default function DashboardPage() {
         </article>
       </section>
 
-      <section aria-labelledby="modules-title">
-        <h2 id="modules-title">Módulos planificados</h2>
-        <ModuleGrid modules={modules} />
-      </section>
+      {token && (
+        <section aria-labelledby="modules-title">
+          <h2 id="modules-title">Módulos planificados</h2>
+          <ModuleGrid modules={modules} />
+        </section>
+      )}
     </main>
   );
 }

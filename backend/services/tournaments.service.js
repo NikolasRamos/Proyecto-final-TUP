@@ -2,6 +2,8 @@ import { Op } from "sequelize";
 
 import Tournament from "../models/Tournament.js";
 
+const publicTournamentStatuses = ["open", "in_progress"];
+
 const allowedStatusTransitions = Object.freeze({
   draft: ["open", "cancelled"],
   open: ["in_progress", "cancelled"],
@@ -14,15 +16,18 @@ export function createTournament(tournamentData) {
   return Tournament.create(tournamentData);
 }
 
-export function listTournaments({
-  search,
-  status,
-  modality,
-  page,
-  limit,
-  sortBy = "createdAt",
-  order = "desc",
-}) {
+export function listTournaments(
+  {
+    search,
+    status,
+    modality,
+    page,
+    limit,
+    sortBy = "createdAt",
+    order = "desc",
+  },
+  { publicOnly = false } = {},
+) {
   const where = {};
 
   if (search) {
@@ -32,7 +37,14 @@ export function listTournaments({
     ];
   }
 
-  if (status) {
+  if (publicOnly) {
+    const visibleStatuses = status
+      ? publicTournamentStatuses.filter(
+          (visibleStatus) => visibleStatus === status,
+        )
+      : publicTournamentStatuses;
+    where.status = { [Op.in]: visibleStatuses };
+  } else if (status) {
     where.status = status;
   }
 
@@ -51,7 +63,15 @@ export function listTournaments({
   });
 }
 
-export function getTournamentById(tournamentId) {
+export function getTournamentById(tournamentId, { publicOnly = false } = {}) {
+  if (publicOnly) {
+    return Tournament.findOne({
+      where: {
+        id: tournamentId,
+        status: { [Op.in]: publicTournamentStatuses },
+      },
+    });
+  }
   return Tournament.findByPk(tournamentId);
 }
 

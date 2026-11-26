@@ -27,15 +27,18 @@ export interface ListTournamentsParams {
   order?: "asc" | "desc";
 }
 
-export function listTournaments({
-  search,
-  status,
-  modality,
-  page = 1,
-  limit = 5,
-  sortBy,
-  order,
-}: ListTournamentsParams = {}) {
+export function listTournaments(
+  {
+    search,
+    status,
+    modality,
+    page = 1,
+    limit = 5,
+    sortBy,
+    order,
+  }: ListTournamentsParams = {},
+  token?: string,
+) {
   const query = new URLSearchParams({
     page: String(page),
     limit: String(limit),
@@ -63,44 +66,58 @@ export function listTournaments({
 
   return apiGet<PaginatedResponse<Tournament>>(
     `/api/tournaments?${query.toString()}`,
+    { token },
   );
 }
 
-export function createTournament(tournament: CreateTournamentInput) {
+export function createTournament(
+  tournament: CreateTournamentInput,
+  token: string,
+) {
   return apiPost<CreateTournamentResponse, CreateTournamentInput>(
     "/api/tournaments",
     tournament,
+    token,
   );
 }
 
-export function getTournament(tournamentId: number) {
-  return apiGet<{ data: Tournament }>(`/api/tournaments/${tournamentId}`);
+export function getTournament(tournamentId: number, token?: string) {
+  return apiGet<{ data: Tournament }>(`/api/tournaments/${tournamentId}`, {
+    token,
+  });
 }
 
 export function updateTournament(
   tournamentId: number,
   tournament: UpdateTournamentInput,
+  token: string,
 ) {
   return apiPut<TournamentResponse, UpdateTournamentInput>(
     `/api/tournaments/${tournamentId}`,
     tournament,
+    token,
   );
 }
 
-export function deleteTournament(tournamentId: number) {
-  return apiDelete<{ message: string }>(`/api/tournaments/${tournamentId}`);
+export function deleteTournament(tournamentId: number, token: string) {
+  return apiDelete<{ message: string }>(
+    `/api/tournaments/${tournamentId}`,
+    token,
+  );
 }
 
 export function updateTournamentStatus(
   tournamentId: number,
   status: TournamentStatus,
+  token: string,
 ) {
   return apiPatch<TournamentResponse, { status: TournamentStatus }>(
     `/api/tournaments/${tournamentId}/status`,
     { status },
+    token,
   );
 }
 
-export function downloadTournamentReport(tournamentId: number) {
-  return apiDownload(`/api/tournaments/${tournamentId}/report`);
+export function downloadTournamentReport(tournamentId: number, token: string) {
+  return apiDownload(`/api/tournaments/${tournamentId}/report`, token);
 }

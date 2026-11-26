@@ -47,6 +47,19 @@ Comprueba que Express responde.
 
 ## Torneos
 
+### Acceso de invitados
+
+Sin iniciar sesión, se pueden buscar y consultar torneos con inscripción
+abierta (`open`) o en curso (`in_progress`). La API aplica ese límite al
+listado, al total de la paginación y a la consulta por ID. Un filtro por un
+estado no visible devuelve una página vacía y un detalle no visible devuelve
+`404`. Un token válido habilita los demás estados.
+
+La creación, edición, cambio de estado, eliminación, exportación e
+inscripciones requieren `Authorization: Bearer <token>`. En equipos, el listado
+y el detalle son públicos. La gestión del equipo y las consultas u operaciones
+de integrantes requieren sesión. Sin una sesión válida, la API devuelve `401`.
+
 ### Listar
 
 `GET /api/tournaments`

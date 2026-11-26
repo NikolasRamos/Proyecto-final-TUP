@@ -14,6 +14,7 @@ interface ListTournamentRegistrationsParams {
 
 export function listTournamentRegistrations(
   tournamentId: number,
+  token: string,
   {
     status = "registered",
     page = 1,
@@ -28,6 +29,7 @@ export function listTournamentRegistrations(
 
   return apiGet<PaginatedResponse<TournamentRegistration>>(
     `/api/tournaments/${tournamentId}/registrations?${query.toString()}`,
+    { token },
   );
 }
 
@@ -35,18 +37,22 @@ export function registerTeamInTournament(
   tournamentId: number,
   teamId: number,
   memberIds: number[],
+  token: string,
 ) {
   return apiPost<RegistrationResponse, { teamId: number; memberIds: number[] }>(
     `/api/tournaments/${tournamentId}/registrations`,
     { teamId, memberIds },
+    token,
   );
 }
 
 export function withdrawTeamFromTournament(
   tournamentId: number,
   teamId: number,
+  token: string,
 ) {
   return apiDelete<RegistrationResponse>(
     `/api/tournaments/${tournamentId}/registrations/${teamId}`,
+    token,
   );
 }

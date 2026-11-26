@@ -3,6 +3,7 @@ import { Link } from "react-router";
 
 import { ApiError } from "../api/client";
 import { createTournament } from "../api/tournaments.api";
+import { useAuthSession } from "../auth/auth-session";
 import {
   getGroupsPlayoffConfigurationError,
   getRecommendedSwissRounds,
@@ -114,6 +115,7 @@ function validateFormat(form: TournamentFormData) {
 }
 
 export default function CreateTournamentPage() {
+  const { session } = useAuthSession();
   const [form, setForm] = useState(initialForm);
   const [submitState, setSubmitState] = useState<SubmitState>({
     status: "idle",
@@ -167,6 +169,7 @@ export default function CreateTournamentPage() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (session.status !== "signedIn") return;
 
     const formatError = validateFormat(form);
 
@@ -231,7 +234,7 @@ export default function CreateTournamentPage() {
     setSubmitState({ status: "submitting" });
 
     try {
-      const response = await createTournament(payload);
+      const response = await createTournament(payload, session.token);
 
       setSubmitState({
         status: "success",

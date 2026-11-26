@@ -1,9 +1,11 @@
-import request from "supertest";
+import { useAuthenticatedRequests } from "./authenticated-request.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import app from "../app.js";
 import { createTournamentReportPdf } from "../reports/tournament-report.pdf.js";
 import { getTournamentReportData } from "../services/tournament-reports.service.js";
+
+const authenticatedRequest = useAuthenticatedRequests(app);
 
 vi.mock("../reports/tournament-report.pdf.js", () => ({
   createTournamentReportPdf: vi.fn(),
@@ -29,7 +31,9 @@ describe("GET /api/tournaments/:id/report", () => {
     getTournamentReportData.mockResolvedValue({ outcome: "found", report });
     createTournamentReportPdf.mockResolvedValue(pdf);
 
-    const response = await request(app).get("/api/tournaments/101/report");
+    const response = await authenticatedRequest().get(
+      "/api/tournaments/101/report",
+    );
 
     expect(response.status).toBe(200);
     expect(response.headers["content-type"]).toBe("application/pdf");
@@ -42,7 +46,7 @@ describe("GET /api/tournaments/:id/report", () => {
   });
 
   it("rechaza un identificador inválido", async () => {
-    const response = await request(app).get(
+    const response = await authenticatedRequest().get(
       "/api/tournaments/no-es-un-id/report",
     );
 
@@ -56,7 +60,9 @@ describe("GET /api/tournaments/:id/report", () => {
   it("responde 404 cuando el torneo no existe", async () => {
     getTournamentReportData.mockResolvedValue({ outcome: "not_found" });
 
-    const response = await request(app).get("/api/tournaments/999/report");
+    const response = await authenticatedRequest().get(
+      "/api/tournaments/999/report",
+    );
 
     expect(response.status).toBe(404);
     expect(response.body.message).toBe("Torneo no encontrado");
@@ -65,7 +71,9 @@ describe("GET /api/tournaments/:id/report", () => {
   it("no expone detalles si falla la generación", async () => {
     getTournamentReportData.mockRejectedValue(new Error("detalle interno"));
 
-    const response = await request(app).get("/api/tournaments/101/report");
+    const response = await authenticatedRequest().get(
+      "/api/tournaments/101/report",
+    );
 
     expect(response.status).toBe(500);
     expect(response.body).toEqual({

@@ -5,8 +5,14 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { testToken } from "../test/signed-in";
 import App from "./App";
 import { createTournament } from "./api/tournaments.api";
+
+vi.mock("./auth/AuthProvider", async () => {
+  const { SignedInTestProvider } = await import("../test/signed-in");
+  return { default: SignedInTestProvider };
+});
 
 vi.mock("./api/tournaments.api", () => ({
   createTournament: vi.fn(),
@@ -201,6 +207,7 @@ describe("CreateTournamentPage", () => {
         maxParticipants: 16,
         swissRounds: 5,
       }),
+      testToken,
     );
   });
 
@@ -344,6 +351,7 @@ describe("CreateTournamentPage", () => {
         groupCount: 4,
         maxParticipantsPerGroup: 5,
       }),
+      testToken,
     );
   });
 
@@ -399,19 +407,22 @@ describe("CreateTournamentPage", () => {
 
     await user.click(screen.getByRole("button", { name: "Crear torneo" }));
 
-    expect(createTournament).toHaveBeenCalledWith({
-      name: "Torneo Copa",
-      description: null,
-      modality: "league",
-      maxParticipants: 16,
-      isTeamTournament: true,
-      minTeamMembers: 2,
-      maxTeamMembers: 5,
-      registrationDeadline: "2026-11-01",
-      startDate: "2026-11-05",
-      endDate: "2026-12-10",
-      organizerId,
-    });
+    expect(createTournament).toHaveBeenCalledWith(
+      {
+        name: "Torneo Copa",
+        description: null,
+        modality: "league",
+        maxParticipants: 16,
+        isTeamTournament: true,
+        minTeamMembers: 2,
+        maxTeamMembers: 5,
+        registrationDeadline: "2026-11-01",
+        startDate: "2026-11-05",
+        endDate: "2026-12-10",
+        organizerId,
+      },
+      testToken,
+    );
     expect(
       await screen.findByText("Torneo creado correctamente"),
     ).toBeInTheDocument();
@@ -461,6 +472,7 @@ describe("CreateTournamentPage", () => {
         minTeamMembers: null,
         maxTeamMembers: null,
       }),
+      testToken,
     );
   });
 
