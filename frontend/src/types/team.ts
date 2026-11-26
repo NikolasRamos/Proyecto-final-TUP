@@ -6,6 +6,7 @@ export interface Team {
   description: string | null;
   captainId: EntityId;
   captainAccountId?: EntityId | null;
+  captainName?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -26,6 +27,7 @@ export interface TeamResponse {
 export interface TeamMember {
   id: EntityId;
   userId: EntityId;
+  nombre?: string | null;
   isCaptain: boolean;
   joinedAt: string;
 }
