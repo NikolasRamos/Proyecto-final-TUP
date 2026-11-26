@@ -174,6 +174,12 @@ Tournament.init(
         min: 1,
       },
     },
+    organizerAccountId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      field: "organizer_account_id",
+      validate: { isInt: true, min: 1 },
+    },
   },
   {
     sequelize: database,

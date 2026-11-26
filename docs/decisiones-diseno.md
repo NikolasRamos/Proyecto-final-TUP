@@ -138,12 +138,23 @@ Esta separación favorece la responsabilidad única y permite probar las reglas
 sin levantar un servidor real. No se afirma que el proyecto aplique todos los
 principios SOLID; solo se identifica la separación concreta presente.
 
-### 2.6 Limitación conocida: usuarios
+### 2.6 Propiedad de los torneos
 
-`organizerId`, `captainId` y `userId` validan enteros positivos, pero todavía
-no poseen todas las claves foráneas hacia `users`, porque ese módulo corresponde
-al bloque 1. La integración futura debe realizarse con migraciones nuevas, sin
-reescribir las ya ejecutadas, y debe obtener el usuario autenticado desde JWT.
+Los torneos del prototipo guardaban el `organizerId` ingresado en el formulario.
+Como ese número podía coincidir con el ID de una cuenta creada después,
+reutilizarlo como prueba de propiedad podía otorgar permisos sobre otro torneo.
+
+La [migración 017](../backend/migrations/017-link-tournament-organizer-accounts.cjs)
+agrega una columna opcional que el servidor completa a partir de la sesión.
+Los datos anteriores siguen disponibles para los administradores. La decisión
+evita asignaciones incorrectas y requiere una columna adicional y una consulta
+de permisos por operación del organizador.
+
+El [middleware de acceso](../backend/middlewares/tournament-access.middleware.js)
+se reutiliza en edición, estado, eliminación, inscripciones y reportes. Esto
+mantiene la misma regla aunque la petición venga de Postman o del navegador.
+Las [pruebas de acceso](../backend/tests/guest-access.routes.test.js) cubren
+cuentas ajenas, torneos del prototipo y el filtro de Mis torneos.
 
 ## 3. Alternativas consideradas
 

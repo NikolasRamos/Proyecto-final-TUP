@@ -18,6 +18,7 @@ import {
 } from "./client";
 
 export interface ListTournamentsParams {
+  mine?: boolean;
   search?: string;
   status?: TournamentStatus;
   modality?: TournamentModality;
@@ -29,6 +30,7 @@ export interface ListTournamentsParams {
 
 export function listTournaments(
   {
+    mine = false,
     search,
     status,
     modality,
@@ -65,7 +67,7 @@ export function listTournaments(
   }
 
   return apiGet<PaginatedResponse<Tournament>>(
-    `/api/tournaments?${query.toString()}`,
+    `/api/tournaments${mine ? "/mine" : ""}?${query.toString()}`,
     { token },
   );
 }

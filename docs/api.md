@@ -104,6 +104,14 @@ ambos formatos todavía está pendiente.
 GET /api/tournaments?search=apertura&status=open&page=1&limit=10&sortBy=name&order=asc
 ```
 
+Invitados y participantes ven torneos abiertos y en curso. Un organizador
+también ve sus propios torneos en cualquier estado. Los administradores pueden
+consultar todos los torneos.
+
+`GET /api/tournaments/mine` devuelve solo los torneos vinculados a la cuenta
+de sesión. Admite los mismos filtros y paginación. Requiere rol de organizador
+o administrador.
+
 ### Consultar
 
 `GET /api/tournaments/:id`
@@ -127,8 +135,7 @@ GET /api/tournaments?search=apertura&status=open&page=1&limit=10&sortBy=name&ord
   "maxTeamMembers": 5,
   "registrationDeadline": "2026-11-01",
   "startDate": "2026-11-05",
-  "endDate": "2026-12-10",
-  "organizerId": 1
+  "endDate": "2026-12-10"
 }
 ```
 
@@ -150,10 +157,15 @@ Reglas principales:
 - si el formato es `gauntlet`, el cupo mínimo es 2;
 - el cierre de inscripción no puede ser posterior al inicio;
 - la finalización no puede ser anterior al inicio;
-- `organizerId` debe ser un entero positivo;
+- el servidor asigna como organizador a la cuenta de sesión;
 - el servidor genera el identificador y el estado inicial `draft`.
 
 Respuesta correcta: `201 Created`.
+
+Solo un organizador del torneo o un administrador puede editarlo, cambiar su
+estado, eliminarlo, gestionar inscripciones y exportar el reporte. La gestión
+de un torneo ajeno visible devuelve `403`. Los torneos ajenos fuera del
+catálogo público devuelven `404` para el organizador.
 
 Ejemplo de configuración de Grupos + Playoff:
 

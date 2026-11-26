@@ -251,10 +251,7 @@ function validateTournamentUpdate(tournament, context) {
 }
 
 export const createTournamentSchema = z
-  .object({
-    ...tournamentFields,
-    organizerId: entityIdSchema,
-  })
+  .object(tournamentFields)
   .superRefine(validateTournament);
 
 export const updateTournamentSchema = z

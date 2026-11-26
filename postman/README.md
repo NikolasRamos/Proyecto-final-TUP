@@ -26,7 +26,6 @@ Si la API está iniciada, la comprobación debe responder `200 OK`.
 | `baseUrl`      | Dirección de la API local                              |
 | `tournamentId` | Torneo utilizado en consultas, cambios e inscripciones |
 | `teamId`       | Equipo utilizado en consultas y operaciones            |
-| `organizerId`  | Usuario organizador al crear un torneo                 |
 | `captainId`    | Usuario capitán al crear un equipo                     |
 | `userId`       | Usuario utilizado para agregar o retirar integrantes   |
 

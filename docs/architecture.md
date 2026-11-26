@@ -69,6 +69,7 @@ Rutas implementadas:
 | `/`                | Panel interno y resumen    |
 | `/tournaments`     | Listado inicial de torneos |
 | `/tournaments/new` | Creación de torneos        |
+| `/my-tournaments`  | Torneos de la cuenta        |
 
 Las rutas de detalle, edición, equipos, autenticación y otros módulos todavía
 deben incorporarse.
@@ -111,8 +112,9 @@ Proyecto-final-TUP/
 
 - El backend persiste datos reales; todavía no existe un modo mock global para
   la entrega de prototipo.
-- `organizerId`, `captainId` y `userId` son enteros positivos, pero aún no
-  referencian la tabla `users`.
+- `organizerAccountId` vincula los torneos nuevos con una cuenta autenticada.
+  Los torneos del prototipo conservan su identificador anterior y quedan a cargo
+  de los administradores.
 - El frontend consume la API mediante `VITE_API_URL` y utiliza
   `http://localhost:3000` como valor local predeterminado. En Vercel utiliza
   rutas relativas para compartir el mismo dominio con la API.

@@ -41,6 +41,7 @@ export interface Tournament {
   endDate: string;
   status: TournamentStatus;
   organizerId: EntityId;
+  organizerAccountId?: EntityId | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -60,10 +61,9 @@ export interface CreateTournamentInput {
   registrationDeadline: string;
   startDate: string;
   endDate: string;
-  organizerId: EntityId;
 }
 
-export type UpdateTournamentInput = Omit<CreateTournamentInput, "organizerId">;
+export type UpdateTournamentInput = CreateTournamentInput;
 
 export interface TournamentResponse {
   message: string;

@@ -10,6 +10,7 @@ import {
   createTournamentHandler,
   deleteTournamentHandler,
   getTournamentByIdHandler,
+  listMyTournamentsHandler,
   listTournamentsHandler,
   updateTournamentHandler,
   updateTournamentStatusHandler,
@@ -19,6 +20,7 @@ import {
   loadCompetitionRole,
   requireCompetitionManager,
 } from "../middlewares/competition-access.middleware.js";
+import { requireTournamentManager } from "../middlewares/tournament-access.middleware.js";
 
 const tournamentsRouter = Router();
 
@@ -29,6 +31,11 @@ tournamentsRouter.get(
   listTournamentsHandler,
 );
 tournamentsRouter.get(
+  "/mine",
+  requireCompetitionManager,
+  listMyTournamentsHandler,
+);
+tournamentsRouter.get(
   "/:id",
   allowGuest,
   loadCompetitionRole,
@@ -36,38 +43,38 @@ tournamentsRouter.get(
 );
 tournamentsRouter.get(
   "/:id/report",
-  requireCompetitionManager,
+  requireTournamentManager,
   downloadTournamentReportHandler,
 );
 tournamentsRouter.post("/", requireCompetitionManager, createTournamentHandler);
 tournamentsRouter.put(
   "/:id",
-  requireCompetitionManager,
+  requireTournamentManager,
   updateTournamentHandler,
 );
 tournamentsRouter.patch(
   "/:id/status",
-  requireCompetitionManager,
+  requireTournamentManager,
   updateTournamentStatusHandler,
 );
 tournamentsRouter.delete(
   "/:id",
-  requireCompetitionManager,
+  requireTournamentManager,
   deleteTournamentHandler,
 );
 tournamentsRouter.post(
   "/:tournamentId/registrations",
-  requireCompetitionManager,
+  requireTournamentManager,
   createRegistrationHandler,
 );
 tournamentsRouter.delete(
   "/:tournamentId/registrations/:teamId",
-  requireCompetitionManager,
+  requireTournamentManager,
   withdrawRegistrationHandler,
 );
 tournamentsRouter.get(
   "/:tournamentId/registrations",
-  requireCompetitionManager,
+  requireTournamentManager,
   listRegistrationsHandler,
 );
 

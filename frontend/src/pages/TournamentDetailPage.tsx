@@ -259,7 +259,7 @@ function getRequestErrorMessage(error: unknown) {
 
 export default function TournamentDetailPage() {
   const { session } = useAuthSession();
-  const token = getCompetitionManagerToken(session);
+  const viewToken = getCompetitionManagerToken(session);
   const isCheckingSession = session.status === "checking";
   const { id = "" } = useParams();
   const navigate = useNavigate();
@@ -284,6 +284,14 @@ export default function TournamentDetailPage() {
       ? result
       : { status: "loading", requestKey };
 
+  const token =
+    state.status === "success" &&
+    session.status === "signedIn" &&
+    (session.user.role === "administrador" ||
+      state.tournament.organizerAccountId === session.user.idUsuario)
+      ? viewToken
+      : undefined;
+
   useEffect(() => {
     if (!hasValidId || isCheckingSession) {
       return;
@@ -291,7 +299,7 @@ export default function TournamentDetailPage() {
 
     let active = true;
 
-    void getTournament(tournamentId, token)
+    void getTournament(tournamentId, viewToken)
       .then((response) => {
         if (!active) {
           return;
@@ -319,7 +327,7 @@ export default function TournamentDetailPage() {
     return () => {
       active = false;
     };
-  }, [hasValidId, isCheckingSession, requestKey, token, tournamentId]);
+  }, [hasValidId, isCheckingSession, requestKey, viewToken, tournamentId]);
 
   function updateField<Key extends keyof TournamentFormData>(
     field: Key,
@@ -1277,8 +1285,12 @@ export default function TournamentDetailPage() {
                   <dd>{formatDate(state.tournament.endDate)}</dd>
                 </div>
                 <div>
-                  <dt>Organizador temporal</dt>
-                  <dd>Usuario #{state.tournament.organizerId}</dd>
+                  <dt>Organizador</dt>
+                  <dd>
+                    {state.tournament.organizerAccountId
+                      ? `Usuario #${state.tournament.organizerAccountId}`
+                      : "Sin cuenta vinculada"}
+                  </dd>
                 </div>
                 <div>
                   <dt>Creado</dt>

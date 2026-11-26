@@ -23,6 +23,13 @@ erDiagram
 Almacena nombre, descripción, formato en la columna `modality`, cupo, fechas,
 estado y `organizer_id`. Los identificadores son enteros autoincrementales.
 
+La migración `017-link-tournament-organizer-accounts.cjs` agrega
+`organizer_account_id` y un índice para el listado Mis torneos. El servidor
+guarda ahí el ID de la cuenta autenticada al crear un torneo. Los torneos
+anteriores conservan `organizer_id` y quedan sin una cuenta vinculada, porque
+ese identificador originalmente se ingresaba manualmente. Los administradores
+pueden seguir gestionando esos torneos.
+
 La migración `012-add-groups-playoff-configuration.cjs` agrega:
 
 - `playoff_spots`: lugares disponibles en la fase eliminatoria;
@@ -57,7 +64,7 @@ presenta como formato del torneo.
 
 Índices principales:
 
-- `organizer_id`;
+- `organizer_id` y `organizer_account_id`;
 - `status`.
 
 ### `teams`
@@ -107,21 +114,13 @@ victorias, empates, derrotas, goles, diferencia y puntos.
 - `team_id` referencia `teams.id`.
 - La combinación `tournament_id + team_id` es única.
 
-## Integración pendiente con usuarios
+## Identificadores y cuentas de usuario
 
-`tournaments.organizer_id`, `teams.captain_id` y
-`team_members.user_id` ya almacenan enteros positivos, pero todavía no poseen claves
-foráneas hacia `users.id`.
-
-Cuando la tabla `users` esté disponible se deben crear migraciones nuevas para:
-
-- agregar las claves foráneas;
-- utilizar `ON UPDATE CASCADE`;
-- utilizar `ON DELETE RESTRICT` donde exista información histórica;
-- agregar las asociaciones de Sequelize;
-- devolver datos públicos del usuario en lugar de solamente su identificador.
-
-Las migraciones existentes no deben modificarse para incorporar esta relación.
+La tabla `usuario` identifica cada cuenta con `idUsuario`. Los identificadores
+del prototipo (`tournaments.organizer_id`, `teams.captain_id` y
+`team_members.user_id`) pueden contener datos anteriores a la autenticación.
+Los permisos de propiedad de torneos y capitanía se comprueban con
+`organizer_account_id` y `captain_account_id`, respectivamente.
 
 ## Identificadores simplificados del prototipo
 

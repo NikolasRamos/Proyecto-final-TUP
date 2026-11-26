@@ -37,7 +37,6 @@ interface TournamentFormData {
   registrationDeadline: string;
   startDate: string;
   endDate: string;
-  organizerId: string;
 }
 
 type SubmitState =
@@ -61,7 +60,6 @@ const initialForm: TournamentFormData = {
   registrationDeadline: "",
   startDate: "",
   endDate: "",
-  organizerId: "",
 };
 
 function validateDates(form: TournamentFormData) {
@@ -204,17 +202,6 @@ export default function CreateTournamentPage() {
       return;
     }
 
-    const organizerId = Number(form.organizerId);
-
-    if (!Number.isInteger(organizerId) || organizerId <= 0) {
-      setSubmitState({
-        status: "error",
-        message: "El identificador del organizador no es válido.",
-        details: [],
-      });
-      return;
-    }
-
     const {
       playoffSpots,
       groupCount,
@@ -228,7 +215,6 @@ export default function CreateTournamentPage() {
       description: form.description.trim() || null,
       minTeamMembers: form.isTeamTournament ? form.minTeamMembers : null,
       maxTeamMembers: form.isTeamTournament ? form.maxTeamMembers : null,
-      organizerId,
       ...(form.modality === "groups_playoff"
         ? { playoffSpots, groupCount, maxParticipantsPerGroup }
         : {}),
@@ -647,28 +633,6 @@ export default function CreateTournamentPage() {
               required
               disabled={isSubmitting}
             />
-          </div>
-
-          <div className="form-field field-full">
-            <label htmlFor="organizerId">ID del organizador</label>
-            <input
-              id="organizerId"
-              name="organizerId"
-              type="number"
-              min={1}
-              step={1}
-              value={form.organizerId}
-              onChange={(event) =>
-                updateField("organizerId", event.target.value)
-              }
-              placeholder="Ejemplo: 1"
-              aria-describedby="organizer-hint"
-              required
-              disabled={isSubmitting}
-            />
-            <span className="field-hint" id="organizer-hint">
-              Campo temporal hasta que se integre el bloque de usuarios.
-            </span>
           </div>
         </div>
 

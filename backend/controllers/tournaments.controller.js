@@ -1,4 +1,3 @@
-import { canManageCompetition } from "../middlewares/competition-access.middleware.js";
 import {
   createTournamentSchema,
   listTournamentsQuerySchema,
@@ -15,7 +14,29 @@ import {
   updateTournamentStatus,
 } from "../services/tournaments.service.js";
 
-export async function listTournamentsHandler(request, response) {
+function getTournamentVisibility({ authRole, authUser }) {
+  if (authRole === "administrador") return { publicOnly: false };
+  if (authRole === "organizador") {
+    return { publicOnly: true, organizerAccountId: authUser.idUsuario };
+  }
+  return { publicOnly: true };
+}
+
+export function listTournamentsHandler(request, response) {
+  return sendTournamentList(
+    request,
+    response,
+    getTournamentVisibility(response.locals),
+  );
+}
+
+export function listMyTournamentsHandler(request, response) {
+  return sendTournamentList(request, response, {
+    organizerAccountId: response.locals.authUser.idUsuario,
+  });
+}
+
+async function sendTournamentList(request, response, visibility) {
   const validation = listTournamentsQuerySchema.safeParse(request.query);
 
   if (!validation.success) {
@@ -30,9 +51,7 @@ export async function listTournamentsHandler(request, response) {
 
   try {
     const { page, limit } = validation.data;
-    const { count, rows } = await listTournaments(validation.data, {
-      publicOnly: !canManageCompetition(response.locals.authRole),
-    });
+    const { count, rows } = await listTournaments(validation.data, visibility);
 
     return response.status(200).json({
       data: rows,
@@ -60,9 +79,10 @@ export async function getTournamentByIdHandler(request, response) {
   }
 
   try {
-    const tournament = await getTournamentById(validation.data, {
-      publicOnly: !canManageCompetition(response.locals.authRole),
-    });
+    const tournament = await getTournamentById(
+      validation.data,
+      getTournamentVisibility(response.locals),
+    );
 
     if (!tournament) {
       return response.status(404).json({
@@ -94,7 +114,12 @@ export async function createTournamentHandler(request, response) {
   }
 
   try {
-    const tournament = await createTournament(validation.data);
+    const organizerAccountId = response.locals.authUser.idUsuario;
+    const tournament = await createTournament({
+      ...validation.data,
+      organizerId: organizerAccountId,
+      organizerAccountId,
+    });
 
     return response.status(201).json({
       message: "Torneo creado correctamente",

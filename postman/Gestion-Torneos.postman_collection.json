@@ -25,11 +25,6 @@
       "type": "string"
     },
     {
-      "key": "organizerId",
-      "value": "1",
-      "type": "string"
-    },
-    {
       "key": "captainId",
       "value": "1",
       "type": "string"
@@ -90,6 +85,16 @@
           "response": []
         },
         {
+          "name": "Mis torneos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/tournaments/mine?page=1&limit=10",
+            "description": "Lista los torneos de la cuenta autenticada y admite los filtros del listado general."
+          },
+          "response": []
+        },
+        {
           "name": "Crear torneo",
           "event": [
             {
@@ -117,7 +122,7 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Torneo de apertura\",\n  \"description\": \"Competencia inicial de la temporada\",\n  \"modality\": \"league\",\n  \"maxParticipants\": 16,\n  \"isTeamTournament\": true,\n  \"minTeamMembers\": 2,\n  \"maxTeamMembers\": 5,\n  \"registrationDeadline\": \"2026-11-01\",\n  \"startDate\": \"2026-11-05\",\n  \"endDate\": \"2026-12-10\",\n  \"organizerId\": {{organizerId}}\n}",
+              "raw": "{\n  \"name\": \"Torneo de apertura\",\n  \"description\": \"Competencia inicial de la temporada\",\n  \"modality\": \"league\",\n  \"maxParticipants\": 16,\n  \"isTeamTournament\": true,\n  \"minTeamMembers\": 2,\n  \"maxTeamMembers\": 5,\n  \"registrationDeadline\": \"2026-11-01\",\n  \"startDate\": \"2026-11-05\",\n  \"endDate\": \"2026-12-10\"\n}",
               "options": {
                 "raw": {
                   "language": "json"
@@ -125,7 +130,7 @@
               }
             },
             "url": "{{baseUrl}}/api/tournaments",
-            "description": "Crea un torneo en estado draft. Si responde 201, guarda automáticamente su ID en tournamentId."
+            "description": "Crea un borrador a nombre de la cuenta autenticada. Si responde 201, guarda su ID en tournamentId."
           },
           "response": []
         },
