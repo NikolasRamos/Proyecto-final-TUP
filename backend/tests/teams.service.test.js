@@ -43,7 +43,9 @@ vi.mock("../models/TeamMember.js", () => ({
   },
 }));
 
-vi.mock("../models/user.js", () => ({ default: { findByPk: vi.fn() } }));
+vi.mock("../models/user.js", () => ({
+  default: { findAll: vi.fn(), findByPk: vi.fn() },
+}));
 
 vi.mock("../models/TournamentRegistration.js", () => ({
   default: {
@@ -54,6 +56,7 @@ vi.mock("../models/TournamentRegistration.js", () => ({
 describe("teams service", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    User.findAll.mockResolvedValue([]);
   });
 
   it("delega la creacion al modelo", async () => {
@@ -73,6 +76,18 @@ describe("teams service", () => {
       { teamId: 201, userId: 1, accountLinked: true },
       { transaction: expect.any(Object) },
     );
+  });
+
+  it("devuelve el nombre del capitán al crear un equipo", async () => {
+    const teamData = { name: "Los Halcones", captainId: 1 };
+    const createdTeam = { id: 201, ...teamData };
+    User.findByPk.mockResolvedValue({ idUsuario: 1, nombre: "Niko" });
+    Team.create.mockResolvedValue(createdTeam);
+    TeamMember.create.mockResolvedValue({ id: 401 });
+
+    const team = await createTeam(teamData);
+
+    expect(team.captainName).toBe("Niko");
   });
 
   it("vincula al capitán y asegura su membresía en la misma transacción", async () => {
@@ -136,6 +151,23 @@ describe("teams service", () => {
       { name: { [Op.iLike]: "%halcones%" } },
       { description: { [Op.iLike]: "%halcones%" } },
     ]);
+  });
+
+  it("incluye el nombre del capitán en el listado", async () => {
+    Team.findAndCountAll.mockResolvedValue({
+      count: 1,
+      rows: [{ id: 201, captainAccountId: 7 }],
+    });
+    User.findAll.mockResolvedValue([{ idUsuario: 7, nombre: "Niko" }]);
+
+    const result = await listTeams({ page: 1, limit: 10 });
+
+    expect(User.findAll).toHaveBeenCalledWith({
+      attributes: ["idUsuario", "nombre"],
+      where: { idUsuario: { [Op.in]: [7] } },
+      raw: true,
+    });
+    expect(result.rows[0].captainName).toBe("Niko");
   });
 
   it("busca un equipo por su clave primaria", async () => {
