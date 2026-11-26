@@ -38,6 +38,8 @@ describe("Acceso público a torneos y equipos", () => {
     ["post", "/api/teams/1/join-requests"],
     ["post", "/api/teams/1/invitations"],
     ["patch", "/api/teams/1/membership-requests/1"],
+    ["get", "/api/notifications"],
+    ["patch", "/api/notifications/1/read"],
   ])("exige iniciar sesión para %s %s", async (method, path) => {
     await request(app)[method](path).expect(401);
   });

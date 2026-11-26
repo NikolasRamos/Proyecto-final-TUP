@@ -46,7 +46,7 @@ equipos. El borrado de equipos corresponde a su capitán o a un administrador.
 - Pedir ingreso a un equipo o responder una invitación en **Solicitudes**.
 - Invitar a una cuenta registrada y responder solicitudes en equipos que capitanea.
 - Ver sus membresías vinculadas en **Mis equipos**.
-- La bandeja de notificaciones está planificada.
+- Consultar y marcar como leídos los avisos de equipos en **Notificaciones**.
 
 ## Estado por módulo
 

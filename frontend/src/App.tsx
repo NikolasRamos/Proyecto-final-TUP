@@ -13,6 +13,7 @@ import CreateTournamentPage from "./pages/CreateTournamentPage";
 import LoginPage from "./pages/LoginPage";
 import MyTeamsPage from "./pages/MyTeamsPage";
 import NotFoundPage from "./pages/NotFoundPage";
+import NotificationsPage from "./pages/NotificationsPage";
 import RegisterPage from "./pages/RegisterPage";
 import TeamDetailPage from "./pages/TeamDetailPage";
 import TeamRequestsPage from "./pages/TeamRequestsPage";
@@ -71,6 +72,7 @@ function AppRoutes() {
       <Route element={<RequireSession />}>
         <Route path="/my-teams" element={<MyTeamsPage />} />
         <Route path="/team-requests" element={<TeamRequestsPage />} />
+        <Route path="/notifications" element={<NotificationsPage />} />
       </Route>
       <Route element={<RequireCreationAccess resource="teams" />}>
         <Route path="/teams/new" element={<CreateTeamPage />} />

@@ -41,9 +41,12 @@ export function listTeamRequests(
   page: number,
   token: string,
   signal: AbortSignal,
+  requestId?: string,
 ) {
+  const query = new URLSearchParams({ box, page: String(page) });
+  if (requestId) query.set("requestId", requestId);
   return apiGet<PaginatedResponse<MembershipRequest>>(
-    `/api/teams/membership-requests?box=${box}&page=${page}`,
+    `/api/teams/membership-requests?${query}`,
     { token, signal },
   );
 }

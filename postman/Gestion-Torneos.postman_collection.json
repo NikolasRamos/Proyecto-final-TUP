@@ -937,6 +937,39 @@
           "response": []
         }
       ]
+    },
+    {
+      "name": "08 - Notificaciones",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{teamActorToken}}",
+            "type": "string"
+          }
+        ]
+      },
+      "item": [
+        {
+          "name": "Consultar mi bandeja",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/notifications?page=1"
+          },
+          "response": []
+        },
+        {
+          "name": "Marcar un aviso como leído",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": "{{baseUrl}}/api/notifications/{{membershipRequestId}}/read"
+          },
+          "response": []
+        }
+      ]
     }
   ]
 }

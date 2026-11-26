@@ -13,6 +13,7 @@ import {
 const paginationSchema = listTeamsQuerySchema.pick({ page: true, limit: true });
 const requestsQuerySchema = paginationSchema.extend({
   box: z.enum(["received", "sent"]).default("received"),
+  requestId: entityIdSchema.max(2_147_483_647).optional(),
 });
 const paramsSchema = z.object({ teamId: entityIdSchema });
 const decisionParamsSchema = paramsSchema.extend({ requestId: entityIdSchema });

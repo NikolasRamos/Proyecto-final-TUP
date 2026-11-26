@@ -35,6 +35,9 @@ export default function SessionBar() {
             <Link className="secondary-link" to="/team-requests">
               Solicitudes
             </Link>
+            <Link className="secondary-link" to="/notifications">
+              Notificaciones
+            </Link>
             <p className="session-identity">
               <strong>{session.user.nombre}</strong>
               <span className="session-role">{session.user.role}</span>

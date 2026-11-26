@@ -137,7 +137,10 @@ async function paginate(select, bind, page, limit, order) {
   };
 }
 
-export function listMembershipRequests(userId, { box, page, limit }) {
+export function listMembershipRequests(
+  userId,
+  { box, page, limit, requestId },
+) {
   const visibility =
     box === "sent"
       ? "r.initiator_id = $userId"
@@ -154,9 +157,9 @@ export function listMembershipRequests(userId, { box, page, limit }) {
     FROM team_membership_requests r
     JOIN teams t ON t.id = r.team_id
     LEFT JOIN usuario u ON u."idUsuario" = r.user_id AND u."deletedAt" IS NULL
-    WHERE ${visibility}
+    WHERE (${visibility}) AND ($requestId::int IS NULL OR r.id = $requestId)
   `,
-    { userId },
+    { userId, requestId: requestId ?? null },
     page,
     limit,
     '"updatedAt" DESC, id DESC',

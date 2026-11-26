@@ -25,6 +25,7 @@ export default function TeamRequestsPage() {
   const [query, setQuery] = useSearchParams();
   const box = query.get("box") === "sent" ? "sent" : "received";
   const page = Math.max(1, Number.parseInt(query.get("page") ?? "1", 10) || 1);
+  const requestId = query.get("requestId") ?? undefined;
   const [result, setResult] = useState<{
     key: string;
     value: PaginatedResponse<MembershipRequest>;
@@ -33,14 +34,14 @@ export default function TeamRequestsPage() {
     null,
   );
   const [busy, setBusy] = useState<number | null>(null);
-  const key = `${box}:${page}`;
+  const key = `${box}:${page}:${requestId ?? ""}`;
   const data = result?.key === key ? result.value : null;
   const message = error?.key === key ? error.message : null;
 
   useEffect(() => {
     if (!token) return;
     const request = new AbortController();
-    void listTeamRequests(box, page, token, request.signal).then(
+    void listTeamRequests(box, page, token, request.signal, requestId).then(
       (value) => {
         if (!request.signal.aborted) setResult({ key, value });
       },
@@ -50,7 +51,7 @@ export default function TeamRequestsPage() {
       },
     );
     return () => request.abort();
-  }, [box, page, key, token]);
+  }, [box, page, key, requestId, token]);
 
   async function decide(item: MembershipRequest, status: MembershipDecision) {
     if (!token || busy !== null) return;

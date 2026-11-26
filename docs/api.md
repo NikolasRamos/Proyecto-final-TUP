@@ -331,7 +331,7 @@ Estas rutas usan el token de la cuenta que realiza la acción.
 | `GET /api/teams/:teamId/membership` | Indica si la cuenta ya integra el equipo, tiene un trámite pendiente o puede pedir ingreso. |
 | `POST /api/teams/:teamId/join-requests` | Crea la solicitud de la cuenta participante al capitán del equipo. |
 | `POST /api/teams/:teamId/invitations` | El capitán invita a una cuenta activa mediante `{ "email": "participante@example.test" }`. |
-| `GET /api/teams/membership-requests` | Lista trámites de la cuenta con `box=received` o `box=sent`, `page` y `limit`. |
+| `GET /api/teams/membership-requests` | Lista trámites de la cuenta con `box=received` o `box=sent`, `page` y `limit`. El filtro opcional `requestId` abre un trámite desde su aviso. |
 | `PATCH /api/teams/:teamId/membership-requests/:requestId` | El destinatario envía `{ "status": "accepted" }` o `{ "status": "rejected" }`. |
 
 Aceptar vincula la membresía a una cuenta activa en la misma transacción. Puede
@@ -343,6 +343,20 @@ emitidas pertenecen al equipo y pueden responderse aunque cambie su capitán.
 La migración `015` vincula las membresías previas respaldadas por una asignación
 de capitán. Las demás membresías numéricas se vinculan al aceptar una solicitud
 o invitación. En **Mis equipos** se consultan membresías vinculadas vigentes.
+
+### Notificaciones de equipos
+
+Todas las cuentas con sesión pueden abrir su bandeja. Una solicitud de ingreso
+avisa al capitán y una invitación avisa a la cuenta invitada. La respuesta se
+muestra a quien inició el trámite. Los avisos se calculan a partir de los
+trámites existentes y la migración `016` guarda la lectura por cuenta.
+
+- `GET /api/notifications?page=1&limit=10` devuelve `data`, `pagination` y el
+  total `unread` de la cuenta. Cada aviso tiene `requestId`, `teamId`, `teamName`,
+  `kind`, `status`, `event`, `createdAt` e `isRead`.
+- `PATCH /api/notifications/:requestId/read` registra la lectura del aviso
+  visible para la cuenta y devuelve `{ "data": { "isRead": true } }`. Si el
+  aviso no está disponible para esa cuenta, devuelve `404`.
 
 ### Listar integrantes
 
