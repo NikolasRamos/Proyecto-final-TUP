@@ -6,6 +6,18 @@ interface Credentials {
   password: string;
 }
 
+interface Registration extends Credentials {
+  nombre: string;
+}
+
+export async function register(details: Registration): Promise<string> {
+  const response = await apiPost<{ data: { email: string } }, Registration>(
+    "/api/auth/register",
+    details,
+  );
+  return response.data.email;
+}
+
 export async function login(credentials: Credentials): Promise<string> {
   const response = await apiPost<{ token: string }, Credentials>(
     "/api/auth/login",

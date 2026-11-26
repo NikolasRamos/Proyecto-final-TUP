@@ -5,6 +5,7 @@ import { useAuthSession } from "../auth/auth-session";
 export default function SessionBar() {
   const { session, signOut, retry } = useAuthSession();
   const onLoginPage = useMatch("/login");
+  const onRegisterPage = useMatch("/register");
 
   return (
     <nav className="session-bar" aria-label="Cuenta">
@@ -13,10 +14,15 @@ export default function SessionBar() {
       </Link>
 
       <div className="session-controls">
-        {session.status === "signedOut" && !onLoginPage && (
-          <Link className="secondary-button" to="/login">
-            Iniciar sesión
-          </Link>
+        {session.status === "signedOut" && !onLoginPage && !onRegisterPage && (
+          <>
+            <Link className="secondary-button" to="/login">
+              Iniciar sesión
+            </Link>
+            <Link className="secondary-button" to="/register">
+              Registrarse
+            </Link>
+          </>
         )}
         {session.status === "checking" && (
           <span role="status">Comprobando sesión…</span>

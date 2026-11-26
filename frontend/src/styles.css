@@ -1080,6 +1080,10 @@ section[aria-labelledby="modules-title"] > h2 {
   color: #17633b;
 }
 
+.auth-registration-notice {
+  margin: 0 0 1.25rem;
+}
+
 .form-actions {
   display: flex;
   align-items: center;

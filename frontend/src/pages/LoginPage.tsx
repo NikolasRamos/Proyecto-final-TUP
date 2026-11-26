@@ -1,12 +1,15 @@
 import { useState, type FormEvent } from "react";
-import { Navigate } from "react-router";
+import { Link, Navigate, useLocation } from "react-router";
 
 import { ApiError } from "../api/client";
 import { useAuthSession } from "../auth/auth-session";
 
 export default function LoginPage() {
   const { session, signIn } = useAuthSession();
-  const [email, setEmail] = useState("");
+  const { state } = useLocation();
+  const registeredEmail =
+    typeof state?.registeredEmail === "string" ? state.registeredEmail : null;
+  const [email, setEmail] = useState(registeredEmail ?? "");
   const [password, setPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,6 +49,14 @@ export default function LoginPage() {
         onSubmit={handleSubmit}
         aria-busy={submitting}
       >
+        {registeredEmail && !error && (
+          <p
+            className="form-feedback feedback-success auth-registration-notice"
+            role="status"
+          >
+            Tu cuenta se creó. Ya podés iniciar sesión.
+          </p>
+        )}
         <div className="auth-form-fields">
           <div className="form-field">
             <label htmlFor="login-email">Correo electrónico</label>
@@ -84,6 +95,9 @@ export default function LoginPage() {
         )}
 
         <div className="form-actions">
+          <Link className="secondary-link" to="/register">
+            Registrarse
+          </Link>
           <button className="primary-button" type="submit" disabled={disabled}>
             {submitting ? "Iniciando sesión…" : "Iniciar sesión"}
           </button>
