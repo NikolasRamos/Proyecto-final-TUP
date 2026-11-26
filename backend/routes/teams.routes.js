@@ -10,20 +10,31 @@ import {
   removeTeamMemberHandler,
   updateTeamHandler,
 } from "../controllers/teams.controller.js";
-import { requireSession } from "../middlewares/auth.middleware.js";
+import {
+  requireCompetitionManager,
+  requireTeamCreator,
+} from "../middlewares/competition-access.middleware.js";
 
 const teamsRouter = Router();
 
 teamsRouter.get("/", listTeamsHandler);
 teamsRouter.get("/:id", getTeamByIdHandler);
-teamsRouter.post("/", requireSession, createTeamHandler);
-teamsRouter.put("/:id", requireSession, updateTeamHandler);
-teamsRouter.delete("/:id", requireSession, deleteTeamHandler);
-teamsRouter.post("/:teamId/members", requireSession, addTeamMemberHandler);
-teamsRouter.get("/:teamId/members", requireSession, listTeamMembersHandler);
+teamsRouter.post("/", requireTeamCreator, createTeamHandler);
+teamsRouter.put("/:id", requireCompetitionManager, updateTeamHandler);
+teamsRouter.delete("/:id", requireCompetitionManager, deleteTeamHandler);
+teamsRouter.post(
+  "/:teamId/members",
+  requireCompetitionManager,
+  addTeamMemberHandler,
+);
+teamsRouter.get(
+  "/:teamId/members",
+  requireCompetitionManager,
+  listTeamMembersHandler,
+);
 teamsRouter.delete(
   "/:teamId/members/:userId",
-  requireSession,
+  requireCompetitionManager,
   removeTeamMemberHandler,
 );
 

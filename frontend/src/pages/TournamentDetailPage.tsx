@@ -9,7 +9,10 @@ import {
   updateTournament,
   updateTournamentStatus,
 } from "../api/tournaments.api";
-import { useAuthSession } from "../auth/auth-session";
+import {
+  getCompetitionManagerToken,
+  useAuthSession,
+} from "../auth/auth-session";
 import ResourceListSkeleton from "../components/ResourceListSkeleton";
 import TournamentRegistrationsPanel from "../components/TournamentRegistrationsPanel";
 import {
@@ -256,7 +259,7 @@ function getRequestErrorMessage(error: unknown) {
 
 export default function TournamentDetailPage() {
   const { session } = useAuthSession();
-  const token = session.status === "signedIn" ? session.token : undefined;
+  const token = getCompetitionManagerToken(session);
   const isCheckingSession = session.status === "checking";
   const { id = "" } = useParams();
   const navigate = useNavigate();

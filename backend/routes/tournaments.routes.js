@@ -14,38 +14,60 @@ import {
   updateTournamentHandler,
   updateTournamentStatusHandler,
 } from "../controllers/tournaments.controller.js";
-import { allowGuest, requireSession } from "../middlewares/auth.middleware.js";
+import { allowGuest } from "../middlewares/auth.middleware.js";
+import {
+  loadCompetitionRole,
+  requireCompetitionManager,
+} from "../middlewares/competition-access.middleware.js";
 
 const tournamentsRouter = Router();
 
-tournamentsRouter.get("/", allowGuest, listTournamentsHandler);
-tournamentsRouter.get("/:id", allowGuest, getTournamentByIdHandler);
+tournamentsRouter.get(
+  "/",
+  allowGuest,
+  loadCompetitionRole,
+  listTournamentsHandler,
+);
+tournamentsRouter.get(
+  "/:id",
+  allowGuest,
+  loadCompetitionRole,
+  getTournamentByIdHandler,
+);
 tournamentsRouter.get(
   "/:id/report",
-  requireSession,
+  requireCompetitionManager,
   downloadTournamentReportHandler,
 );
-tournamentsRouter.post("/", requireSession, createTournamentHandler);
-tournamentsRouter.put("/:id", requireSession, updateTournamentHandler);
+tournamentsRouter.post("/", requireCompetitionManager, createTournamentHandler);
+tournamentsRouter.put(
+  "/:id",
+  requireCompetitionManager,
+  updateTournamentHandler,
+);
 tournamentsRouter.patch(
   "/:id/status",
-  requireSession,
+  requireCompetitionManager,
   updateTournamentStatusHandler,
 );
-tournamentsRouter.delete("/:id", requireSession, deleteTournamentHandler);
+tournamentsRouter.delete(
+  "/:id",
+  requireCompetitionManager,
+  deleteTournamentHandler,
+);
 tournamentsRouter.post(
   "/:tournamentId/registrations",
-  requireSession,
+  requireCompetitionManager,
   createRegistrationHandler,
 );
 tournamentsRouter.delete(
   "/:tournamentId/registrations/:teamId",
-  requireSession,
+  requireCompetitionManager,
   withdrawRegistrationHandler,
 );
 tournamentsRouter.get(
   "/:tournamentId/registrations",
-  requireSession,
+  requireCompetitionManager,
   listRegistrationsHandler,
 );
 

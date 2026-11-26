@@ -12,7 +12,7 @@ export interface Team {
 export interface CreateTeamInput {
   name: string;
   description?: string | null;
-  captainId: EntityId;
+  captainId?: EntityId;
 }
 
 export type UpdateTeamInput = Omit<CreateTeamInput, "captainId">;

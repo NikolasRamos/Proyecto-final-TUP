@@ -47,18 +47,21 @@ Comprueba que Express responde.
 
 ## Torneos
 
-### Acceso de invitados
+### Acceso por rol
 
-Sin iniciar sesión, se pueden buscar y consultar torneos con inscripción
+Los invitados y participantes pueden buscar y consultar torneos con inscripción
 abierta (`open`) o en curso (`in_progress`). La API aplica ese límite al
 listado, al total de la paginación y a la consulta por ID. Un filtro por un
 estado no visible devuelve una página vacía y un detalle no visible devuelve
-`404`. Un token válido habilita los demás estados.
+`404`. Los organizadores y administradores pueden consultar todos los estados.
 
-La creación, edición, cambio de estado, eliminación, exportación e
-inscripciones requieren `Authorization: Bearer <token>`. En equipos, el listado
-y el detalle son públicos. La gestión del equipo y las consultas u operaciones
-de integrantes requieren sesión. Sin una sesión válida, la API devuelve `401`.
+La gestión de torneos, la exportación de reportes y el acceso a las
+inscripciones requieren `Authorization: Bearer <token>` de un organizador o
+administrador. Los mismos roles habilitan la edición y eliminación de equipos,
+así como la consulta y gestión de sus integrantes. El listado y el detalle de
+equipos son públicos, y todas las cuentas con un rol base pueden crear equipos.
+En las rutas protegidas, la API devuelve `401` sin sesión válida y `403` si el
+rol actual de la cuenta carece del permiso.
 
 ### Listar
 
@@ -257,6 +260,19 @@ Devuelve el equipo por su identificador numérico o responde `404`.
 
 `POST /api/teams`
 
+Con el token de participante:
+
+```json
+{
+  "name": "Los Halcones",
+  "description": "Equipo de la categoría principal"
+}
+```
+
+La API toma el capitán de la sesión. Si el participante incluye `captainId`, la
+petición devuelve `400`. Con el token de un organizador o administrador, el
+cuerpo incluye `captainId`:
+
 ```json
 {
   "name": "Los Halcones",
@@ -423,11 +439,11 @@ con la cuenta administradora para habilitar otras cuentas del equipo.
 
 ## Limitaciones actuales
 
-- El registro y la administración de usuarios por rol están disponibles en la
-  API. React ya permite iniciar y cerrar sesión. La integración de la sesión
-  con las operaciones de torneos y equipos sigue pendiente.
-- Los identificadores de organizadores, capitanes e integrantes no comprueban todavía la
-  existencia de un usuario.
+- La edición por propiedad de un equipo y las solicitudes de ingreso están
+  pendientes. La creación de un equipo por un participante usa su cuenta activa
+  como capitán.
+- La validación de los identificadores de usuario indicados manualmente por
+  organizadores o administradores sigue pendiente.
 - Las rutas de partidas y resultados aún no están implementadas.
 - Todavía no existe una especificación OpenAPI; este documento debe verificarse
   contra las pruebas y el comportamiento real.

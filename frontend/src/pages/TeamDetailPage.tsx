@@ -3,7 +3,10 @@ import { Link, useNavigate, useParams } from "react-router";
 
 import { ApiError } from "../api/client";
 import { deleteTeam, getTeam, updateTeam } from "../api/teams.api";
-import { useAuthSession } from "../auth/auth-session";
+import {
+  getCompetitionManagerToken,
+  useAuthSession,
+} from "../auth/auth-session";
 import ResourceListSkeleton from "../components/ResourceListSkeleton";
 import type { Team, UpdateTeamInput } from "../types/team";
 
@@ -48,7 +51,7 @@ function getRequestErrorMessage(error: unknown) {
 
 export default function TeamDetailPage() {
   const { session } = useAuthSession();
-  const token = session.status === "signedIn" ? session.token : undefined;
+  const token = getCompetitionManagerToken(session);
   const { id = "" } = useParams();
   const navigate = useNavigate();
   const teamId = Number(id);
@@ -354,7 +357,7 @@ export default function TeamDetailPage() {
               </p>
               <dl className="detail-grid">
                 <div>
-                  <dt>Capitán temporal</dt>
+                  <dt>Capitán</dt>
                   <dd>Usuario #{state.team.captainId}</dd>
                 </div>
                 <div>
@@ -370,10 +373,6 @@ export default function TeamDetailPage() {
                   </dd>
                 </div>
               </dl>
-              <p className="detail-rule-note">
-                El capitán no puede cambiarse desde la edición básica. La
-                gestión de integrantes se incorporará en esta pantalla.
-              </p>
             </section>
           )}
         </>

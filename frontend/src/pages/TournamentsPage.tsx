@@ -2,7 +2,10 @@ import { type FormEvent, useEffect, useState } from "react";
 import { Link, useLocation, useSearchParams } from "react-router";
 
 import { listTournaments } from "../api/tournaments.api";
-import { useAuthSession } from "../auth/auth-session";
+import {
+  getCompetitionManagerToken,
+  useAuthSession,
+} from "../auth/auth-session";
 import ResourceListSkeleton from "../components/ResourceListSkeleton";
 import TournamentCard from "../components/TournamentCard";
 import type { Pagination } from "../types/api";
@@ -90,7 +93,7 @@ function isSortOption(value: string | null): value is SortOption {
 
 export default function TournamentsPage() {
   const { session } = useAuthSession();
-  const token = session.status === "signedIn" ? session.token : undefined;
+  const token = getCompetitionManagerToken(session);
   const visibleStatuses = token ? tournamentStatuses : publicTournamentStatuses;
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();

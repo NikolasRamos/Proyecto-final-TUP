@@ -13,9 +13,10 @@ equipos, inscripciones, partidas y estadísticas.
 
 ## Acceso al sistema
 
-El registro crea cuentas de participante y el inicio de sesión permite gestionar
-los recursos. El acceso a operaciones de gestión requiere sesión. Los permisos
-específicos por rol y por propiedad de un recurso se implementarán por separado.
+El registro crea cuentas de participante. Los permisos se aplican en la web y
+en la API. La gestión de torneos y equipos corresponde a organizadores y
+administradores. El permiso de crear un equipo propio también está disponible
+para participantes.
 
 ### Invitado
 
@@ -39,10 +40,10 @@ específicos por rol y por propiedad de un recurso se implementarán por separad
 
 ### Participante
 
-- Administrar su perfil.
-- Integrar equipos.
-- Inscribirse en torneos mediante un equipo.
-- Consultar partidas, resultados y posiciones.
+- Buscar y consultar los torneos vigentes y los equipos registrados.
+- Crear un equipo propio y quedar registrado como capitán y primer integrante.
+- Las solicitudes de ingreso, las invitaciones y la bandeja de notificaciones
+  están planificadas.
 
 ## Estado por módulo
 

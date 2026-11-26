@@ -1,7 +1,11 @@
 import { Navigate, Outlet, Route, Routes } from "react-router";
 
 import AuthProvider from "./auth/AuthProvider";
-import { useAuthSession } from "./auth/auth-session";
+import {
+  getCompetitionManagerToken,
+  getTeamCreatorToken,
+  useAuthSession,
+} from "./auth/auth-session";
 import SessionBar from "./components/SessionBar";
 import DashboardPage from "./pages/DashboardPage";
 import CreateTeamPage from "./pages/CreateTeamPage";
@@ -23,11 +27,19 @@ export default function App() {
   );
 }
 
-function RequireSession() {
+function RequireCreationAccess({
+  resource,
+}: {
+  resource: "teams" | "tournaments";
+}) {
   const { session } = useAuthSession();
   if (session.status === "checking") return null;
   if (session.status !== "signedIn") return <Navigate to="/login" replace />;
-  return <Outlet />;
+  const token =
+    resource === "teams"
+      ? getTeamCreatorToken(session)
+      : getCompetitionManagerToken(session);
+  return token ? <Outlet /> : <Navigate to={`/${resource}`} replace />;
 }
 
 function AppRoutes() {
@@ -44,8 +56,10 @@ function AppRoutes() {
       <Route path="/teams/:id" element={<TeamDetailPage />} />
       <Route path="/tournaments" element={<TournamentsPage />} />
       <Route path="/tournaments/:id" element={<TournamentDetailPage />} />
-      <Route element={<RequireSession />}>
+      <Route element={<RequireCreationAccess resource="teams" />}>
         <Route path="/teams/new" element={<CreateTeamPage />} />
+      </Route>
+      <Route element={<RequireCreationAccess resource="tournaments" />}>
         <Route path="/tournaments/new" element={<CreateTournamentPage />} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />

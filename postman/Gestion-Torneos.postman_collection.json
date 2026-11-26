@@ -277,6 +277,40 @@
           "response": []
         },
         {
+          "name": "Crear mi equipo como participante",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authParticipantToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Mi equipo\",\n  \"description\": \"Equipo creado por su capitán\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/teams",
+            "description": "Usá una cuenta que tenga el rol participante. La API toma el capitán de la sesión y lo agrega como primer integrante. Debe responder 201."
+          },
+          "response": []
+        },
+        {
           "name": "Consultar equipo por ID",
           "request": {
             "method": "GET",

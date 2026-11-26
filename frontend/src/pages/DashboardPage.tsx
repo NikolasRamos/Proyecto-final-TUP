@@ -3,7 +3,11 @@ import { Link } from "react-router";
 
 import { listTeams } from "../api/teams.api";
 import { listTournaments } from "../api/tournaments.api";
-import { useAuthSession } from "../auth/auth-session";
+import {
+  getCompetitionManagerToken,
+  getTeamCreatorToken,
+  useAuthSession,
+} from "../auth/auth-session";
 import ModuleGrid from "../components/ModuleGrid";
 import ResourceListSkeleton from "../components/ResourceListSkeleton";
 import TeamCard from "../components/TeamCard";
@@ -39,7 +43,7 @@ function getErrorMessage(error: unknown) {
 
 export default function DashboardPage() {
   const { session } = useAuthSession();
-  const token = session.status === "signedIn" ? session.token : undefined;
+  const token = getCompetitionManagerToken(session);
   const [tournaments, setTournaments] =
     useState<ResourceState<Tournament>>(createInitialState);
   const [teams, setTeams] = useState<ResourceState<Team>>(createInitialState);
@@ -104,12 +108,16 @@ export default function DashboardPage() {
           >
             {token ? "Crear torneo" : "Buscar torneos"}
           </Link>
-          <Link
-            className="secondary-button"
-            to={token ? "/teams/new" : "/teams"}
-          >
-            {token ? "Crear equipo" : "Buscar equipos"}
-          </Link>
+          {!token && (
+            <Link className="secondary-button" to="/teams">
+              Buscar equipos
+            </Link>
+          )}
+          {getTeamCreatorToken(session) && (
+            <Link className="secondary-button" to="/teams/new">
+              Crear equipo
+            </Link>
+          )}
         </div>
       </section>
 

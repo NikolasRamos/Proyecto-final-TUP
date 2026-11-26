@@ -58,6 +58,10 @@ en el ambiente activo. Usar un correo nuevo para repetir la prueba desde el
 registro. Para compartir el ambiente, usar el JSON versionado con las
 credenciales y tokens vacíos.
 
+Para probar la creación de un equipo propio, después de iniciar sesión con una
+cuenta participante ejecutá **03 - Equipos → Crear mi equipo como participante**
+mientras esa cuenta siga teniendo ese rol.
+
 ## Orden recomendado para una demostración
 
 Las búsquedas de torneos vigentes y equipos se pueden ejecutar como invitado.

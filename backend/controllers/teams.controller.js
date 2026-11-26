@@ -1,5 +1,6 @@
 import {
   addTeamMemberSchema,
+  createOwnTeamSchema,
   createTeamSchema,
   listTeamsQuerySchema,
   teamIdSchema,
@@ -79,7 +80,9 @@ export async function getTeamByIdHandler(request, response) {
 }
 
 export async function createTeamHandler(request, response) {
-  const validation = createTeamSchema.safeParse(request.body);
+  const createsOwnTeam = response.locals.authRole === "participante";
+  const schema = createsOwnTeam ? createOwnTeamSchema : createTeamSchema;
+  const validation = schema.safeParse(request.body);
 
   if (!validation.success) {
     return response.status(400).json({
@@ -92,7 +95,10 @@ export async function createTeamHandler(request, response) {
   }
 
   try {
-    const team = await createTeam(validation.data);
+    const teamData = createsOwnTeam
+      ? { ...validation.data, captainId: response.locals.authUser.idUsuario }
+      : validation.data;
+    const team = await createTeam(teamData);
 
     return response.status(201).json({
       message: "Equipo creado correctamente",
