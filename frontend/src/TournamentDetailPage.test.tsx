@@ -633,6 +633,54 @@ describe("TournamentDetailPage", () => {
     ).toBeInTheDocument();
   });
 
+  it("muestra los nombres de los integrantes al inscribir", async () => {
+    const user = userEvent.setup();
+    vi.mocked(getTournament).mockResolvedValue({
+      data: { ...tournament, status: "open" },
+    });
+    vi.mocked(listTeams).mockResolvedValue({
+      data: [
+        {
+          id: 201,
+          name: "Los Halcones",
+          description: null,
+          captainId: 1,
+          createdAt: "2026-10-30T10:00:00.000Z",
+          updatedAt: "2026-10-30T10:00:00.000Z",
+        },
+      ],
+      pagination: { page: 1, limit: 100, total: 1, totalPages: 1 },
+    });
+    vi.mocked(listTeamMembers).mockResolvedValue({
+      data: [
+        {
+          id: 501,
+          userId: 1,
+          nombre: "Niko",
+          isCaptain: true,
+          joinedAt: "2026-10-01T10:00:00.000Z",
+        },
+        {
+          id: 502,
+          userId: 2,
+          nombre: "Ana",
+          isCaptain: false,
+          joinedAt: "2026-10-02T10:00:00.000Z",
+        },
+      ],
+    });
+
+    renderPage();
+
+    await user.selectOptions(
+      await screen.findByLabelText("Equipo a inscribir"),
+      "201",
+    );
+
+    expect(await screen.findByText(/Niko/)).toBeInTheDocument();
+    expect(screen.getByText(/Ana/)).toBeInTheDocument();
+  });
+
   it("retira un equipo inscrito desde el detalle", async () => {
     const user = userEvent.setup();
     vi.mocked(getTournament).mockResolvedValue({
