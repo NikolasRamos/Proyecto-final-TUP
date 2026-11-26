@@ -2,12 +2,72 @@
 
 import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router";
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import App from "./App";
+import { getTeam, listTeams } from "./api/teams.api";
+import { getTournament, listTournaments } from "./api/tournaments.api";
+
+vi.mock("./api/tournaments.api", () => ({
+  createTournament: vi.fn(),
+  deleteTournament: vi.fn(),
+  downloadTournamentReport: vi.fn(),
+  getTournament: vi.fn(),
+  listTournaments: vi.fn(),
+  updateTournament: vi.fn(),
+  updateTournamentStatus: vi.fn(),
+}));
+
+vi.mock("./api/teams.api", () => ({
+  createTeam: vi.fn(),
+  deleteTeam: vi.fn(),
+  getTeam: vi.fn(),
+  listTeamMembers: vi.fn(),
+  listTeams: vi.fn(),
+  updateTeam: vi.fn(),
+}));
+
+const tournament = {
+  id: 101,
+  name: "Torneo Apertura",
+  description: "Competencia de prueba",
+  modality: "league" as const,
+  maxParticipants: 16,
+  isTeamTournament: true,
+  minTeamMembers: 2,
+  maxTeamMembers: 5,
+  registrationDeadline: "2026-11-01",
+  startDate: "2026-11-05",
+  endDate: "2026-12-10",
+  status: "open" as const,
+  organizerId: 1,
+  createdAt: "2026-10-13T12:00:00.000Z",
+  updatedAt: "2026-10-13T12:00:00.000Z",
+};
+
+const team = {
+  id: 201,
+  name: "Los Halcones",
+  description: "Equipo de prueba",
+  captainId: 1,
+  createdAt: "2026-10-13T12:00:00.000Z",
+  updatedAt: "2026-10-13T12:00:00.000Z",
+};
 
 describe("App", () => {
-  it("presenta el sistema y sus módulos principales", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(listTournaments).mockResolvedValue({
+      data: [],
+      pagination: { page: 1, limit: 5, total: 0, totalPages: 0 },
+    });
+    vi.mocked(listTeams).mockResolvedValue({
+      data: [],
+      pagination: { page: 1, limit: 5, total: 0, totalPages: 0 },
+    });
+  });
+
+  it("presenta búsquedas públicas en la portada del invitado", async () => {
     render(
       <MemoryRouter>
         <App />
@@ -15,9 +75,137 @@ describe("App", () => {
     );
 
     expect(
-      screen.getByRole("heading", { name: "Sistema de Gestión de Torneos" }),
+      screen.getByRole("heading", { name: "Título X" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("React + TypeScript")).toBeInTheDocument();
-    expect(screen.getByText("Partidas y resultados")).toBeInTheDocument();
+    expect(screen.getByText("Descripción X")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Buscar torneos" }),
+    ).toHaveAttribute("href", "/tournaments");
+    expect(
+      screen.getByRole("link", { name: "Buscar equipos" }),
+    ).toHaveAttribute("href", "/teams");
+    expect(
+      screen.queryByRole("link", { name: /Crear (torneo|equipo)/ }),
+    ).not.toBeInTheDocument();
+    expect(
+      await screen.findByText("Todavía no hay torneos para mostrar."),
+    ).toBeInTheDocument();
+  });
+
+  it.each(["/tournaments/new", "/teams/new"])(
+    "pide iniciar sesión al abrir %s como invitado",
+    async (path) => {
+      render(
+        <MemoryRouter initialEntries={[path]}>
+          <App />
+        </MemoryRouter>,
+      );
+
+      expect(
+        await screen.findByRole("heading", { name: "Iniciar sesión" }),
+      ).toBeInTheDocument();
+    },
+  );
+
+  it.each([
+    ["/tournaments/101", tournament.name],
+    ["/teams/201", team.name],
+  ])(
+    "muestra el detalle de %s sin acciones de gestión",
+    async (path, heading) => {
+      vi.mocked(getTournament).mockResolvedValue({ data: tournament });
+      vi.mocked(getTeam).mockResolvedValue({ data: team });
+      render(
+        <MemoryRouter initialEntries={[path]}>
+          <App />
+        </MemoryRouter>,
+      );
+
+      expect(
+        await screen.findByRole("heading", { name: heading }),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", {
+          name: /Editar|Eliminar|Exportar reporte|Inscribir equipo/,
+        }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("heading", { name: "Equipos inscritos" }),
+      ).not.toBeInTheDocument();
+    },
+  );
+
+  it("muestra esqueletos accesibles mientras carga los datos", () => {
+    vi.mocked(listTournaments).mockReturnValue(new Promise(() => undefined));
+    vi.mocked(listTeams).mockReturnValue(new Promise(() => undefined));
+
+    render(
+      <MemoryRouter>
+        <App />
+      </MemoryRouter>,
+    );
+
+    expect(screen.getByText("Cargando torneos…")).toBeInTheDocument();
+    expect(screen.getByText("Cargando equipos…")).toBeInTheDocument();
+  });
+
+  it("muestra los torneos y equipos obtenidos desde la API", async () => {
+    vi.mocked(listTournaments).mockResolvedValue({
+      data: [tournament],
+      pagination: { page: 1, limit: 5, total: 1, totalPages: 1 },
+    });
+    vi.mocked(listTeams).mockResolvedValue({
+      data: [team],
+      pagination: { page: 1, limit: 5, total: 1, totalPages: 1 },
+    });
+
+    render(
+      <MemoryRouter>
+        <App />
+      </MemoryRouter>,
+    );
+
+    expect(await screen.findByText("Torneo Apertura")).toBeInTheDocument();
+    expect(await screen.findByText("Los Halcones")).toBeInTheDocument();
+    expect(
+      screen.getByText("Torneos vigentes").nextElementSibling,
+    ).toHaveTextContent("1");
+    expect(
+      screen.getByText("Equipos registrados").nextElementSibling,
+    ).toHaveTextContent("1");
+  });
+
+  it("informa cuando una consulta a la API falla", async () => {
+    vi.mocked(listTournaments).mockRejectedValue(
+      new Error("El servidor no responde"),
+    );
+
+    render(
+      <MemoryRouter>
+        <App />
+      </MemoryRouter>,
+    );
+
+    expect(
+      await screen.findByText(/No se pudieron cargar los torneos/),
+    ).toHaveTextContent("El servidor no responde");
+    expect(
+      await screen.findByText("Todavía no hay equipos para mostrar."),
+    ).toBeInTheDocument();
+  });
+
+  it("traduce los errores de conexión del navegador", async () => {
+    vi.mocked(listTeams).mockRejectedValue(new TypeError("Failed to fetch"));
+
+    render(
+      <MemoryRouter>
+        <App />
+      </MemoryRouter>,
+    );
+
+    expect(
+      await screen.findByText(/No se pudieron cargar los equipos/),
+    ).toHaveTextContent("No pudimos conectarnos con el servidor.");
+    expect(screen.queryByText(/Failed to fetch/)).not.toBeInTheDocument();
   });
 });

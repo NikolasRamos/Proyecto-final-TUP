@@ -2,6 +2,9 @@ import cors from "cors";
 import express from "express";
 import helmet from "helmet";
 
+
+import matchesRoutes from "./routes/matches.routes.js";
+
 const app = express();
 
 app.use(helmet());
@@ -18,6 +21,9 @@ app.get("/api/health", (_request, response) => {
     service: "gestion-torneos-api",
   });
 });
+
+
+app.use("/api", matchesRoutes);
 
 app.use((_request, response) => {
   response.status(404).json({ message: "Recurso no encontrado" });

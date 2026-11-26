@@ -1,26 +1,73 @@
-'use strict';
-const { Model } = require('sequelize');
+import { DataTypes, Model } from "sequelize";
 
-module.exports = (sequelize, DataTypes) => {
-  class Match extends Model {
-    static associate(models) {
-      Match.belongsTo(models.Tournament, { foreignKey: 'tournamentId', as: 'tournament' });
-      Match.belongsTo(models.Team, { foreignKey: 'homeTeamId', as: 'homeTeam' });
-      Match.belongsTo(models.Team, { foreignKey: 'awayTeamId', as: 'awayTeam' });
-      Match.hasOne(models.Result, { foreignKey: 'matchId', as: 'result' });
-    }
-  }
-  Match.init({
-    tournamentId: { type: DataTypes.INTEGER, allowNull: false },
-    homeTeamId: { type: DataTypes.INTEGER, allowNull: false },
-    awayTeamId: { type: DataTypes.INTEGER, allowNull: false },
-    status: { type: DataTypes.ENUM('scheduled', 'in_progress', 'finished', 'cancelled'), defaultValue: 'scheduled' },
-    round: { type: DataTypes.STRING, allowNull: true },
-    matchDate: { type: DataTypes.DATE, allowNull: true }
-  }, {
-    sequelize,
-    modelName: 'Match',
-    tableName: 'matches'
-  });
-  return Match;
-};
+import database from "../config/database.js";
+
+export const MATCH_STATUSES = Object.freeze([
+  "scheduled",
+  "in_progress",
+  "finished",
+  "cancelled",
+]);
+
+class Match extends Model {}
+
+Match.init(
+  {
+    id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      primaryKey: true,
+      autoIncrement: true,
+    },
+    tournamentId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      field: "tournament_id",
+      validate: { isInt: true, min: 1 },
+    },
+    homeTeamId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      field: "home_team_id",
+      validate: { isInt: true, min: 1 },
+    },
+    awayTeamId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      field: "away_team_id",
+      validate: { isInt: true, min: 1 },
+    },
+    status: {
+      type: DataTypes.STRING(20),
+      allowNull: false,
+      defaultValue: "scheduled",
+      validate: { isIn: [MATCH_STATUSES] },
+    },
+    round: {
+      type: DataTypes.STRING(60),
+      allowNull: true,
+    },
+    matchDate: {
+      type: DataTypes.DATE,
+      allowNull: true,
+      field: "match_date",
+      validate: { isDate: true },
+    },
+  },
+  {
+    sequelize: database,
+    modelName: "Match",
+    tableName: "matches",
+    underscored: true,
+    timestamps: true,
+    validate: {
+      teamsAreDifferent() {
+        if (this.homeTeamId === this.awayTeamId) {
+          throw new Error("Un equipo no puede jugar contra sí mismo");
+        }
+      },
+    },
+  },
+);
+
+export default Match;

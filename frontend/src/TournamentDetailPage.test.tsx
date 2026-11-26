@@ -1,0 +1,718 @@
+// @vitest-environment jsdom
+
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { MemoryRouter } from "react-router";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+import { testToken } from "../test/signed-in";
+import App from "./App";
+import { ApiError } from "./api/client";
+import {
+  listTournamentRegistrations,
+  registerTeamInTournament,
+  withdrawTeamFromTournament,
+} from "./api/registrations.api";
+import { listTeamMembers, listTeams } from "./api/teams.api";
+import {
+  deleteTournament,
+  downloadTournamentReport,
+  getTournament,
+  listTournaments,
+  updateTournament,
+  updateTournamentStatus,
+} from "./api/tournaments.api";
+
+vi.mock("./auth/AuthProvider", async () => {
+  const { SignedInTestProvider } = await import("../test/signed-in");
+  return { default: SignedInTestProvider };
+});
+
+vi.mock("./api/tournaments.api", () => ({
+  createTournament: vi.fn(),
+  deleteTournament: vi.fn(),
+  downloadTournamentReport: vi.fn(),
+  getTournament: vi.fn(),
+  listTournaments: vi.fn(),
+  updateTournament: vi.fn(),
+  updateTournamentStatus: vi.fn(),
+}));
+
+vi.mock("./api/teams.api", () => ({
+  listTeamMembers: vi.fn(),
+  listTeams: vi.fn(),
+}));
+
+vi.mock("./api/registrations.api", () => ({
+  listTournamentRegistrations: vi.fn(),
+  registerTeamInTournament: vi.fn(),
+  withdrawTeamFromTournament: vi.fn(),
+}));
+
+const tournament = {
+  id: 101,
+  name: "Torneo Apertura",
+  description: "Competencia de prueba",
+  modality: "league" as const,
+  maxParticipants: 16,
+  isTeamTournament: true,
+  minTeamMembers: 2,
+  maxTeamMembers: 5,
+  registrationDeadline: "2026-11-01",
+  startDate: "2026-11-05",
+  endDate: "2026-12-10",
+  status: "draft" as const,
+  organizerId: 1,
+  createdAt: "2026-10-13T12:00:00.000Z",
+  updatedAt: "2026-10-13T12:00:00.000Z",
+};
+
+const groupsPlayoffTournament = {
+  ...tournament,
+  modality: "groups_playoff" as const,
+  maxParticipants: 20,
+  playoffSpots: 8,
+  groupCount: 4,
+  maxParticipantsPerGroup: 5,
+};
+
+const swissTournament = {
+  ...tournament,
+  modality: "swiss" as const,
+  maxParticipants: 16,
+  swissRounds: 5,
+};
+
+function renderPage(path = "/tournaments/101") {
+  render(
+    <MemoryRouter initialEntries={[path]}>
+      <App />
+    </MemoryRouter>,
+  );
+}
+
+describe("TournamentDetailPage", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(getTournament).mockResolvedValue({ data: tournament });
+    vi.mocked(listTournaments).mockResolvedValue({
+      data: [],
+      pagination: { page: 1, limit: 10, total: 0, totalPages: 0 },
+    });
+    vi.mocked(listTeams).mockResolvedValue({
+      data: [],
+      pagination: { page: 1, limit: 100, total: 0, totalPages: 0 },
+    });
+    vi.mocked(listTeamMembers).mockResolvedValue({
+      data: [
+        {
+          id: 501,
+          userId: 1,
+          isCaptain: true,
+          joinedAt: "2026-10-01T10:00:00.000Z",
+        },
+        {
+          id: 502,
+          userId: 2,
+          isCaptain: false,
+          joinedAt: "2026-10-02T10:00:00.000Z",
+        },
+      ],
+    });
+    vi.mocked(listTournamentRegistrations).mockResolvedValue({
+      data: [],
+      pagination: { page: 1, limit: 100, total: 0, totalPages: 0 },
+    });
+  });
+
+  it("muestra todos los datos principales del torneo", async () => {
+    renderPage();
+
+    expect(
+      await screen.findByRole("heading", { name: "Torneo Apertura" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Competencia de prueba")).toBeInTheDocument();
+    expect(screen.getByText("Liga")).toBeInTheDocument();
+    expect(screen.getByText("Por equipos")).toBeInTheDocument();
+    expect(screen.getByText("16 equipos")).toBeInTheDocument();
+    expect(screen.getByText("De 2 a 5 integrantes")).toBeInTheDocument();
+    expect(screen.getByText("Usuario #1")).toBeInTheDocument();
+    expect(getTournament).toHaveBeenCalledWith(101, testToken);
+  });
+
+  it("descarga el reporte exportable del torneo", async () => {
+    const user = userEvent.setup();
+    const report = new Blob(["%PDF-1.3"], { type: "application/pdf" });
+    const createObjectURL = vi.fn(() => "blob:reporte");
+    const revokeObjectURL = vi.fn();
+    const click = vi
+      .spyOn(HTMLAnchorElement.prototype, "click")
+      .mockImplementation(() => undefined);
+    Object.defineProperty(URL, "createObjectURL", {
+      configurable: true,
+      value: createObjectURL,
+    });
+    Object.defineProperty(URL, "revokeObjectURL", {
+      configurable: true,
+      value: revokeObjectURL,
+    });
+    vi.mocked(downloadTournamentReport).mockResolvedValue(report);
+    renderPage();
+
+    await user.click(
+      await screen.findByRole("button", { name: "Exportar reporte" }),
+    );
+
+    expect(downloadTournamentReport).toHaveBeenCalledWith(101, testToken);
+    expect(createObjectURL).toHaveBeenCalledWith(report);
+    expect(click).toHaveBeenCalledOnce();
+    expect(revokeObjectURL).toHaveBeenCalledWith("blob:reporte");
+    expect(
+      await screen.findByText("Reporte descargado correctamente"),
+    ).toBeInTheDocument();
+  });
+
+  it("edita los datos permitidos y actualiza la vista", async () => {
+    const user = userEvent.setup();
+    const updatedTournament = {
+      ...tournament,
+      name: "Torneo Apertura renovado",
+      maxParticipants: 20,
+      updatedAt: "2026-10-30T12:00:00.000Z",
+    };
+    vi.mocked(updateTournament).mockResolvedValue({
+      message: "Torneo actualizado correctamente",
+      data: updatedTournament,
+    });
+    renderPage();
+
+    await user.click(
+      await screen.findByRole("button", { name: "Editar torneo" }),
+    );
+    const nameInput = screen.getByLabelText("Nombre del torneo");
+    const capacityInput = screen.getByLabelText("Cupo máximo de equipos");
+    await user.clear(nameInput);
+    await user.type(nameInput, "Torneo Apertura renovado");
+    await user.clear(capacityInput);
+    await user.type(capacityInput, "20");
+    await user.click(screen.getByRole("button", { name: "Guardar cambios" }));
+
+    expect(updateTournament).toHaveBeenCalledWith(
+      101,
+      {
+        name: "Torneo Apertura renovado",
+        description: "Competencia de prueba",
+        modality: "league",
+        maxParticipants: 20,
+        playoffSpots: null,
+        groupCount: null,
+        maxParticipantsPerGroup: null,
+        swissRounds: null,
+        isTeamTournament: true,
+        minTeamMembers: 2,
+        maxTeamMembers: 5,
+        registrationDeadline: "2026-11-01",
+        startDate: "2026-11-05",
+        endDate: "2026-12-10",
+      },
+      testToken,
+    );
+    expect(
+      await screen.findByText("Torneo actualizado correctamente"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Torneo Apertura renovado" }),
+    ).toBeInTheDocument();
+  });
+
+  it("muestra la configuracion guardada de Grupos + Playoff", async () => {
+    vi.mocked(getTournament).mockResolvedValue({
+      data: groupsPlayoffTournament,
+    });
+    renderPage();
+
+    expect(
+      await screen.findByRole("heading", { name: "Torneo Apertura" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Grupos + Playoff")).toBeInTheDocument();
+    expect(
+      screen.getByText("Lugares en el playoff").parentElement,
+    ).toHaveTextContent("8");
+    expect(
+      screen.getByText("Cantidad de grupos").parentElement,
+    ).toHaveTextContent("4");
+    expect(
+      screen.getByText("Máximo por grupo").parentElement,
+    ).toHaveTextContent("5");
+    expect(
+      screen.getByText("Clasificados por grupo").parentElement,
+    ).toHaveTextContent("2");
+  });
+
+  it("edita Grupos + Playoff y recalcula el cupo", async () => {
+    const user = userEvent.setup();
+    const updatedTournament = {
+      ...groupsPlayoffTournament,
+      maxParticipants: 24,
+      maxParticipantsPerGroup: 6,
+      updatedAt: "2026-11-13T12:00:00.000Z",
+    };
+    vi.mocked(getTournament).mockResolvedValue({
+      data: groupsPlayoffTournament,
+    });
+    vi.mocked(updateTournament).mockResolvedValue({
+      message: "Torneo actualizado correctamente",
+      data: updatedTournament,
+    });
+    renderPage();
+
+    await user.click(
+      await screen.findByRole("button", { name: "Editar torneo" }),
+    );
+    expect(screen.getByLabelText("Lugares en el playoff")).toHaveValue(8);
+    expect(screen.getByLabelText("Cantidad de grupos")).toHaveValue(4);
+    const maximumPerGroup = screen.getByLabelText(
+      "Máximo de participantes por grupo",
+    );
+    await user.clear(maximumPerGroup);
+    await user.type(maximumPerGroup, "6");
+
+    expect(screen.getByLabelText("Cupo máximo de equipos")).toHaveValue(24);
+    expect(screen.getByLabelText("Cupo máximo de equipos")).toHaveAttribute(
+      "readonly",
+    );
+    expect(
+      screen.getByRole("status", { name: "Resumen de grupos y playoff" }),
+    ).toHaveTextContent("Clasifican 2 por grupo · Cupo máximo total: 24");
+
+    await user.click(screen.getByRole("button", { name: "Guardar cambios" }));
+
+    expect(updateTournament).toHaveBeenCalledWith(
+      101,
+      expect.objectContaining({
+        modality: "groups_playoff",
+        maxParticipants: 24,
+        playoffSpots: 8,
+        groupCount: 4,
+        maxParticipantsPerGroup: 6,
+      }),
+      testToken,
+    );
+  });
+
+  it("propone configuracion para un Grupos + Playoff anterior", async () => {
+    const user = userEvent.setup();
+    vi.mocked(getTournament).mockResolvedValue({
+      data: {
+        ...groupsPlayoffTournament,
+        maxParticipants: 16,
+        playoffSpots: null,
+        groupCount: null,
+        maxParticipantsPerGroup: null,
+      },
+    });
+    renderPage();
+
+    expect(await screen.findAllByText("Configuración pendiente")).toHaveLength(
+      4,
+    );
+    await user.click(screen.getByRole("button", { name: "Editar torneo" }));
+
+    expect(screen.getByLabelText("Lugares en el playoff")).toHaveValue(8);
+    expect(screen.getByLabelText("Cantidad de grupos")).toHaveValue(4);
+    expect(
+      screen.getByLabelText("Máximo de participantes por grupo"),
+    ).toHaveValue(4);
+    expect(screen.getByLabelText("Cupo máximo de equipos")).toHaveValue(16);
+  });
+
+  it("muestra la cantidad de rondas guardada para un torneo Suizo", async () => {
+    vi.mocked(getTournament).mockResolvedValue({ data: swissTournament });
+    renderPage();
+
+    expect(await screen.findByText("Suizo")).toBeInTheDocument();
+    expect(
+      screen.getByText("Rondas del sistema Suizo").parentElement,
+    ).toHaveTextContent("5");
+  });
+
+  it("permite ajustar las rondas Suizas mientras las inscripciones estan abiertas", async () => {
+    const user = userEvent.setup();
+    const openSwissTournament = {
+      ...swissTournament,
+      status: "open" as const,
+    };
+    vi.mocked(getTournament).mockResolvedValue({ data: openSwissTournament });
+    vi.mocked(updateTournament).mockResolvedValue({
+      message: "Torneo actualizado correctamente",
+      data: { ...openSwissTournament, swissRounds: 6 },
+    });
+    renderPage();
+
+    await user.click(
+      await screen.findByRole("button", { name: "Editar torneo" }),
+    );
+    expect(screen.getByLabelText("Modalidad")).toBeDisabled();
+    expect(screen.getByLabelText("Cupo máximo de equipos")).toBeDisabled();
+    const roundsInput = screen.getByLabelText("Cantidad de rondas");
+    expect(roundsInput).toBeEnabled();
+    await user.clear(roundsInput);
+    await user.type(roundsInput, "6");
+    await user.click(screen.getByRole("button", { name: "Guardar cambios" }));
+
+    expect(updateTournament).toHaveBeenCalledWith(
+      101,
+      expect.objectContaining({
+        modality: "swiss",
+        maxParticipants: 16,
+        swissRounds: 6,
+      }),
+      testToken,
+    );
+  });
+
+  it("bloquea las rondas Suizas cuando el torneo ya comenzo", async () => {
+    const user = userEvent.setup();
+    vi.mocked(getTournament).mockResolvedValue({
+      data: { ...swissTournament, status: "in_progress" },
+    });
+    renderPage();
+
+    await user.click(
+      await screen.findByRole("button", { name: "Editar torneo" }),
+    );
+
+    expect(screen.getByLabelText("Cantidad de rondas")).toBeDisabled();
+  });
+
+  it("permite convertir un torneo en borrador a participación individual", async () => {
+    const user = userEvent.setup();
+    const updatedTournament = {
+      ...tournament,
+      isTeamTournament: false,
+      minTeamMembers: null,
+      maxTeamMembers: null,
+    };
+    vi.mocked(updateTournament).mockResolvedValue({
+      message: "Torneo actualizado correctamente",
+      data: updatedTournament,
+    });
+    renderPage();
+
+    await user.click(
+      await screen.findByRole("button", { name: "Editar torneo" }),
+    );
+    await user.click(screen.getByLabelText("Individual"));
+
+    expect(
+      screen.getByLabelText("Cupo máximo de personas"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByLabelText("Mínimo de integrantes por equipo"),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Guardar cambios" }));
+
+    expect(updateTournament).toHaveBeenCalledWith(
+      101,
+      expect.objectContaining({
+        isTeamTournament: false,
+        minTeamMembers: null,
+        maxTeamMembers: null,
+      }),
+      testToken,
+    );
+  });
+
+  it("valida los límites de integrantes antes de guardar", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(
+      await screen.findByRole("button", { name: "Editar torneo" }),
+    );
+    const minimumInput = screen.getByLabelText(
+      "Mínimo de integrantes por equipo",
+    );
+    const maximumInput = screen.getByLabelText(
+      "Máximo de integrantes por equipo",
+    );
+    await user.clear(minimumInput);
+    await user.type(minimumInput, "6");
+    await user.clear(maximumInput);
+    await user.type(maximumInput, "4");
+    await user.click(screen.getByRole("button", { name: "Guardar cambios" }));
+
+    expect(updateTournament).not.toHaveBeenCalled();
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "El máximo de integrantes no puede ser menor que el mínimo.",
+    );
+  });
+
+  it("impide guardar fechas inconsistentes", async () => {
+    const user = userEvent.setup();
+    renderPage();
+
+    await user.click(
+      await screen.findByRole("button", { name: "Editar torneo" }),
+    );
+    const deadlineInput = screen.getByLabelText("Cierre de inscripción");
+    await user.clear(deadlineInput);
+    await user.type(deadlineInput, "2026-11-20");
+    await user.click(screen.getByRole("button", { name: "Guardar cambios" }));
+
+    expect(updateTournament).not.toHaveBeenCalled();
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "La fecha límite de inscripción no puede ser posterior al inicio.",
+    );
+  });
+
+  it("solicita confirmación y elimina un torneo en borrador", async () => {
+    const user = userEvent.setup();
+    vi.mocked(deleteTournament).mockResolvedValue({
+      message: "Torneo eliminado correctamente",
+    });
+    renderPage();
+
+    await user.click(
+      await screen.findByRole("button", { name: "Eliminar torneo" }),
+    );
+    expect(
+      screen.getByRole("heading", { name: "¿Eliminar este torneo?" }),
+    ).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Sí, eliminar" }));
+
+    expect(deleteTournament).toHaveBeenCalledWith(101, testToken);
+    expect(
+      await screen.findByText("Torneo eliminado correctamente"),
+    ).toBeInTheDocument();
+  });
+
+  it("explica por qué un torneo abierto no se puede eliminar", async () => {
+    vi.mocked(getTournament).mockResolvedValue({
+      data: { ...tournament, status: "open" },
+    });
+    renderPage();
+
+    expect(
+      await screen.findByText(/ya no puede eliminarse/),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Eliminar torneo" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("bloquea las reglas de participación cuando el torneo está abierto", async () => {
+    const user = userEvent.setup();
+    vi.mocked(getTournament).mockResolvedValue({
+      data: { ...tournament, status: "open" },
+    });
+    renderPage();
+
+    await user.click(
+      await screen.findByRole("button", { name: "Editar torneo" }),
+    );
+
+    expect(screen.getByLabelText("Individual")).toBeDisabled();
+    expect(screen.getByLabelText("Por equipos")).toBeDisabled();
+    expect(screen.getByLabelText("Cupo máximo de equipos")).toBeDisabled();
+    expect(
+      screen.getByText(/quedó bloqueada al abrir las inscripciones/),
+    ).toBeInTheDocument();
+  });
+
+  it("bloquea la configuracion de grupos cuando el torneo esta abierto", async () => {
+    const user = userEvent.setup();
+    vi.mocked(getTournament).mockResolvedValue({
+      data: { ...groupsPlayoffTournament, status: "open" },
+    });
+    renderPage();
+
+    await user.click(
+      await screen.findByRole("button", { name: "Editar torneo" }),
+    );
+
+    expect(screen.getByLabelText("Modalidad")).toBeDisabled();
+    expect(screen.getByLabelText("Lugares en el playoff")).toBeDisabled();
+    expect(screen.getByLabelText("Cantidad de grupos")).toBeDisabled();
+    expect(
+      screen.getByLabelText("Máximo de participantes por grupo"),
+    ).toBeDisabled();
+  });
+
+  it("muestra el detalle individual sin controles de equipos", async () => {
+    vi.mocked(getTournament).mockResolvedValue({
+      data: {
+        ...tournament,
+        isTeamTournament: false,
+        minTeamMembers: null,
+        maxTeamMembers: null,
+      },
+    });
+    renderPage();
+
+    expect(await screen.findByText("Individual")).toBeInTheDocument();
+    expect(screen.getByText("16 personas")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Inscripciones individuales" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Abrir inscripciones" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("abre las inscripciones desde el detalle del torneo", async () => {
+    const user = userEvent.setup();
+    const openTournament = { ...tournament, status: "open" as const };
+    vi.mocked(updateTournamentStatus).mockResolvedValue({
+      message: "Estado del torneo actualizado correctamente",
+      data: openTournament,
+    });
+    renderPage();
+
+    await user.click(
+      await screen.findByRole("button", { name: "Abrir inscripciones" }),
+    );
+
+    expect(updateTournamentStatus).toHaveBeenCalledWith(101, "open", testToken);
+    expect(
+      await screen.findByText("Estado del torneo actualizado correctamente"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Inscribir equipo" }),
+    ).toBeDisabled();
+  });
+
+  it("inscribe un equipo disponible y actualiza el listado", async () => {
+    const user = userEvent.setup();
+    vi.mocked(getTournament).mockResolvedValue({
+      data: { ...tournament, status: "open" },
+    });
+    vi.mocked(listTeams).mockResolvedValue({
+      data: [
+        {
+          id: 201,
+          name: "Los Halcones",
+          description: null,
+          captainId: 1,
+          createdAt: "2026-10-30T10:00:00.000Z",
+          updatedAt: "2026-10-30T10:00:00.000Z",
+        },
+      ],
+      pagination: { page: 1, limit: 100, total: 1, totalPages: 1 },
+    });
+    vi.mocked(registerTeamInTournament).mockResolvedValue({
+      message: "Equipo inscrito correctamente",
+      data: {
+        id: 301,
+        tournamentId: 101,
+        teamId: 201,
+        status: "registered",
+        createdAt: "2026-10-30T12:00:00.000Z",
+        updatedAt: "2026-10-30T12:00:00.000Z",
+      },
+    });
+    renderPage();
+
+    await user.selectOptions(
+      await screen.findByLabelText("Equipo a inscribir"),
+      "201",
+    );
+    await user.click(await screen.findByLabelText(/Usuario #1/));
+    await user.click(screen.getByLabelText(/Usuario #2/));
+    await user.click(screen.getByRole("button", { name: "Inscribir equipo" }));
+
+    expect(registerTeamInTournament).toHaveBeenCalledWith(
+      101,
+      201,
+      [1, 2],
+      testToken,
+    );
+    expect(
+      await screen.findByText("Equipo inscrito correctamente"),
+    ).toBeInTheDocument();
+  });
+
+  it("retira un equipo inscrito desde el detalle", async () => {
+    const user = userEvent.setup();
+    vi.mocked(getTournament).mockResolvedValue({
+      data: { ...tournament, status: "open" },
+    });
+    vi.mocked(listTournamentRegistrations).mockResolvedValue({
+      data: [
+        {
+          id: 301,
+          status: "registered",
+          registeredAt: "2026-10-30T12:00:00.000Z",
+          updatedAt: "2026-10-30T12:00:00.000Z",
+          memberIds: [1, 2],
+          team: { id: 201, name: "Los Halcones" },
+        },
+      ],
+      pagination: { page: 1, limit: 100, total: 1, totalPages: 1 },
+    });
+    vi.mocked(withdrawTeamFromTournament).mockResolvedValue({
+      message: "Equipo retirado correctamente",
+      data: {
+        id: 301,
+        tournamentId: 101,
+        teamId: 201,
+        status: "withdrawn",
+        createdAt: "2026-10-30T12:00:00.000Z",
+        updatedAt: "2026-10-30T13:00:00.000Z",
+      },
+    });
+    renderPage();
+
+    expect(await screen.findByText("Los Halcones")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Retirar" }));
+
+    expect(withdrawTeamFromTournament).toHaveBeenCalledWith(
+      101,
+      201,
+      testToken,
+    );
+    expect(
+      await screen.findByText("Equipo retirado correctamente"),
+    ).toBeInTheDocument();
+  });
+
+  it("muestra el conflicto si el estado cambia antes del borrado", async () => {
+    const user = userEvent.setup();
+    vi.mocked(deleteTournament).mockRejectedValue(
+      new ApiError(409, {
+        message: "Solo se pueden eliminar torneos en estado draft",
+      }),
+    );
+    renderPage();
+
+    await user.click(
+      await screen.findByRole("button", { name: "Eliminar torneo" }),
+    );
+    await user.click(screen.getByRole("button", { name: "Sí, eliminar" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Solo se pueden eliminar torneos en estado draft",
+    );
+  });
+
+  it("muestra un error entendible cuando el torneo no existe", async () => {
+    vi.mocked(getTournament).mockRejectedValue(
+      new ApiError(404, { message: "Torneo no encontrado" }),
+    );
+    renderPage();
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "Torneo no encontrado",
+    );
+  });
+
+  it("rechaza un identificador inválido sin consultar la API", () => {
+    renderPage("/tournaments/no-es-un-id");
+
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "El identificador del torneo no es válido.",
+    );
+    expect(getTournament).not.toHaveBeenCalled();
+  });
+});

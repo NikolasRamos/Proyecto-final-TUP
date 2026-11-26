@@ -1,28 +1,100 @@
-'use strict';
-const { Model } = require('sequelize');
+import { DataTypes, Model } from "sequelize";
 
-module.exports = (sequelize, DataTypes) => {
-  class Standing extends Model {
-    static associate(models) {
-      Standing.belongsTo(models.Tournament, { foreignKey: 'tournamentId', as: 'tournament' });
-      Standing.belongsTo(models.Team, { foreignKey: 'teamId', as: 'team' });
-    }
-  }
-  Standing.init({
-    tournamentId: { type: DataTypes.INTEGER, allowNull: false },
-    teamId: { type: DataTypes.INTEGER, allowNull: false },
-    played: { type: DataTypes.INTEGER, defaultValue: 0 },
-    won: { type: DataTypes.INTEGER, defaultValue: 0 },
-    drawn: { type: DataTypes.INTEGER, defaultValue: 0 },
-    lost: { type: DataTypes.INTEGER, defaultValue: 0 },
-    goalsFor: { type: DataTypes.INTEGER, defaultValue: 0 },
-    goalsAgainst: { type: DataTypes.INTEGER, defaultValue: 0 },
-    goalDifference: { type: DataTypes.INTEGER, defaultValue: 0 },
-    points: { type: DataTypes.INTEGER, defaultValue: 0 }
-  }, {
-    sequelize,
-    modelName: 'Standing',
-    tableName: 'standings'
-  });
-  return Standing;
+import database from "../config/database.js";
+
+const nonNegativeInteger = {
+  isInt: true,
+  min: 0,
 };
+
+class Standing extends Model {}
+
+Standing.init(
+  {
+    id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      primaryKey: true,
+      autoIncrement: true,
+    },
+    tournamentId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      field: "tournament_id",
+      validate: { isInt: true, min: 1 },
+    },
+    teamId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      field: "team_id",
+      validate: { isInt: true, min: 1 },
+    },
+    played: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+      validate: nonNegativeInteger,
+    },
+    won: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+      validate: nonNegativeInteger,
+    },
+    drawn: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+      validate: nonNegativeInteger,
+    },
+    lost: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+      validate: nonNegativeInteger,
+    },
+    goalsFor: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+      field: "goals_for",
+      validate: nonNegativeInteger,
+    },
+    goalsAgainst: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+      field: "goals_against",
+      validate: nonNegativeInteger,
+    },
+    goalDifference: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+      field: "goal_difference",
+      validate: { isInt: true },
+    },
+    points: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+      validate: nonNegativeInteger,
+    },
+  },
+  {
+    sequelize: database,
+    modelName: "Standing",
+    tableName: "standings",
+    underscored: true,
+    timestamps: true,
+    indexes: [
+      {
+        unique: true,
+        fields: ["tournament_id", "team_id"],
+        name: "standings_tournament_id_team_id_unique",
+      },
+    ],
+  },
+);
+
+export default Standing;
