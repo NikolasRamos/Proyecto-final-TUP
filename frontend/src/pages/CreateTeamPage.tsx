@@ -3,6 +3,11 @@ import { Link } from "react-router";
 
 import { ApiError } from "../api/client";
 import { createTeam } from "../api/teams.api";
+import {
+  getCompetitionManagerToken,
+  getTeamCreatorToken,
+  useAuthSession,
+} from "../auth/auth-session";
 import type { EntityId } from "../types/id";
 import type { CreateTeamInput } from "../types/team";
 
@@ -25,6 +30,9 @@ const initialForm: TeamFormData = {
 };
 
 export default function CreateTeamPage() {
+  const { session } = useAuthSession();
+  const token = getTeamCreatorToken(session);
+  const canChooseCaptain = Boolean(getCompetitionManagerToken(session));
   const [form, setForm] = useState(initialForm);
   const [submitState, setSubmitState] = useState<SubmitState>({
     status: "idle",
@@ -43,27 +51,30 @@ export default function CreateTeamPage() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const captainId = Number(form.captainId);
-
-    if (!Number.isInteger(captainId) || captainId <= 0) {
-      setSubmitState({
-        status: "error",
-        message: "El identificador del capitán no es válido.",
-        details: [],
-      });
-      return;
-    }
+    if (!token) return;
 
     const payload: CreateTeamInput = {
       name: form.name.trim(),
       description: form.description.trim() || null,
-      captainId,
     };
+
+    if (canChooseCaptain) {
+      const captainId = Number(form.captainId);
+      if (!Number.isInteger(captainId) || captainId <= 0) {
+        setSubmitState({
+          status: "error",
+          message: "El identificador del capitán no es válido.",
+          details: [],
+        });
+        return;
+      }
+      payload.captainId = captainId;
+    }
 
     setSubmitState({ status: "submitting" });
 
     try {
-      const response = await createTeam(payload);
+      const response = await createTeam(payload, token);
       setSubmitState({
         status: "success",
         message: response.message,
@@ -101,8 +112,9 @@ export default function CreateTeamPage() {
         <span className="eyebrow">Equipos</span>
         <h1>Crear equipo</h1>
         <p>
-          Registrá los datos principales. El capitán se agregará automáticamente
-          como primer integrante.
+          {canChooseCaptain
+            ? "El capitán se agregará automáticamente como primer integrante."
+            : "Vas a quedar como capitán y primer integrante del equipo."}
         </p>
       </header>
 
@@ -141,25 +153,24 @@ export default function CreateTeamPage() {
             </span>
           </div>
 
-          <div className="form-field field-full">
-            <label htmlFor="captain-id">ID del capitán</label>
-            <input
-              id="captain-id"
-              type="number"
-              min={1}
-              step={1}
-              value={form.captainId}
-              onChange={(event) => updateField("captainId", event.target.value)}
-              placeholder="Ejemplo: 1"
-              aria-describedby="captain-hint"
-              required
-              disabled={isSubmitting}
-            />
-            <span className="field-hint" id="captain-hint">
-              Campo temporal hasta integrar usuarios. Para las pruebas podés
-              utilizar el número 1.
-            </span>
-          </div>
+          {canChooseCaptain && (
+            <div className="form-field field-full">
+              <label htmlFor="captain-id">ID del capitán</label>
+              <input
+                id="captain-id"
+                type="number"
+                min={1}
+                step={1}
+                value={form.captainId}
+                onChange={(event) =>
+                  updateField("captainId", event.target.value)
+                }
+                placeholder="Ejemplo: 1"
+                required
+                disabled={isSubmitting}
+              />
+            </div>
+          )}
         </div>
 
         {submitState.status === "error" && (

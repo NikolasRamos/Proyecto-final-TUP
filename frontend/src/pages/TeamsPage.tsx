@@ -2,6 +2,7 @@ import { type FormEvent, useEffect, useState } from "react";
 import { Link, useLocation, useSearchParams } from "react-router";
 
 import { listTeams } from "../api/teams.api";
+import { getTeamCreatorToken, useAuthSession } from "../auth/auth-session";
 import ResourceListSkeleton from "../components/ResourceListSkeleton";
 import TeamCard from "../components/TeamCard";
 import type { Pagination } from "../types/api";
@@ -40,6 +41,7 @@ function formatTeamCount(total: number) {
 }
 
 export default function TeamsPage() {
+  const { session } = useAuthSession();
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigationFeedback = (location.state as { feedback?: string } | null)
@@ -149,11 +151,13 @@ export default function TeamsPage() {
         <div>
           <span className="eyebrow">Participantes</span>
           <h1>Equipos</h1>
-          <p>Consultá y administrá los equipos registrados.</p>
+          <p>Consultá los equipos registrados.</p>
         </div>
-        <Link className="primary-link" to="/teams/new">
-          Crear equipo
-        </Link>
+        {getTeamCreatorToken(session) && (
+          <Link className="primary-link" to="/teams/new">
+            Crear equipo
+          </Link>
+        )}
       </header>
 
       <section className="list-panel" aria-labelledby="team-list-title">

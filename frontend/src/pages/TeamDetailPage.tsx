@@ -3,7 +3,13 @@ import { Link, useNavigate, useParams } from "react-router";
 
 import { ApiError } from "../api/client";
 import { deleteTeam, getTeam, updateTeam } from "../api/teams.api";
+import {
+  getCompetitionManagerToken,
+  useAuthSession,
+} from "../auth/auth-session";
 import ResourceListSkeleton from "../components/ResourceListSkeleton";
+import TeamCaptainForm from "../components/TeamCaptainForm";
+import TeamMembershipPanel from "../components/TeamMembershipPanel";
 import type { Team, UpdateTeamInput } from "../types/team";
 
 interface TeamFormData {
@@ -46,6 +52,12 @@ function getRequestErrorMessage(error: unknown) {
 }
 
 export default function TeamDetailPage() {
+  const { session } = useAuthSession();
+  const editToken = getCompetitionManagerToken(session);
+  const adminToken =
+    session.status === "signedIn" && session.user.role === "administrador"
+      ? session.token
+      : undefined;
   const { id = "" } = useParams();
   const navigate = useNavigate();
   const teamId = Number(id);
@@ -59,12 +71,24 @@ export default function TeamDetailPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [deleteConfirmationId, setDeleteConfirmationId] = useState<
+    number | null
+  >(null);
   const [notice, setNotice] = useState<Notice>(null);
+  const [captainFormTeamId, setCaptainFormTeamId] = useState<number | null>(
+    null,
+  );
   const state: DetailState =
     result.requestKey === requestKey
       ? result
       : { status: "loading", requestKey };
+  const deleteToken =
+    state.status === "success" &&
+    session.status === "signedIn" &&
+    (session.user.role === "administrador" ||
+      session.user.idUsuario === state.team.captainAccountId)
+      ? session.token
+      : undefined;
 
   useEffect(() => {
     if (!hasValidId) {
@@ -110,7 +134,7 @@ export default function TeamDetailPage() {
   async function handleUpdate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!form || state.status !== "success") {
+    if (!editToken || !form || state.status !== "success") {
       return;
     }
 
@@ -123,7 +147,7 @@ export default function TeamDetailPage() {
     setNotice(null);
 
     try {
-      const response = await updateTeam(teamId, payload);
+      const response = await updateTeam(teamId, payload, editToken);
       setResult({ status: "success", requestKey, team: response.data });
       setForm(toFormData(response.data));
       setIsEditing(false);
@@ -147,11 +171,13 @@ export default function TeamDetailPage() {
   }
 
   async function handleDelete() {
+    if (!deleteToken || deleteConfirmationId !== teamId || isDeleting) return;
+
     setIsDeleting(true);
     setNotice(null);
 
     try {
-      const response = await deleteTeam(teamId);
+      const response = await deleteTeam(teamId, deleteToken);
       navigate("/teams", {
         replace: true,
         state: { feedback: response.message },
@@ -164,7 +190,7 @@ export default function TeamDetailPage() {
             ? error.message
             : "No se pudo eliminar el equipo.",
       });
-      setShowDeleteConfirmation(false);
+      setDeleteConfirmationId(null);
     } finally {
       setIsDeleting(false);
     }
@@ -210,29 +236,48 @@ export default function TeamDetailPage() {
               <span className="eyebrow">Equipo #{state.team.id}</span>
               <h1>{state.team.name}</h1>
             </div>
-            {!isEditing && (
-              <div className="detail-actions">
-                <button
-                  className="secondary-button"
-                  type="button"
-                  onClick={() => {
-                    setForm(toFormData(state.team));
-                    setNotice(null);
-                    setShowDeleteConfirmation(false);
-                    setIsEditing(true);
-                  }}
-                >
-                  Editar equipo
-                </button>
-                <button
-                  className="danger-button"
-                  type="button"
-                  onClick={() => setShowDeleteConfirmation(true)}
-                >
-                  Eliminar equipo
-                </button>
-              </div>
-            )}
+            {(editToken || deleteToken) &&
+              !isEditing &&
+              captainFormTeamId !== teamId && (
+                <div className="detail-actions">
+                  {editToken && (
+                    <button
+                      className="secondary-button"
+                      type="button"
+                      onClick={() => {
+                        setForm(toFormData(state.team));
+                        setNotice(null);
+                        setDeleteConfirmationId(null);
+                        setIsEditing(true);
+                      }}
+                    >
+                      Editar equipo
+                    </button>
+                  )}
+                  {deleteToken && (
+                    <button
+                      className="danger-button"
+                      type="button"
+                      onClick={() => setDeleteConfirmationId(teamId)}
+                    >
+                      Eliminar equipo
+                    </button>
+                  )}
+                  {adminToken && (
+                    <button
+                      className="secondary-button"
+                      type="button"
+                      onClick={() => {
+                        setNotice(null);
+                        setDeleteConfirmationId(null);
+                        setCaptainFormTeamId(teamId);
+                      }}
+                    >
+                      Asignar capitán
+                    </button>
+                  )}
+                </div>
+              )}
           </header>
 
           {notice && (
@@ -253,7 +298,25 @@ export default function TeamDetailPage() {
             </div>
           )}
 
-          {showDeleteConfirmation && (
+          {adminToken && captainFormTeamId === teamId && (
+            <TeamCaptainForm
+              teamId={teamId}
+              token={adminToken}
+              onCancel={() => setCaptainFormTeamId(null)}
+              onAssigned={(response) => {
+                setResult({
+                  status: "success",
+                  requestKey,
+                  team: response.data,
+                });
+                setForm(toFormData(response.data));
+                setNotice({ type: "success", message: response.message });
+                setCaptainFormTeamId(null);
+              }}
+            />
+          )}
+
+          {deleteToken && deleteConfirmationId === teamId && (
             <section
               className="delete-confirmation"
               aria-labelledby="delete-team-title"
@@ -270,7 +333,7 @@ export default function TeamDetailPage() {
                 <button
                   className="secondary-button"
                   type="button"
-                  onClick={() => setShowDeleteConfirmation(false)}
+                  onClick={() => setDeleteConfirmationId(null)}
                   disabled={isDeleting}
                 >
                   Cancelar
@@ -349,8 +412,12 @@ export default function TeamDetailPage() {
               </p>
               <dl className="detail-grid">
                 <div>
-                  <dt>Capitán temporal</dt>
-                  <dd>Usuario #{state.team.captainId}</dd>
+                  <dt>Capitán</dt>
+                  <dd>
+                    {state.team.captainAccountId
+                      ? `Usuario #${state.team.captainAccountId}`
+                      : "Sin cuenta vinculada"}
+                  </dd>
                 </div>
                 <div>
                   <dt>Creado</dt>
@@ -365,12 +432,22 @@ export default function TeamDetailPage() {
                   </dd>
                 </div>
               </dl>
-              <p className="detail-rule-note">
-                El capitán no puede cambiarse desde la edición básica. La
-                gestión de integrantes se incorporará en esta pantalla.
-              </p>
             </section>
           )}
+          {session.status === "signedIn" &&
+            !isEditing &&
+            captainFormTeamId !== teamId &&
+            (session.user.role === "participante" ||
+              session.user.idUsuario === state.team.captainAccountId) && (
+              <TeamMembershipPanel
+                key={`${teamId}:${state.team.captainAccountId}`}
+                teamId={teamId}
+                token={session.token}
+                isCaptain={
+                  session.user.idUsuario === state.team.captainAccountId
+                }
+              />
+            )}
         </>
       )}
     </main>

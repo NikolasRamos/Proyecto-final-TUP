@@ -36,6 +36,12 @@ Team.init(
         min: 1,
       },
     },
+    captainAccountId: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      field: "captain_account_id",
+      validate: { isInt: true, min: 1 },
+    },
   },
   {
     sequelize: database,

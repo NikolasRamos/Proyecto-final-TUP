@@ -25,6 +25,12 @@ export const createTeamSchema = z.object({
   captainId: entityIdSchema,
 });
 
+export const createOwnTeamSchema = z.strictObject(teamFields);
+
+export const assignTeamCaptainSchema = z.strictObject({
+  captainId: entityIdSchema,
+});
+
 export const updateTeamSchema = z.object(teamFields);
 
 export const addTeamMemberSchema = z.object({

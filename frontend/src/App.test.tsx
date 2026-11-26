@@ -5,8 +5,8 @@ import { MemoryRouter } from "react-router";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import App from "./App";
-import { listTeams } from "./api/teams.api";
-import { listTournaments } from "./api/tournaments.api";
+import { getTeam, listTeams } from "./api/teams.api";
+import { getTournament, listTournaments } from "./api/tournaments.api";
 
 vi.mock("./api/tournaments.api", () => ({
   createTournament: vi.fn(),
@@ -27,6 +27,33 @@ vi.mock("./api/teams.api", () => ({
   updateTeam: vi.fn(),
 }));
 
+const tournament = {
+  id: 101,
+  name: "Torneo Apertura",
+  description: "Competencia de prueba",
+  modality: "league" as const,
+  maxParticipants: 16,
+  isTeamTournament: true,
+  minTeamMembers: 2,
+  maxTeamMembers: 5,
+  registrationDeadline: "2026-11-01",
+  startDate: "2026-11-05",
+  endDate: "2026-12-10",
+  status: "open" as const,
+  organizerId: 1,
+  createdAt: "2026-10-13T12:00:00.000Z",
+  updatedAt: "2026-10-13T12:00:00.000Z",
+};
+
+const team = {
+  id: 201,
+  name: "Los Halcones",
+  description: "Equipo de prueba",
+  captainId: 1,
+  createdAt: "2026-10-13T12:00:00.000Z",
+  updatedAt: "2026-10-13T12:00:00.000Z",
+};
+
 describe("App", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -40,7 +67,7 @@ describe("App", () => {
     });
   });
 
-  it("presenta el panel interno con textos editables", async () => {
+  it("presenta búsquedas públicas en la portada del invitado", async () => {
     render(
       <MemoryRouter>
         <App />
@@ -50,18 +77,63 @@ describe("App", () => {
     expect(
       screen.getByRole("heading", { name: "Título X" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("Panel interno")).toBeInTheDocument();
     expect(screen.getByText("Descripción X")).toBeInTheDocument();
-    expect(screen.getByText("Partidas y resultados")).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: "Módulos planificados" }),
-    ).toBeInTheDocument();
-    expect(screen.queryByText("Torneos", { selector: "li" })).toBeNull();
-    expect(screen.queryByText("Equipos", { selector: "li" })).toBeNull();
+      screen.getByRole("link", { name: "Buscar torneos" }),
+    ).toHaveAttribute("href", "/tournaments");
+    expect(
+      screen.getByRole("link", { name: "Buscar equipos" }),
+    ).toHaveAttribute("href", "/teams");
+    expect(
+      screen.queryByRole("link", { name: /Crear (torneo|equipo)/ }),
+    ).not.toBeInTheDocument();
     expect(
       await screen.findByText("Todavía no hay torneos para mostrar."),
     ).toBeInTheDocument();
   });
+
+  it.each(["/tournaments/new", "/teams/new"])(
+    "pide iniciar sesión al abrir %s como invitado",
+    async (path) => {
+      render(
+        <MemoryRouter initialEntries={[path]}>
+          <App />
+        </MemoryRouter>,
+      );
+
+      expect(
+        await screen.findByRole("heading", { name: "Iniciar sesión" }),
+      ).toBeInTheDocument();
+    },
+  );
+
+  it.each([
+    ["/tournaments/101", tournament.name],
+    ["/teams/201", team.name],
+  ])(
+    "muestra el detalle de %s sin acciones de gestión",
+    async (path, heading) => {
+      vi.mocked(getTournament).mockResolvedValue({ data: tournament });
+      vi.mocked(getTeam).mockResolvedValue({ data: team });
+      render(
+        <MemoryRouter initialEntries={[path]}>
+          <App />
+        </MemoryRouter>,
+      );
+
+      expect(
+        await screen.findByRole("heading", { name: heading }),
+      ).toBeInTheDocument();
+      expect(
+        screen.queryByRole("button", {
+          name: /Editar|Eliminar|Exportar reporte|Inscribir equipo/,
+        }),
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("heading", { name: "Equipos inscritos" }),
+      ).not.toBeInTheDocument();
+    },
+  );
 
   it("muestra esqueletos accesibles mientras carga los datos", () => {
     vi.mocked(listTournaments).mockReturnValue(new Promise(() => undefined));
@@ -79,38 +151,11 @@ describe("App", () => {
 
   it("muestra los torneos y equipos obtenidos desde la API", async () => {
     vi.mocked(listTournaments).mockResolvedValue({
-      data: [
-        {
-          id: 101,
-          name: "Torneo Apertura",
-          description: "Competencia de prueba",
-          modality: "league",
-          maxParticipants: 16,
-          isTeamTournament: true,
-          minTeamMembers: 2,
-          maxTeamMembers: 5,
-          registrationDeadline: "2026-11-01",
-          startDate: "2026-11-05",
-          endDate: "2026-12-10",
-          status: "open",
-          organizerId: 1,
-          createdAt: "2026-10-13T12:00:00.000Z",
-          updatedAt: "2026-10-13T12:00:00.000Z",
-        },
-      ],
+      data: [tournament],
       pagination: { page: 1, limit: 5, total: 1, totalPages: 1 },
     });
     vi.mocked(listTeams).mockResolvedValue({
-      data: [
-        {
-          id: 201,
-          name: "Los Halcones",
-          description: "Equipo de prueba",
-          captainId: 1,
-          createdAt: "2026-10-13T12:00:00.000Z",
-          updatedAt: "2026-10-13T12:00:00.000Z",
-        },
-      ],
+      data: [team],
       pagination: { page: 1, limit: 5, total: 1, totalPages: 1 },
     });
 
@@ -123,7 +168,7 @@ describe("App", () => {
     expect(await screen.findByText("Torneo Apertura")).toBeInTheDocument();
     expect(await screen.findByText("Los Halcones")).toBeInTheDocument();
     expect(
-      screen.getByText("Torneos registrados").nextElementSibling,
+      screen.getByText("Torneos vigentes").nextElementSibling,
     ).toHaveTextContent("1");
     expect(
       screen.getByText("Equipos registrados").nextElementSibling,

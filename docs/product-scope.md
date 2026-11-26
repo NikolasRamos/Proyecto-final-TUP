@@ -11,14 +11,21 @@ organizadores podrán configurar competencias, administrar equipos, registrar
 resultados y consultar posiciones. Los participantes podrán consultar sus
 equipos, inscripciones, partidas y estadísticas.
 
-## Roles previstos
+## Acceso al sistema
 
-Los roles pertenecen al alcance planificado. La autenticación y la autorización
-todavía no están implementadas.
+El registro crea cuentas de participante. Los permisos se aplican en la web y
+en la API. Los organizadores y administradores gestionan torneos y editan
+equipos. El borrado de equipos corresponde a su capitán o a un administrador.
+
+### Invitado
+
+- Buscar y consultar torneos con inscripción abierta o en curso.
+- Buscar y consultar los equipos registrados.
 
 ### Administrador
 
 - Gestionar usuarios y permisos.
+- Asignar una cuenta activa como capitana de un equipo existente.
 - Administrar torneos, equipos y categorías.
 - Consultar estadísticas generales.
 - Resolver situaciones que requieran privilegios globales.
@@ -33,10 +40,13 @@ todavía no están implementadas.
 
 ### Participante
 
-- Administrar su perfil.
-- Integrar equipos.
-- Inscribirse en torneos mediante un equipo.
-- Consultar partidas, resultados y posiciones.
+- Buscar y consultar los torneos vigentes y los equipos registrados.
+- Crear un equipo propio y quedar registrado como capitán y primer integrante.
+- Borrar un equipo que capitanea si está libre de historial de inscripciones.
+- Pedir ingreso a un equipo o responder una invitación en **Solicitudes**.
+- Invitar a una cuenta registrada y responder solicitudes en equipos que capitanea.
+- Ver sus membresías vinculadas en **Mis equipos**.
+- Consultar y marcar como leídos los avisos de equipos en **Notificaciones**.
 
 ## Estado por módulo
 
@@ -46,7 +56,7 @@ todavía no están implementadas.
 | Equipos                  | En desarrollo avanzado | CRUD y listado con búsqueda y paginación en API y frontend; integrantes disponibles todavía solo en API |
 | Inscripciones            | En desarrollo avanzado | Alta, retiro lógico, cupos, duplicados y listado en API y desde el detalle del torneo                   |
 | Reportes                 | Prototipo implementado | PDF por torneo con información general, ocupación y equipos activos                                     |
-| Usuarios y autenticación | Pendiente              | Los IDs numéricos se almacenan sin claves foráneas definitivas hacia `users`                            |
+| Usuarios y autenticación | En desarrollo avanzado | Registro, inicio de sesión, asignación de roles y acceso público de solo lectura a los catálogos        |
 | Partidas y resultados    | Base de datos iniciada | Migraciones y modelos disponibles; todavía sin endpoints, reglas de aplicación ni pantallas             |
 | Clasificaciones          | Base de datos iniciada | Tabla y modelo de posiciones disponibles; el cálculo automático todavía está pendiente                  |
 | Estadísticas             | Pendiente              | Solo existen espacios planificados en la interfaz                                                       |
@@ -82,7 +92,7 @@ todavía no están implementadas.
 
 ## Funcionalidades planificadas
 
-1. Registro, inicio de sesión, perfiles y permisos.
+1. Perfiles y permisos por rol y por propiedad de los recursos.
 2. Integración de organizadores, capitanes e integrantes con usuarios reales.
 3. Gestión de integrantes desde el frontend.
 4. Completar las transiciones posteriores al estado `open` desde el detalle del torneo.
@@ -97,8 +107,7 @@ todavía no están implementadas.
 
 No deben presentarse como funcionalidades terminadas:
 
-- autenticación mediante JWT;
-- roles y permisos efectivos;
+- permisos de gestión por rol y por propiedad de torneos y equipos;
 - gestión de partidas o resultados mediante API o frontend;
 - cálculo de clasificaciones automáticas;
 - estadísticas reales;

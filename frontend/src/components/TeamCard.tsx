@@ -17,7 +17,9 @@ export default function TeamCard({ team }: TeamCardProps) {
         {team.description || "Este equipo todavía no tiene una descripción."}
       </p>
       <p className="resource-meta">
-        Capitán temporal: <code>{team.captainId}</code>
+        {team.captainAccountId
+          ? `Capitán: usuario #${team.captainAccountId}`
+          : "Capitán sin cuenta vinculada"}
       </p>
       <Link
         className="resource-detail-link"

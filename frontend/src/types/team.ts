@@ -5,6 +5,7 @@ export interface Team {
   name: string;
   description: string | null;
   captainId: EntityId;
+  captainAccountId?: EntityId | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -12,7 +13,7 @@ export interface Team {
 export interface CreateTeamInput {
   name: string;
   description?: string | null;
-  captainId: EntityId;
+  captainId?: EntityId;
 }
 
 export type UpdateTeamInput = Omit<CreateTeamInput, "captainId">;

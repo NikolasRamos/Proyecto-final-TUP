@@ -2,6 +2,10 @@ import { type FormEvent, useEffect, useState } from "react";
 import { Link, useLocation, useSearchParams } from "react-router";
 
 import { listTournaments } from "../api/tournaments.api";
+import {
+  getCompetitionManagerToken,
+  useAuthSession,
+} from "../auth/auth-session";
 import ResourceListSkeleton from "../components/ResourceListSkeleton";
 import TournamentCard from "../components/TournamentCard";
 import type { Pagination } from "../types/api";
@@ -20,6 +24,7 @@ const tournamentStatuses: TournamentStatus[] = [
   "finished",
   "cancelled",
 ];
+const publicTournamentStatuses: TournamentStatus[] = ["open", "in_progress"];
 
 const statusLabels: Record<TournamentStatus, string> = {
   draft: "Borrador",
@@ -69,10 +74,6 @@ function readPositiveInteger(value: string | null, fallback: number) {
     : fallback;
 }
 
-function isTournamentStatus(value: string | null): value is TournamentStatus {
-  return tournamentStatuses.includes(value as TournamentStatus);
-}
-
 function isTournamentModality(
   value: string | null,
 ): value is TournamentModality {
@@ -91,6 +92,9 @@ function isSortOption(value: string | null): value is SortOption {
 }
 
 export default function TournamentsPage() {
+  const { session } = useAuthSession();
+  const token = getCompetitionManagerToken(session);
+  const visibleStatuses = token ? tournamentStatuses : publicTournamentStatuses;
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const navigationFeedback = (location.state as { feedback?: string } | null)
@@ -99,7 +103,9 @@ export default function TournamentsPage() {
   const statusParam = searchParams.get("status");
   const modalityParam = searchParams.get("modality");
   const sortParam = searchParams.get("sort");
-  const status = isTournamentStatus(statusParam) ? statusParam : undefined;
+  const status = visibleStatuses.find(
+    (visibleStatus) => visibleStatus === statusParam,
+  );
   const modality = isTournamentModality(modalityParam)
     ? modalityParam
     : undefined;
@@ -141,15 +147,18 @@ export default function TournamentsPage() {
   useEffect(() => {
     let active = true;
 
-    void listTournaments({
-      search: search || undefined,
-      status,
-      modality,
-      page,
-      limit,
-      sortBy,
-      order,
-    })
+    void listTournaments(
+      {
+        search: search || undefined,
+        status,
+        modality,
+        page,
+        limit,
+        sortBy,
+        order,
+      },
+      token,
+    )
       .then((response) => {
         if (!active) {
           return;
@@ -201,6 +210,7 @@ export default function TournamentsPage() {
     order,
     requestKey,
     setSearchParams,
+    token,
   ]);
 
   function updateQuery(changes: Record<string, string | number | undefined>) {
@@ -242,11 +252,17 @@ export default function TournamentsPage() {
         <div>
           <span className="eyebrow">Competencias</span>
           <h1>Torneos</h1>
-          <p>Consultá los torneos registrados y su información principal.</p>
+          <p>
+            {token
+              ? "Consultá los torneos registrados y su información principal."
+              : "Buscá torneos con inscripción abierta o en curso."}
+          </p>
         </div>
-        <Link className="primary-link" to="/tournaments/new">
-          Crear torneo
-        </Link>
+        {token && (
+          <Link className="primary-link" to="/tournaments/new">
+            Crear torneo
+          </Link>
+        )}
       </header>
 
       <section className="list-panel" aria-labelledby="tournament-list-title">
@@ -292,7 +308,7 @@ export default function TournamentsPage() {
               }
             >
               <option value="">Todos</option>
-              {tournamentStatuses.map((tournamentStatus) => (
+              {visibleStatuses.map((tournamentStatus) => (
                 <option key={tournamentStatus} value={tournamentStatus}>
                   {statusLabels[tournamentStatus]}
                 </option>
@@ -368,7 +384,9 @@ export default function TournamentsPage() {
         <div className="section-heading list-results-heading">
           <div>
             <p className="section-kicker">Listado</p>
-            <h2 id="tournament-list-title">Torneos registrados</h2>
+            <h2 id="tournament-list-title">
+              {token ? "Torneos registrados" : "Torneos vigentes"}
+            </h2>
           </div>
           {state.status === "success" && (
             <strong className="result-count" aria-live="polite">
@@ -395,7 +413,9 @@ export default function TournamentsPage() {
             <p>
               {hasActiveFilters
                 ? "No encontramos torneos con los filtros seleccionados."
-                : "Todavía no hay torneos registrados."}
+                : token
+                  ? "Todavía no hay torneos registrados."
+                  : "Todavía no hay torneos vigentes."}
             </p>
             {hasActiveFilters && (
               <button

@@ -1,5 +1,6 @@
 import "dotenv/config";
 
+import pg from "pg";
 import { Sequelize } from "sequelize";
 
 const databaseUrl = process.env.DATABASE_URL?.trim();
@@ -9,6 +10,7 @@ const sslEnabled =
 
 const connectionOptions = {
   dialect: "postgres",
+  dialectModule: pg,
   logging: process.env.NODE_ENV === "development" ? console.log : false,
   pool: {
     max: Number(process.env.DB_POOL_MAX ?? 5),

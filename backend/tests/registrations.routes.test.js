@@ -1,6 +1,6 @@
 import { nextTestId } from "./test-id.js";
 
-import request from "supertest";
+import { useAuthenticatedRequests } from "./authenticated-request.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import app from "../app.js";
@@ -9,6 +9,8 @@ import {
   registerTeamInTournament,
   withdrawTeamFromTournament,
 } from "../services/registrations.service.js";
+
+const authenticatedRequest = useAuthenticatedRequests(app);
 
 vi.mock("../services/registrations.service.js", () => ({
   listTournamentRegistrations: vi.fn(),
@@ -35,7 +37,7 @@ describe("POST /api/tournaments/:tournamentId/registrations", () => {
       registration,
     });
 
-    const response = await request(app)
+    const response = await authenticatedRequest()
       .post(`/api/tournaments/${tournamentId}/registrations`)
       .send({ teamId, memberIds: [1, 2] });
 
@@ -52,7 +54,7 @@ describe("POST /api/tournaments/:tournamentId/registrations", () => {
   });
 
   it("rechaza un identificador de torneo que no es un entero positivo", async () => {
-    const response = await request(app)
+    const response = await authenticatedRequest()
       .post("/api/tournaments/invalid-id/registrations")
       .send({ teamId: nextTestId(), memberIds: [1, 2] });
 
@@ -64,7 +66,7 @@ describe("POST /api/tournaments/:tournamentId/registrations", () => {
   });
 
   it("rechaza un identificador de equipo que no es un entero positivo", async () => {
-    const response = await request(app)
+    const response = await authenticatedRequest()
       .post(`/api/tournaments/${nextTestId()}/registrations`)
       .send({ teamId: "invalid-id", memberIds: [1, 2] });
 
@@ -101,7 +103,7 @@ describe("POST /api/tournaments/:tournamentId/registrations", () => {
   ])("responde correctamente para %s", async (outcome, status, message) => {
     registerTeamInTournament.mockResolvedValue({ outcome });
 
-    const response = await request(app)
+    const response = await authenticatedRequest()
       .post(`/api/tournaments/${nextTestId()}/registrations`)
       .send({ teamId: nextTestId(), memberIds: [1, 2] });
 
@@ -116,7 +118,7 @@ describe("POST /api/tournaments/:tournamentId/registrations", () => {
       maximumMembers: 5,
     });
 
-    const response = await request(app)
+    const response = await authenticatedRequest()
       .post(`/api/tournaments/${nextTestId()}/registrations`)
       .send({ teamId: nextTestId(), memberIds: [1] });
 
@@ -127,7 +129,7 @@ describe("POST /api/tournaments/:tournamentId/registrations", () => {
   });
 
   it("rechaza una inscripcion sin integrantes seleccionados", async () => {
-    const response = await request(app)
+    const response = await authenticatedRequest()
       .post(`/api/tournaments/${nextTestId()}/registrations`)
       .send({ teamId: nextTestId(), memberIds: [] });
 
@@ -143,7 +145,7 @@ describe("POST /api/tournaments/:tournamentId/registrations", () => {
       new Error("database unavailable"),
     );
 
-    const response = await request(app)
+    const response = await authenticatedRequest()
       .post(`/api/tournaments/${nextTestId()}/registrations`)
       .send({ teamId: nextTestId(), memberIds: [1, 2] });
 
@@ -173,7 +175,7 @@ describe("DELETE /api/tournaments/:tournamentId/registrations/:teamId", () => {
       registration,
     });
 
-    const response = await request(app).delete(
+    const response = await authenticatedRequest().delete(
       `/api/tournaments/${tournamentId}/registrations/${teamId}`,
     );
 
@@ -189,7 +191,7 @@ describe("DELETE /api/tournaments/:tournamentId/registrations/:teamId", () => {
   });
 
   it("rechaza un identificador de torneo que no es un entero positivo", async () => {
-    const response = await request(app).delete(
+    const response = await authenticatedRequest().delete(
       `/api/tournaments/invalid-id/registrations/${nextTestId()}`,
     );
 
@@ -201,7 +203,7 @@ describe("DELETE /api/tournaments/:tournamentId/registrations/:teamId", () => {
   });
 
   it("rechaza un identificador de equipo que no es un entero positivo", async () => {
-    const response = await request(app).delete(
+    const response = await authenticatedRequest().delete(
       `/api/tournaments/${nextTestId()}/registrations/invalid-id`,
     );
 
@@ -224,7 +226,7 @@ describe("DELETE /api/tournaments/:tournamentId/registrations/:teamId", () => {
   ])("responde correctamente para %s", async (outcome, status, message) => {
     withdrawTeamFromTournament.mockResolvedValue({ outcome });
 
-    const response = await request(app).delete(
+    const response = await authenticatedRequest().delete(
       `/api/tournaments/${nextTestId()}/registrations/${nextTestId()}`,
     );
 
@@ -237,7 +239,7 @@ describe("DELETE /api/tournaments/:tournamentId/registrations/:teamId", () => {
       new Error("database unavailable"),
     );
 
-    const response = await request(app).delete(
+    const response = await authenticatedRequest().delete(
       `/api/tournaments/${nextTestId()}/registrations/${nextTestId()}`,
     );
 
@@ -268,7 +270,7 @@ describe("GET /api/tournaments/:tournamentId/registrations", () => {
       registrations,
     });
 
-    const response = await request(app).get(
+    const response = await authenticatedRequest().get(
       `/api/tournaments/${tournamentId}/registrations`,
     );
 
@@ -297,7 +299,7 @@ describe("GET /api/tournaments/:tournamentId/registrations", () => {
       registrations: [],
     });
 
-    const response = await request(app).get(
+    const response = await authenticatedRequest().get(
       `/api/tournaments/${tournamentId}/registrations?status=withdrawn&page=2&limit=5`,
     );
 
@@ -316,7 +318,7 @@ describe("GET /api/tournaments/:tournamentId/registrations", () => {
   });
 
   it("rechaza un identificador de torneo que no es un entero positivo", async () => {
-    const response = await request(app).get(
+    const response = await authenticatedRequest().get(
       "/api/tournaments/invalid-id/registrations",
     );
 
@@ -328,7 +330,7 @@ describe("GET /api/tournaments/:tournamentId/registrations", () => {
   });
 
   it("rechaza filtros y paginacion invalidos", async () => {
-    const response = await request(app).get(
+    const response = await authenticatedRequest().get(
       `/api/tournaments/${nextTestId()}/registrations?status=unknown&page=0&limit=101`,
     );
 
@@ -351,7 +353,7 @@ describe("GET /api/tournaments/:tournamentId/registrations", () => {
       outcome: "tournament_not_found",
     });
 
-    const response = await request(app).get(
+    const response = await authenticatedRequest().get(
       `/api/tournaments/${nextTestId()}/registrations`,
     );
 
@@ -364,7 +366,7 @@ describe("GET /api/tournaments/:tournamentId/registrations", () => {
       new Error("database unavailable"),
     );
 
-    const response = await request(app).get(
+    const response = await authenticatedRequest().get(
       `/api/tournaments/${nextTestId()}/registrations`,
     );
 

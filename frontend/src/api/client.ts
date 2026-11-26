@@ -26,9 +26,15 @@ function isApiErrorResponse(value: unknown): value is ApiErrorResponse {
   );
 }
 
-async function apiRequest<T>(path: string, options?: RequestInit): Promise<T> {
-  const headers = new Headers(options?.headers);
+type ApiRequestOptions = RequestInit & { token?: string };
+
+async function apiRequest<T>(
+  path: string,
+  { token, ...options }: ApiRequestOptions = {},
+): Promise<T> {
+  const headers = new Headers(options.headers);
   headers.set("Accept", "application/json");
+  if (token) headers.set("Authorization", `Bearer ${token}`);
 
   const response = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
@@ -47,16 +53,21 @@ async function apiRequest<T>(path: string, options?: RequestInit): Promise<T> {
   return payload as T;
 }
 
-export function apiGet<T>(path: string): Promise<T> {
-  return apiRequest<T>(path);
+export function apiGet<T>(
+  path: string,
+  options?: ApiRequestOptions,
+): Promise<T> {
+  return apiRequest<T>(path, options);
 }
 
 export function apiPost<TResponse, TBody>(
   path: string,
   body: TBody,
+  token?: string,
 ): Promise<TResponse> {
   return apiRequest<TResponse>(path, {
     method: "POST",
+    token,
     headers: {
       "Content-Type": "application/json",
     },
@@ -67,9 +78,11 @@ export function apiPost<TResponse, TBody>(
 export function apiPut<TResponse, TBody>(
   path: string,
   body: TBody,
+  token: string,
 ): Promise<TResponse> {
   return apiRequest<TResponse>(path, {
     method: "PUT",
+    token,
     headers: {
       "Content-Type": "application/json",
     },
@@ -80,9 +93,11 @@ export function apiPut<TResponse, TBody>(
 export function apiPatch<TResponse, TBody>(
   path: string,
   body: TBody,
+  token: string,
 ): Promise<TResponse> {
   return apiRequest<TResponse>(path, {
     method: "PATCH",
+    token,
     headers: {
       "Content-Type": "application/json",
     },
@@ -90,13 +105,16 @@ export function apiPatch<TResponse, TBody>(
   });
 }
 
-export function apiDelete<TResponse>(path: string): Promise<TResponse> {
-  return apiRequest<TResponse>(path, { method: "DELETE" });
+export function apiDelete<TResponse>(
+  path: string,
+  token: string,
+): Promise<TResponse> {
+  return apiRequest<TResponse>(path, { method: "DELETE", token });
 }
 
-export async function apiDownload(path: string): Promise<Blob> {
+export async function apiDownload(path: string, token: string): Promise<Blob> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
-    headers: { Accept: "application/pdf" },
+    headers: { Accept: "application/pdf", Authorization: `Bearer ${token}` },
   });
 
   if (!response.ok) {

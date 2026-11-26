@@ -47,6 +47,22 @@ Comprueba que Express responde.
 
 ## Torneos
 
+### Acceso por rol
+
+Los invitados y participantes pueden buscar y consultar torneos con inscripción
+abierta (`open`) o en curso (`in_progress`). La API aplica ese límite al
+listado, al total de la paginación y a la consulta por ID. Un filtro por un
+estado no visible devuelve una página vacía y un detalle no visible devuelve
+`404`. Los organizadores y administradores pueden consultar todos los estados.
+
+La gestión de torneos, la exportación de reportes y el acceso a las
+inscripciones requieren `Authorization: Bearer <token>` de un organizador o
+administrador. Los mismos roles habilitan la edición de equipos y la consulta
+y gestión de sus integrantes. El borrado de un equipo corresponde a su capitán
+o a un administrador. El listado y el detalle de equipos son públicos, y todas
+las cuentas con un rol base pueden crear equipos. En las rutas protegidas, la
+API devuelve `401` sin sesión válida y `403` cuando la cuenta no tiene permiso.
+
 ### Listar
 
 `GET /api/tournaments`
@@ -244,6 +260,19 @@ Devuelve el equipo por su identificador numérico o responde `404`.
 
 `POST /api/teams`
 
+Con el token de participante:
+
+```json
+{
+  "name": "Los Halcones",
+  "description": "Equipo de la categoría principal"
+}
+```
+
+La API toma el capitán de la sesión. Si el participante incluye `captainId`, la
+petición devuelve `400`. Con el token de un organizador o administrador, el
+cuerpo incluye `captainId`:
+
 ```json
 {
   "name": "Los Halcones",
@@ -252,8 +281,9 @@ Devuelve el equipo por su identificador numérico o responde `404`.
 }
 ```
 
-El identificador se genera automáticamente. El capitán se registra como primer
-integrante dentro de la misma transacción.
+El identificador se genera automáticamente. El capitán debe tener una cuenta
+activa. Su cuenta se vincula y se registra como primer integrante dentro de la
+misma transacción. Si la cuenta indicada no está activa, se devuelve `404`.
 
 ### Actualizar
 
@@ -268,14 +298,65 @@ integrante dentro de la misma transacción.
 
 No permite cambiar el identificador ni el capitán.
 
+### Asignar capitán
+
+`PATCH /api/teams/:id/captain` requiere un token de administrador. Recibe
+`{"captainId": 7}` con el ID de una cuenta activa. Si la asignación se completa,
+devuelve `200` con los datos del equipo y garantiza que la cuenta figure como
+integrante. Repetir la asignación conserva una sola membresía.
+
+La migración `014` agrega `captainAccountId` a las respuestas de equipos. El
+campo queda inicialmente vacío para los equipos preexistentes. El administrador
+puede vincularlos desde el detalle del equipo. La API usa el vínculo para
+comprobar el permiso de borrado del capitán.
+
 ### Eliminar
 
 `DELETE /api/teams/:id`
 
-Solo elimina equipos sin historial de inscripciones. Si existe una inscripción
-activa o retirada responde `409 Conflict`.
+Requiere una sesión del capitán del equipo o de un administrador. La API
+comprueba el capitán registrado mediante el ID de la sesión. Un usuario
+autenticado sin ese permiso recibe `403`. Si el equipo tiene alguna inscripción
+activa o retirada, la API responde `409 Conflict`.
 
 ## Integrantes de equipos
+
+### Solicitudes, invitaciones y Mis equipos
+
+Estas rutas usan el token de la cuenta que realiza la acción.
+
+| Método y ruta | Uso |
+| --- | --- |
+| `GET /api/teams/mine` | Lista los equipos de la cuenta por membresía vinculada, con `page` y `limit`. |
+| `GET /api/teams/:teamId/membership` | Indica si la cuenta ya integra el equipo, tiene un trámite pendiente o puede pedir ingreso. |
+| `POST /api/teams/:teamId/join-requests` | Crea la solicitud de la cuenta participante al capitán del equipo. |
+| `POST /api/teams/:teamId/invitations` | El capitán invita a una cuenta activa mediante `{ "email": "participante@example.test" }`. |
+| `GET /api/teams/membership-requests` | Lista trámites de la cuenta con `box=received` o `box=sent`, `page` y `limit`. El filtro opcional `requestId` abre un trámite desde su aviso. |
+| `PATCH /api/teams/:teamId/membership-requests/:requestId` | El destinatario envía `{ "status": "accepted" }` o `{ "status": "rejected" }`. |
+
+Aceptar vincula la membresía a una cuenta activa en la misma transacción. Puede
+haber un solo trámite pendiente entre un equipo y una cuenta. Un `403` indica
+falta de permiso y un `409` indica duplicación o un trámite ya respondido.
+Repetir la misma respuesta devuelve el resultado original. Las invitaciones ya
+emitidas pertenecen al equipo y pueden responderse aunque cambie su capitán.
+
+La migración `015` vincula las membresías previas respaldadas por una asignación
+de capitán. Las demás membresías numéricas se vinculan al aceptar una solicitud
+o invitación. En **Mis equipos** se consultan membresías vinculadas vigentes.
+
+### Notificaciones de equipos
+
+Todas las cuentas con sesión pueden abrir su bandeja. Una solicitud de ingreso
+avisa al capitán y una invitación avisa a la cuenta invitada. La respuesta se
+muestra a quien inició el trámite. Los avisos se calculan a partir de los
+trámites existentes y la migración `016` guarda la lectura por cuenta.
+
+- `GET /api/notifications?page=1&limit=10` devuelve `data`, `pagination` y el
+  total `unread` de la cuenta. Cada aviso tiene `requestId`, `teamId`, `teamName`,
+  `kind`, `status`, `event`, `createdAt` e `isRead`.
+- `PATCH /api/notifications/:requestId/read` registra la lectura del aviso
+  visible para la cuenta y devuelve `{ "data": { "isRead": true } }`. Si el
+  aviso no está disponible para esa cuenta, devuelve `404`.
 
 ### Listar integrantes
 
@@ -342,20 +423,79 @@ seleccionada debe respetar `minTeamMembers` y `maxTeamMembers` del torneo.
 Cambia el estado a `withdrawn` sin borrar la fila. Solo se permite mientras el
 torneo está `open`.
 
+## Autenticación
+
+- `POST /api/auth/register` recibe `nombre`, `email` y `password`. Devuelve
+  `201` con los datos de la cuenta. El servidor asigna el rol `participante`.
+  Un correo ya registrado devuelve `409`.
+- `POST /api/auth/login` recibe `email` y `password`. Devuelve `200` con un
+  JWT y los datos de la cuenta si las credenciales son correctas.
+- `GET /api/auth/me` recibe `Authorization: Bearer <token>` y devuelve la cuenta
+  autenticada con `idUsuario`, `nombre`, `email`, `idRol` y `role`. El nombre del
+  rol se lee de la base y refleja las asignaciones posteriores al login. Si la
+  sesión falta o ya no es válida, devuelve `401`.
+- Ambos endpoints normalizan el correo y excluyen la contraseña de la respuesta.
+  Para emitir tokens, el servidor necesita configurar `JWT_SECRET`.
+
+### Asignar un rol a una cuenta nueva
+
+`PATCH /api/users/:id/role`
+
+Enviar `Authorization: Bearer <token>` de un administrador y un cuerpo JSON
+como `{"role":"organizador"}`. También se admite `administrador`. El servidor
+consulta el rol actual de quien realiza la operación en la base.
+
+La cuenta de destino debe tener el rol `participante`. El endpoint devuelve
+`200` con su identificador y nuevo rol. Repetir la misma asignación devuelve
+`200`. Si la cuenta ya tiene otro rol elevado o cambió durante la solicitud,
+devuelve `409`. La edición general de perfil queda separada de esta operación.
+
+Las rutas de usuarios y las operaciones que modifican roles requieren una
+sesión de administrador. Los tres roles base se conservan como parte de la
+configuración del sistema.
+
+#### Primera cuenta administradora
+
+Después de desplegar esta versión, registrar una cuenta del grupo y habilitarla
+desde una consola con acceso autorizado a PostgreSQL. Reemplazar el correo de
+ejemplo por el de la cuenta registrada, en minúsculas.
+
+```sql
+UPDATE usuario AS cuenta
+SET "idRol" = rol_admin."idRol", "updatedAt" = NOW()
+FROM rol AS rol_admin
+WHERE cuenta.email = 'cuenta-del-grupo@example.test'
+  AND cuenta."deletedAt" IS NULL
+  AND rol_admin.nombre = 'administrador'
+  AND NOT EXISTS (
+    SELECT 1 FROM usuario AS admin
+    WHERE admin."idRol" = rol_admin."idRol"
+      AND admin."deletedAt" IS NULL
+  )
+RETURNING cuenta."idUsuario";
+```
+
+La operación debe devolver una fila. A partir de ahí, usar la API de asignación
+con la cuenta administradora para habilitar otras cuentas del equipo.
+
 ## Códigos de error
 
 | Código | Uso general                                |
 | ------ | ------------------------------------------ |
 | `400`  | Identificador, parámetro o cuerpo inválido |
+| `401`  | Credenciales incorrectas o sesión inválida |
+| `403`  | Permisos insuficientes                      |
 | `404`  | Recurso inexistente                        |
 | `409`  | Conflicto con una regla de negocio         |
 | `500`  | Error interno sin detalles sensibles       |
 
 ## Limitaciones actuales
 
-- No existe autenticación ni autorización.
-- Los identificadores de organizadores, capitanes e integrantes no comprueban todavía la
-  existencia de un usuario.
-- Las rutas de partidas, resultados y autenticación aún no están implementadas.
+- La edición por propiedad de un equipo y las solicitudes de ingreso están
+  pendientes. La creación de un equipo por un participante usa su cuenta activa
+  como capitán.
+- La validación de los identificadores de organizador e integrante indicados
+  manualmente sigue pendiente.
+- Las rutas de partidas y resultados aún no están implementadas.
 - Todavía no existe una especificación OpenAPI; este documento debe verificarse
   contra las pruebas y el comportamiento real.

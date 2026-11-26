@@ -1,8 +1,12 @@
 import { DataTypes, Model } from "sequelize";
+import type { CreationOptional, InferAttributes, InferCreationAttributes } from "sequelize";
 
 import database from "../config/database.js";
 
-export class Role extends Model {}
+export class Role extends Model<InferAttributes<Role>, InferCreationAttributes<Role>> {
+  declare idRol: CreationOptional<number>;
+  declare nombre: string;
+}
 
 Role.init(
   {

@@ -1,3 +1,4 @@
+import { canManageCompetition } from "../middlewares/competition-access.middleware.js";
 import {
   createTournamentSchema,
   listTournamentsQuerySchema,
@@ -29,7 +30,9 @@ export async function listTournamentsHandler(request, response) {
 
   try {
     const { page, limit } = validation.data;
-    const { count, rows } = await listTournaments(validation.data);
+    const { count, rows } = await listTournaments(validation.data, {
+      publicOnly: !canManageCompetition(response.locals.authRole),
+    });
 
     return response.status(200).json({
       data: rows,
@@ -57,7 +60,9 @@ export async function getTournamentByIdHandler(request, response) {
   }
 
   try {
-    const tournament = await getTournamentById(validation.data);
+    const tournament = await getTournamentById(validation.data, {
+      publicOnly: !canManageCompetition(response.locals.authRole),
+    });
 
     if (!tournament) {
       return response.status(404).json({

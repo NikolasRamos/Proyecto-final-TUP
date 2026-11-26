@@ -5,6 +5,7 @@ import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { testToken } from "../test/signed-in";
 import App from "./App";
 import { ApiError } from "./api/client";
 import {
@@ -14,6 +15,11 @@ import {
   listTeams,
   updateTeam,
 } from "./api/teams.api";
+
+vi.mock("./auth/AuthProvider", async () => {
+  const { SignedInTestProvider } = await import("../test/signed-in");
+  return { default: SignedInTestProvider };
+});
 
 vi.mock("./api/teams.api", () => ({
   createTeam: vi.fn(),
@@ -29,6 +35,7 @@ const team = {
   name: "Los Halcones",
   description: "Equipo de prueba",
   captainId: 1,
+  captainAccountId: 1,
   createdAt: "2026-10-13T12:00:00.000Z",
   updatedAt: "2026-10-13T12:00:00.000Z",
 };
@@ -116,11 +123,14 @@ describe("pantallas principales de equipos", () => {
     await user.type(screen.getByLabelText("ID del capitán"), "1");
     await user.click(screen.getByRole("button", { name: "Crear equipo" }));
 
-    expect(createTeam).toHaveBeenCalledWith({
-      name: "Los Halcones",
-      description: "Equipo de prueba",
-      captainId: 1,
-    });
+    expect(createTeam).toHaveBeenCalledWith(
+      {
+        name: "Los Halcones",
+        description: "Equipo de prueba",
+        captainId: 1,
+      },
+      testToken,
+    );
     expect(
       await screen.findByText("Equipo creado correctamente"),
     ).toBeInTheDocument();
@@ -168,10 +178,14 @@ describe("pantallas principales de equipos", () => {
     );
     await user.click(screen.getByRole("button", { name: "Guardar cambios" }));
 
-    expect(updateTeam).toHaveBeenCalledWith(201, {
-      name: "Halcones renovados",
-      description: "Descripción actualizada",
-    });
+    expect(updateTeam).toHaveBeenCalledWith(
+      201,
+      {
+        name: "Halcones renovados",
+        description: "Descripción actualizada",
+      },
+      testToken,
+    );
     expect(
       await screen.findByText("Equipo actualizado correctamente"),
     ).toBeInTheDocument();
@@ -192,7 +206,7 @@ describe("pantallas principales de equipos", () => {
     ).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Sí, eliminar" }));
 
-    expect(deleteTeam).toHaveBeenCalledWith(201);
+    expect(deleteTeam).toHaveBeenCalledWith(201, testToken);
     expect(
       await screen.findByText("Equipo eliminado correctamente"),
     ).toBeInTheDocument();
@@ -215,6 +229,20 @@ describe("pantallas principales de equipos", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "No se puede eliminar un equipo con inscripciones registradas",
     );
+  });
+
+  it("oculta el botón de borrar un equipo ajeno al organizador", async () => {
+    vi.mocked(getTeam).mockResolvedValue({
+      data: { ...team, captainId: 2, captainAccountId: 2 },
+    });
+    renderPage("/teams/201");
+
+    expect(
+      await screen.findByRole("button", { name: "Editar equipo" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Eliminar equipo" }),
+    ).not.toBeInTheDocument();
   });
 
   it("rechaza un identificador inválido sin consultar la API", () => {

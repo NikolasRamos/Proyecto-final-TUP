@@ -22,6 +22,8 @@ import {
   updateTournamentStatus,
 } from "./tournaments.api";
 
+const token = "token-de-prueba";
+
 const emptyPage = {
   data: [],
   pagination: { page: 1, limit: 5, total: 0, totalPages: 0 },
@@ -126,10 +128,10 @@ describe("API de recursos", () => {
       description: "Descripción actualizada",
     };
 
-    await createTeam(createPayload);
+    await createTeam(createPayload, token);
     await getTeam(201);
-    await updateTeam(201, updatePayload);
-    await deleteTeam(201);
+    await updateTeam(201, updatePayload, token);
+    await deleteTeam(201, token);
 
     expect(fetchMock).toHaveBeenNthCalledWith(
       1,
@@ -200,7 +202,7 @@ describe("API de recursos", () => {
       organizerId: tournament.organizerId,
     };
 
-    await createTournament(payload);
+    await createTournament(payload, token);
 
     expect(fetchMock).toHaveBeenCalledWith(
       "http://localhost:3000/api/tournaments",
@@ -210,6 +212,9 @@ describe("API de recursos", () => {
       }),
     );
     const request = fetchMock.mock.calls[0]?.[1] as RequestInit;
+    expect(new Headers(request.headers).get("Authorization")).toBe(
+      "Bearer " + token,
+    );
     expect(new Headers(request.headers).get("Content-Type")).toBe(
       "application/json",
     );
@@ -254,7 +259,7 @@ describe("API de recursos", () => {
       endDate: "2026-12-10",
     };
 
-    await updateTournament(101, payload);
+    await updateTournament(101, payload, token);
 
     expect(fetchMock).toHaveBeenCalledWith(
       "http://localhost:3000/api/tournaments/101",
@@ -275,7 +280,7 @@ describe("API de recursos", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
 
-    await deleteTournament(101);
+    await deleteTournament(101, token);
 
     expect(fetchMock).toHaveBeenCalledWith(
       "http://localhost:3000/api/tournaments/101",
@@ -294,7 +299,7 @@ describe("API de recursos", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
 
-    await updateTournamentStatus(101, "open");
+    await updateTournamentStatus(101, "open", token);
 
     expect(fetchMock).toHaveBeenCalledWith(
       "http://localhost:3000/api/tournaments/101/status",
@@ -313,9 +318,9 @@ describe("API de recursos", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
 
-    await listTournamentRegistrations(101);
-    await registerTeamInTournament(101, 201, [1, 2]);
-    await withdrawTeamFromTournament(101, 201);
+    await listTournamentRegistrations(101, token);
+    await registerTeamInTournament(101, 201, [1, 2], token);
+    await withdrawTeamFromTournament(101, 201, token);
 
     expect(fetchMock).toHaveBeenNthCalledWith(
       1,
@@ -346,11 +351,14 @@ describe("API de recursos", () => {
     });
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(downloadTournamentReport(101)).resolves.toBe(report);
+    await expect(downloadTournamentReport(101, token)).resolves.toBe(report);
     expect(fetchMock).toHaveBeenCalledWith(
       "http://localhost:3000/api/tournaments/101/report",
       {
-        headers: { Accept: "application/pdf" },
+        headers: {
+          Accept: "application/pdf",
+          Authorization: "Bearer " + token,
+        },
       },
     );
   });

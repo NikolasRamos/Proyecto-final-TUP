@@ -28,3 +28,21 @@ export const roleExists = async (req: Request, res: Response, next: NextFunction
         });
     }
 };
+
+const systemRoles = new Set(["administrador", "organizador", "participante"]);
+
+export function protectSystemRole(
+    _request: Request,
+    response: Response,
+    next: NextFunction,
+): Response | void {
+    const role: Role = response.locals.rol;
+    if (systemRoles.has(role.nombre)) {
+        return response.status(409).json({
+            success: false,
+            message: "Los roles del sistema se conservan para autenticar y asignar permisos",
+        });
+    }
+
+    next();
+}

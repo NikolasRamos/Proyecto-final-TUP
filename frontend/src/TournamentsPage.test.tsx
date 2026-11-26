@@ -60,16 +60,31 @@ describe("TournamentsPage", () => {
       screen.getByRole("heading", { name: "Torneos" }),
     ).toBeInTheDocument();
     expect(await screen.findByText("Torneo Apertura")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: "Crear torneo" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("option", { name: "Inscripción abierta" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("option", { name: "En curso" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("option", { name: "Borrador" }),
+    ).not.toBeInTheDocument();
     expect(screen.getByText("12 torneos encontrados")).toBeInTheDocument();
-    expect(listTournaments).toHaveBeenCalledWith({
-      search: undefined,
-      status: undefined,
-      modality: undefined,
-      page: 1,
-      limit: 10,
-      sortBy: "createdAt",
-      order: "desc",
-    });
+    expect(listTournaments).toHaveBeenCalledWith(
+      {
+        search: undefined,
+        status: undefined,
+        modality: undefined,
+        page: 1,
+        limit: 10,
+        sortBy: "createdAt",
+        order: "desc",
+      },
+      undefined,
+    );
   });
 
   it("muestra un estado de carga accesible", () => {
@@ -91,7 +106,7 @@ describe("TournamentsPage", () => {
     renderPage();
 
     expect(
-      await screen.findByText("Todavía no hay torneos registrados."),
+      await screen.findByText("Todavía no hay torneos vigentes."),
     ).toBeInTheDocument();
     expect(screen.getByText("0 torneos encontrados")).toBeInTheDocument();
   });
@@ -115,7 +130,7 @@ describe("TournamentsPage", () => {
     });
 
     renderPage();
-    await screen.findByText("Todavía no hay torneos registrados.");
+    await screen.findByText("Todavía no hay torneos vigentes.");
 
     fireEvent.change(screen.getByLabelText("Buscar torneos"), {
       target: { value: " apertura " },
@@ -125,6 +140,7 @@ describe("TournamentsPage", () => {
     await waitFor(() =>
       expect(listTournaments).toHaveBeenLastCalledWith(
         expect.objectContaining({ search: "apertura", page: 1 }),
+        undefined,
       ),
     );
 
@@ -142,15 +158,18 @@ describe("TournamentsPage", () => {
     });
 
     await waitFor(() =>
-      expect(listTournaments).toHaveBeenLastCalledWith({
-        search: "apertura",
-        status: "open",
-        modality: "league",
-        page: 1,
-        limit: 20,
-        sortBy: "name",
-        order: "asc",
-      }),
+      expect(listTournaments).toHaveBeenLastCalledWith(
+        {
+          search: "apertura",
+          status: "open",
+          modality: "league",
+          page: 1,
+          limit: 20,
+          sortBy: "name",
+          order: "asc",
+        },
+        undefined,
+      ),
     );
   });
 
@@ -177,6 +196,7 @@ describe("TournamentsPage", () => {
     await waitFor(() =>
       expect(listTournaments).toHaveBeenLastCalledWith(
         expect.objectContaining({ page: 2 }),
+        undefined,
       ),
     );
 
@@ -190,6 +210,7 @@ describe("TournamentsPage", () => {
     await waitFor(() =>
       expect(listTournaments).toHaveBeenLastCalledWith(
         expect.objectContaining({ page: 1 }),
+        undefined,
       ),
     );
   });
@@ -212,6 +233,7 @@ describe("TournamentsPage", () => {
     await waitFor(() =>
       expect(listTournaments).toHaveBeenLastCalledWith(
         expect.objectContaining({ page: 2 }),
+        undefined,
       ),
     );
   });

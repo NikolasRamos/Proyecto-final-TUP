@@ -1,5 +1,7 @@
 import {
   addTeamMemberSchema,
+  assignTeamCaptainSchema,
+  createOwnTeamSchema,
   createTeamSchema,
   listTeamsQuerySchema,
   teamIdSchema,
@@ -8,6 +10,7 @@ import {
 } from "../schemas/team.schema.js";
 import {
   addTeamMember,
+  assignTeamCaptain,
   createTeam,
   deleteTeam,
   getTeamById,
@@ -79,7 +82,9 @@ export async function getTeamByIdHandler(request, response) {
 }
 
 export async function createTeamHandler(request, response) {
-  const validation = createTeamSchema.safeParse(request.body);
+  const createsOwnTeam = response.locals.authRole === "participante";
+  const schema = createsOwnTeam ? createOwnTeamSchema : createTeamSchema;
+  const validation = schema.safeParse(request.body);
 
   if (!validation.success) {
     return response.status(400).json({
@@ -92,7 +97,15 @@ export async function createTeamHandler(request, response) {
   }
 
   try {
-    const team = await createTeam(validation.data);
+    const teamData = createsOwnTeam
+      ? { ...validation.data, captainId: response.locals.authUser.idUsuario }
+      : validation.data;
+    const team = await createTeam(teamData);
+    if (!team) {
+      return response
+        .status(404)
+        .json({ message: "No se encontró una cuenta activa para el capitán" });
+    }
 
     return response.status(201).json({
       message: "Equipo creado correctamente",
@@ -102,6 +115,36 @@ export async function createTeamHandler(request, response) {
     return response.status(500).json({
       message: "No se pudo crear el equipo",
     });
+  }
+}
+
+export async function assignTeamCaptainHandler(request, response) {
+  const id = teamIdSchema.safeParse(request.params.id);
+  const payload = assignTeamCaptainSchema.safeParse(request.body);
+  if (!id.success || !payload.success) {
+    return response
+      .status(400)
+      .json({ message: "Indicá un equipo y una cuenta válidos" });
+  }
+
+  try {
+    const result = await assignTeamCaptain(id.data, payload.data.captainId);
+    if (result.outcome === "team_not_found") {
+      return response.status(404).json({ message: "Equipo no encontrado" });
+    }
+    if (result.outcome === "captain_not_found") {
+      return response
+        .status(404)
+        .json({ message: "No se encontró una cuenta activa para el capitán" });
+    }
+
+    return response
+      .status(200)
+      .json({ message: "Capitán asignado correctamente", data: result.team });
+  } catch {
+    return response
+      .status(500)
+      .json({ message: "No se pudo asignar el capitán" });
   }
 }
 
@@ -156,11 +199,21 @@ export async function deleteTeamHandler(request, response) {
   }
 
   try {
-    const result = await deleteTeam(validation.data);
+    const result = await deleteTeam(validation.data, {
+      userId: response.locals.authUser.idUsuario,
+      role: response.locals.authRole,
+    });
 
     if (result.outcome === "team_not_found") {
       return response.status(404).json({
         message: "Equipo no encontrado",
+      });
+    }
+
+    if (result.outcome === "forbidden") {
+      return response.status(403).json({
+        message:
+          "Solo el capitán del equipo o un administrador puede eliminarlo",
       });
     }
 

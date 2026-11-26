@@ -4,6 +4,10 @@ import { Link } from "react-router";
 import { ApiError } from "../api/client";
 import { createTournament } from "../api/tournaments.api";
 import {
+  getCompetitionManagerToken,
+  useAuthSession,
+} from "../auth/auth-session";
+import {
   getGroupsPlayoffConfigurationError,
   getRecommendedSwissRounds,
   getSwissConfigurationError,
@@ -114,6 +118,8 @@ function validateFormat(form: TournamentFormData) {
 }
 
 export default function CreateTournamentPage() {
+  const { session } = useAuthSession();
+  const token = getCompetitionManagerToken(session);
   const [form, setForm] = useState(initialForm);
   const [submitState, setSubmitState] = useState<SubmitState>({
     status: "idle",
@@ -167,6 +173,7 @@ export default function CreateTournamentPage() {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!token) return;
 
     const formatError = validateFormat(form);
 
@@ -231,7 +238,7 @@ export default function CreateTournamentPage() {
     setSubmitState({ status: "submitting" });
 
     try {
-      const response = await createTournament(payload);
+      const response = await createTournament(payload, token);
 
       setSubmitState({
         status: "success",

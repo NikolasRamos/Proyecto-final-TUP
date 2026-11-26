@@ -2,7 +2,7 @@
   "info": {
     "_postman_id": "6edba1ac-6fd5-4e2c-87fe-f882d42e27ee",
     "name": "Gestión de torneos - API",
-    "description": "Colección entregable de los endpoints implementados para torneos, equipos, integrantes e inscripciones. Los identificadores creados por los POST se guardan automáticamente como variables de la colección.",
+    "description": "Colección de la API para torneos, equipos, integrantes, inscripciones, inicio de sesión y asignación de roles.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -38,6 +38,11 @@
       "key": "userId",
       "value": "2",
       "type": "string"
+    },
+    {
+      "key": "membershipRequestId",
+      "value": "1",
+      "type": "string"
     }
   ],
   "item": [
@@ -60,14 +65,27 @@
     {
       "name": "02 - Torneos",
       "description": "Creación, consulta, modificación, cambio de estado y eliminación de torneos.",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{authAdminToken}}",
+            "type": "string"
+          }
+        ]
+      },
       "item": [
         {
           "name": "Listar torneos",
           "request": {
             "method": "GET",
             "header": [],
-            "url": "{{baseUrl}}/api/tournaments?search=apertura&status=draft&modality=league&page=1&limit=10&sortBy=createdAt&order=desc",
-            "description": "Listado con ejemplos de búsqueda, filtros, paginación y ordenamiento. Se pueden desactivar o eliminar parámetros en la pestaña Params."
+            "url": "{{baseUrl}}/api/tournaments?search=apertura&status=open&modality=league&page=1&limit=10&sortBy=createdAt&order=desc",
+            "description": "Consulta pública de torneos vigentes. Se pueden ajustar la búsqueda, el estado, la modalidad, el orden y la paginación desde Params.",
+            "auth": {
+              "type": "noauth"
+            }
           },
           "response": []
         },
@@ -199,6 +217,16 @@
     {
       "name": "03 - Equipos",
       "description": "Creación, consulta, modificación y eliminación de equipos.",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{authAdminToken}}",
+            "type": "string"
+          }
+        ]
+      },
       "item": [
         {
           "name": "Listar equipos",
@@ -206,7 +234,10 @@
             "method": "GET",
             "header": [],
             "url": "{{baseUrl}}/api/teams?search=&page=1&limit=10",
-            "description": "Listado paginado de equipos. El parámetro opcional search permite buscar por nombre o descripción."
+            "description": "Listado paginado de equipos. El parámetro opcional search permite buscar por nombre o descripción.",
+            "auth": {
+              "type": "noauth"
+            }
           },
           "response": []
         },
@@ -251,12 +282,49 @@
           "response": []
         },
         {
+          "name": "Crear mi equipo como participante",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authParticipantToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Mi equipo\",\n  \"description\": \"Equipo creado por su capitán\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/teams",
+            "description": "Usá una cuenta que tenga el rol participante. La API toma el capitán de la sesión y lo agrega como primer integrante. Debe responder 201."
+          },
+          "response": []
+        },
+        {
           "name": "Consultar equipo por ID",
           "request": {
             "method": "GET",
             "header": [],
             "url": "{{baseUrl}}/api/teams/{{teamId}}",
-            "description": "Consulta el equipo indicado por la variable teamId."
+            "description": "Consulta el equipo indicado por la variable teamId.",
+            "auth": {
+              "type": "noauth"
+            }
           },
           "response": []
         },
@@ -285,12 +353,36 @@
           "response": []
         },
         {
+          "name": "Asignar capitán",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"captainId\": {{captainId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/teams/{{teamId}}/captain",
+            "description": "Vincula una cuenta activa como capitana del equipo. Requiere el token de un administrador."
+          },
+          "response": []
+        },
+        {
           "name": "Eliminar equipo",
           "request": {
             "method": "DELETE",
             "header": [],
             "url": "{{baseUrl}}/api/teams/{{teamId}}",
-            "description": "Elimina un equipo solamente si no posee historial de inscripciones."
+            "description": "Requiere el token de un administrador o del capitán del equipo indicado en teamId. Devuelve 403 para otros usuarios y 409 si el equipo tiene historial de inscripciones."
           },
           "response": []
         }
@@ -299,6 +391,16 @@
     {
       "name": "04 - Integrantes",
       "description": "Administración de integrantes pertenecientes a un equipo.",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{authAdminToken}}",
+            "type": "string"
+          }
+        ]
+      },
       "item": [
         {
           "name": "Listar integrantes del equipo",
@@ -349,6 +451,16 @@
     {
       "name": "05 - Inscripciones",
       "description": "Inscripción, listado y retiro de equipos en torneos.",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{authAdminToken}}",
+            "type": "string"
+          }
+        ]
+      },
       "item": [
         {
           "name": "Listar equipos inscritos",
@@ -391,6 +503,469 @@
             "header": [],
             "url": "{{baseUrl}}/api/tournaments/{{tournamentId}}/registrations/{{teamId}}",
             "description": "Realiza un retiro lógico de la inscripción mientras el torneo está open."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "06 - Autenticación y roles",
+      "description": "Prueba registro, inicio de sesión y asignación de roles. Usá un ambiente con una cuenta administradora y un correo nuevo de prueba. Ejecutá las solicitudes en orden.",
+      "item": [
+        {
+          "name": "Registrar participante",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.environment.unset(\"authUserId\");",
+                  "pm.variables.set('authRequestBody', JSON.stringify({",
+                  "  nombre: pm.variables.get(\"authName\"),",
+                  "  email: pm.variables.get(\"authEmail\"),",
+                  "  password: pm.variables.get(\"authPassword\"),",
+                  "}));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Registro correcto\", () => pm.response.to.have.status(201));",
+                  "if (pm.response.code === 201) {",
+                  "  const user = pm.response.json().data;",
+                  "  pm.test('Devuelve el ID sin exponer la contraseña', () => {",
+                  "    pm.expect(user.idUsuario).to.be.a('number').and.above(0);",
+                  "    pm.expect(user).not.to.have.property('password');",
+                  "  });",
+                  "  if (Number.isInteger(user.idUsuario) && user.idUsuario > 0) {",
+                  "    pm.environment.set('authUserId', String(user.idUsuario));",
+                  "  }",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{{authRequestBody}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/auth/register",
+            "description": "Envía nombre, email y password desde authName, authEmail y authPassword. El servidor asigna el rol participante. Usá un correo nuevo para cada ejecución."
+          },
+          "response": []
+        },
+        {
+          "name": "Iniciar sesión como participante",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.environment.unset(\"authParticipantToken\");",
+                  "pm.variables.set('authRequestBody', JSON.stringify({",
+                  "  email: pm.variables.get(\"authEmail\"),",
+                  "  password: pm.variables.get(\"authPassword\"),",
+                  "}));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Inicio de sesión correcto\", () => pm.response.to.have.status(200));",
+                  "if (pm.response.code === 200) {",
+                  "  const token = pm.response.json().token;",
+                  "  pm.test('La respuesta incluye un token', () => {",
+                  "    pm.expect(token).to.be.a('string').and.not.empty;",
+                  "  });",
+                  "  if (typeof token === 'string' && token) pm.environment.set(\"authParticipantToken\", token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{{authRequestBody}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/auth/login",
+            "description": "Envía email y password desde authEmail y authPassword. Guarda el token en el ambiente activo."
+          },
+          "response": []
+        },
+        {
+          "name": "Consultar sesión actual",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Sesión activa de participante', () => {",
+                  "  pm.response.to.have.status(200);",
+                  "  const user = pm.response.json().data;",
+                  "  pm.expect(String(user.idUsuario)).to.eql(pm.variables.get('authUserId'));",
+                  "  pm.expect(user.role).to.eql('participante');",
+                  "  pm.expect(user).not.to.have.property('password');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authParticipantToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/auth/me",
+            "description": "Devuelve los datos y el rol actual de la cuenta autenticada. En el recorrido se usa el token del participante recién registrado."
+          },
+          "response": []
+        },
+        {
+          "name": "Rechazar promoción sin permisos",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Rechazar promoción sin permisos\", () => pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authParticipantToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"organizador\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/users/{{authUserId}}/role",
+            "description": "Comprueba que un participante no puede promover su propia cuenta. Debe responder 403."
+          },
+          "response": []
+        },
+        {
+          "name": "Iniciar sesión como administrador",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.environment.unset(\"authAdminToken\");",
+                  "pm.variables.set('authRequestBody', JSON.stringify({",
+                  "  email: pm.variables.get(\"authAdminEmail\"),",
+                  "  password: pm.variables.get(\"authAdminPassword\"),",
+                  "}));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Inicio de sesión correcto\", () => pm.response.to.have.status(200));",
+                  "if (pm.response.code === 200) {",
+                  "  const token = pm.response.json().token;",
+                  "  pm.test('La respuesta incluye un token', () => {",
+                  "    pm.expect(token).to.be.a('string').and.not.empty;",
+                  "  });",
+                  "  if (typeof token === 'string' && token) pm.environment.set(\"authAdminToken\", token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{{authRequestBody}}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/auth/login",
+            "description": "Envía email y password desde authAdminEmail y authAdminPassword. Guarda el token en el ambiente activo."
+          },
+          "response": []
+        },
+        {
+          "name": "Asignar rol de organizador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Asignar rol de organizador\", () => pm.response.to.have.status(200));",
+                  "if (pm.response.code === 200) {",
+                  "  const user = pm.response.json().data;",
+                  "  pm.test('El participante quedó como organizador', () => {",
+                  "    pm.expect(user.role).to.eql('organizador');",
+                  "    pm.expect(String(user.idUsuario)).to.eql(pm.variables.get('authUserId'));",
+                  "  });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{authAdminToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"role\": \"organizador\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/users/{{authUserId}}/role",
+            "description": "Promueve la cuenta nueva indicada por authUserId. Requiere el token obtenido con la cuenta administradora."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "07 - Solicitudes e invitaciones",
+      "description": "Usá teamActorToken para la cuenta que pide ingreso, invita o responde. Para responder, copiá el campo data.id de la solicitud.",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{teamActorToken}}",
+            "type": "string"
+          }
+        ]
+      },
+      "item": [
+        {
+          "name": "Mis equipos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/teams/mine?page=1"
+          },
+          "response": []
+        },
+        {
+          "name": "Estado de mi membresía",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/teams/{{teamId}}/membership"
+          },
+          "response": []
+        },
+        {
+          "name": "Pedir ingreso",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/teams/{{teamId}}/join-requests"
+          },
+          "response": []
+        },
+        {
+          "name": "Invitar a una cuenta",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{authEmail}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/teams/{{teamId}}/invitations"
+          },
+          "response": []
+        },
+        {
+          "name": "Ver solicitudes recibidas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/teams/membership-requests?box=received"
+          },
+          "response": []
+        },
+        {
+          "name": "Ver solicitudes enviadas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/teams/membership-requests?box=sent"
+          },
+          "response": []
+        },
+        {
+          "name": "Responder solicitud o invitación",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"accepted\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/teams/{{teamId}}/membership-requests/{{membershipRequestId}}"
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "08 - Notificaciones",
+      "auth": {
+        "type": "bearer",
+        "bearer": [
+          {
+            "key": "token",
+            "value": "{{teamActorToken}}",
+            "type": "string"
+          }
+        ]
+      },
+      "item": [
+        {
+          "name": "Consultar mi bandeja",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/notifications?page=1"
+          },
+          "response": []
+        },
+        {
+          "name": "Marcar un aviso como leído",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": "{{baseUrl}}/api/notifications/{{membershipRequestId}}/read"
           },
           "response": []
         }

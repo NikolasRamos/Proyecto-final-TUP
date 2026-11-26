@@ -1,6 +1,6 @@
 import { nextTestId } from "./test-id.js";
 
-import request from "supertest";
+import { useAuthenticatedRequests } from "./authenticated-request.js";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import app from "../app.js";
@@ -12,6 +12,8 @@ import {
   updateTournament,
   updateTournamentStatus,
 } from "../services/tournaments.service.js";
+
+const authenticatedRequest = useAuthenticatedRequests(app);
 
 vi.mock("../services/tournaments.service.js", () => ({
   createTournament: vi.fn(),
@@ -51,7 +53,7 @@ describe("GET /api/tournaments", () => {
     ];
     listTournaments.mockResolvedValue({ count: 1, rows: tournaments });
 
-    const response = await request(app).get("/api/tournaments");
+    const response = await authenticatedRequest().get("/api/tournaments");
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({
@@ -63,18 +65,21 @@ describe("GET /api/tournaments", () => {
         totalPages: 1,
       },
     });
-    expect(listTournaments).toHaveBeenCalledWith({
-      page: 1,
-      limit: 10,
-      sortBy: "createdAt",
-      order: "desc",
-    });
+    expect(listTournaments).toHaveBeenCalledWith(
+      {
+        page: 1,
+        limit: 10,
+        sortBy: "createdAt",
+        order: "desc",
+      },
+      { publicOnly: false },
+    );
   });
 
   it("devuelve una lista vacia cuando no hay torneos", async () => {
     listTournaments.mockResolvedValue({ count: 0, rows: [] });
 
-    const response = await request(app).get("/api/tournaments");
+    const response = await authenticatedRequest().get("/api/tournaments");
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({
@@ -91,7 +96,7 @@ describe("GET /api/tournaments", () => {
   it("aplica busqueda, filtros, ordenamiento y paginacion", async () => {
     listTournaments.mockResolvedValue({ count: 25, rows: [] });
 
-    const response = await request(app).get(
+    const response = await authenticatedRequest().get(
       "/api/tournaments?search=apertura&status=open&modality=league&page=2&limit=5&sortBy=name&order=asc",
     );
 
@@ -102,19 +107,22 @@ describe("GET /api/tournaments", () => {
       total: 25,
       totalPages: 5,
     });
-    expect(listTournaments).toHaveBeenCalledWith({
-      search: "apertura",
-      status: "open",
-      modality: "league",
-      page: 2,
-      limit: 5,
-      sortBy: "name",
-      order: "asc",
-    });
+    expect(listTournaments).toHaveBeenCalledWith(
+      {
+        search: "apertura",
+        status: "open",
+        modality: "league",
+        page: 2,
+        limit: 5,
+        sortBy: "name",
+        order: "asc",
+      },
+      { publicOnly: false },
+    );
   });
 
   it("rechaza filtros y paginacion invalidos", async () => {
-    const response = await request(app).get(
+    const response = await authenticatedRequest().get(
       "/api/tournaments?status=unknown&page=0&limit=101&sortBy=unknown&order=sideways",
     );
 
@@ -137,7 +145,7 @@ describe("GET /api/tournaments", () => {
   it("responde sin exponer detalles cuando falla la consulta", async () => {
     listTournaments.mockRejectedValue(new Error("database unavailable"));
 
-    const response = await request(app).get("/api/tournaments");
+    const response = await authenticatedRequest().get("/api/tournaments");
 
     expect(response.status).toBe(500);
     expect(response.body).toEqual({
@@ -160,15 +168,21 @@ describe("GET /api/tournaments/:id", () => {
     };
     getTournamentById.mockResolvedValue(tournament);
 
-    const response = await request(app).get(`/api/tournaments/${tournamentId}`);
+    const response = await authenticatedRequest().get(
+      `/api/tournaments/${tournamentId}`,
+    );
 
     expect(response.status).toBe(200);
     expect(response.body).toEqual({ data: tournament });
-    expect(getTournamentById).toHaveBeenCalledWith(tournamentId);
+    expect(getTournamentById).toHaveBeenCalledWith(tournamentId, {
+      publicOnly: false,
+    });
   });
 
   it("rechaza un identificador que no es un entero positivo", async () => {
-    const response = await request(app).get("/api/tournaments/invalid-id");
+    const response = await authenticatedRequest().get(
+      "/api/tournaments/invalid-id",
+    );
 
     expect(response.status).toBe(400);
     expect(response.body).toEqual({
@@ -181,7 +195,9 @@ describe("GET /api/tournaments/:id", () => {
     const tournamentId = nextTestId();
     getTournamentById.mockResolvedValue(null);
 
-    const response = await request(app).get(`/api/tournaments/${tournamentId}`);
+    const response = await authenticatedRequest().get(
+      `/api/tournaments/${tournamentId}`,
+    );
 
     expect(response.status).toBe(404);
     expect(response.body).toEqual({
@@ -193,7 +209,9 @@ describe("GET /api/tournaments/:id", () => {
     const tournamentId = nextTestId();
     getTournamentById.mockRejectedValue(new Error("database unavailable"));
 
-    const response = await request(app).get(`/api/tournaments/${tournamentId}`);
+    const response = await authenticatedRequest().get(
+      `/api/tournaments/${tournamentId}`,
+    );
 
     expect(response.status).toBe(500);
     expect(response.body).toEqual({
@@ -215,7 +233,7 @@ describe("POST /api/tournaments", () => {
     };
     createTournament.mockResolvedValue(createdTournament);
 
-    const response = await request(app)
+    const response = await authenticatedRequest()
       .post("/api/tournaments")
       .send(validPayload);
 
@@ -238,7 +256,7 @@ describe("POST /api/tournaments", () => {
       };
       createTournament.mockResolvedValue(createdTournament);
 
-      const response = await request(app)
+      const response = await authenticatedRequest()
         .post("/api/tournaments")
         .send(payload);
 
@@ -262,14 +280,16 @@ describe("POST /api/tournaments", () => {
       status: "draft",
     });
 
-    const response = await request(app).post("/api/tournaments").send(payload);
+    const response = await authenticatedRequest()
+      .post("/api/tournaments")
+      .send(payload);
 
     expect(response.status).toBe(201);
     expect(createTournament).toHaveBeenCalledWith(payload);
   });
 
   it("rechaza Grupos + Playoff sin su configuracion", async () => {
-    const response = await request(app)
+    const response = await authenticatedRequest()
       .post("/api/tournaments")
       .send({ ...validPayload, modality: "groups_playoff" });
 
@@ -285,7 +305,7 @@ describe("POST /api/tournaments", () => {
   });
 
   it("rechaza configuracion de grupos en otro formato", async () => {
-    const response = await request(app)
+    const response = await authenticatedRequest()
       .post("/api/tournaments")
       .send({
         ...validPayload,
@@ -319,14 +339,16 @@ describe("POST /api/tournaments", () => {
       status: "draft",
     });
 
-    const response = await request(app).post("/api/tournaments").send(payload);
+    const response = await authenticatedRequest()
+      .post("/api/tournaments")
+      .send(payload);
 
     expect(response.status).toBe(201);
     expect(createTournament).toHaveBeenCalledWith(payload);
   });
 
   it("rechaza un torneo Suizo sin cantidad de rondas", async () => {
-    const response = await request(app)
+    const response = await authenticatedRequest()
       .post("/api/tournaments")
       .send({ ...validPayload, modality: "swiss" });
 
@@ -340,7 +362,7 @@ describe("POST /api/tournaments", () => {
   });
 
   it("rechaza rondas del formato Suizo en otra modalidad", async () => {
-    const response = await request(app)
+    const response = await authenticatedRequest()
       .post("/api/tournaments")
       .send({ ...validPayload, swissRounds: 5 });
 
@@ -357,7 +379,7 @@ describe("POST /api/tournaments", () => {
   });
 
   it("aplica la estrategia de Liga al validar el cupo", async () => {
-    const response = await request(app)
+    const response = await authenticatedRequest()
       .post("/api/tournaments")
       .send({
         ...validPayload,
@@ -378,7 +400,7 @@ describe("POST /api/tournaments", () => {
   });
 
   it("aplica la estrategia de Eliminacion simple al validar el cupo", async () => {
-    const response = await request(app)
+    const response = await authenticatedRequest()
       .post("/api/tournaments")
       .send({
         ...validPayload,
@@ -400,7 +422,7 @@ describe("POST /api/tournaments", () => {
   });
 
   it("aplica la estrategia de Free-for-all al validar el cupo", async () => {
-    const response = await request(app)
+    const response = await authenticatedRequest()
       .post("/api/tournaments")
       .send({
         ...validPayload,
@@ -432,7 +454,9 @@ describe("POST /api/tournaments", () => {
       status: "draft",
     });
 
-    const response = await request(app).post("/api/tournaments").send(payload);
+    const response = await authenticatedRequest()
+      .post("/api/tournaments")
+      .send(payload);
 
     expect(response.status).toBe(201);
     expect(createTournament).toHaveBeenCalledWith(payload);
@@ -452,7 +476,7 @@ describe("POST /api/tournaments", () => {
     };
     createTournament.mockResolvedValue(createdTournament);
 
-    const response = await request(app)
+    const response = await authenticatedRequest()
       .post("/api/tournaments")
       .send(individualPayload);
 
@@ -461,7 +485,7 @@ describe("POST /api/tournaments", () => {
   });
 
   it("rechaza un torneo individual con limites de equipo", async () => {
-    const response = await request(app)
+    const response = await authenticatedRequest()
       .post("/api/tournaments")
       .send({
         ...validPayload,
@@ -479,7 +503,7 @@ describe("POST /api/tournaments", () => {
   });
 
   it("rechaza un torneo por equipos sin limites", async () => {
-    const response = await request(app)
+    const response = await authenticatedRequest()
       .post("/api/tournaments")
       .send({
         ...validPayload,
@@ -498,7 +522,7 @@ describe("POST /api/tournaments", () => {
   });
 
   it("rechaza un maximo de integrantes menor que el minimo", async () => {
-    const response = await request(app)
+    const response = await authenticatedRequest()
       .post("/api/tournaments")
       .send({
         ...validPayload,
@@ -519,7 +543,7 @@ describe("POST /api/tournaments", () => {
   });
 
   it("rechaza datos invalidos antes de llamar al servicio", async () => {
-    const response = await request(app)
+    const response = await authenticatedRequest()
       .post("/api/tournaments")
       .send({
         ...validPayload,
@@ -541,7 +565,7 @@ describe("POST /api/tournaments", () => {
   it("responde sin exponer detalles cuando falla la persistencia", async () => {
     createTournament.mockRejectedValue(new Error("database unavailable"));
 
-    const response = await request(app)
+    const response = await authenticatedRequest()
       .post("/api/tournaments")
       .send(validPayload);
 
@@ -583,7 +607,7 @@ describe("PUT /api/tournaments/:id", () => {
       tournament: updatedTournament,
     });
 
-    const response = await request(app)
+    const response = await authenticatedRequest()
       .put(`/api/tournaments/${tournamentId}`)
       .send(updatePayload);
 
@@ -596,7 +620,7 @@ describe("PUT /api/tournaments/:id", () => {
   });
 
   it("rechaza un identificador que no es un entero positivo", async () => {
-    const response = await request(app)
+    const response = await authenticatedRequest()
       .put("/api/tournaments/invalid-id")
       .send(updatePayload);
 
@@ -608,7 +632,7 @@ describe("PUT /api/tournaments/:id", () => {
   });
 
   it("rechaza datos invalidos antes de llamar al servicio", async () => {
-    const response = await request(app)
+    const response = await authenticatedRequest()
       .put(`/api/tournaments/${nextTestId()}`)
       .send({
         ...updatePayload,
@@ -631,7 +655,7 @@ describe("PUT /api/tournaments/:id", () => {
     const tournamentId = nextTestId();
     updateTournament.mockResolvedValue({ outcome: "not_found" });
 
-    const response = await request(app)
+    const response = await authenticatedRequest()
       .put(`/api/tournaments/${tournamentId}`)
       .send(updatePayload);
 
@@ -659,7 +683,7 @@ describe("PUT /api/tournaments/:id", () => {
       tournament: updatedTournament,
     });
 
-    const response = await request(app)
+    const response = await authenticatedRequest()
       .put(`/api/tournaments/${tournamentId}`)
       .send(legacyPayload);
 
@@ -688,7 +712,7 @@ describe("PUT /api/tournaments/:id", () => {
       tournament: updatedTournament,
     });
 
-    const response = await request(app)
+    const response = await authenticatedRequest()
       .put(`/api/tournaments/${tournamentId}`)
       .send(legacyPayload);
 
@@ -715,7 +739,7 @@ describe("PUT /api/tournaments/:id", () => {
       tournament: updatedTournament,
     });
 
-    const response = await request(app)
+    const response = await authenticatedRequest()
       .put(`/api/tournaments/${tournamentId}`)
       .send(legacyPayload);
 
@@ -726,7 +750,7 @@ describe("PUT /api/tournaments/:id", () => {
   it("responde 409 cuando se intenta cambiar una regla bloqueada", async () => {
     updateTournament.mockResolvedValue({ outcome: "participation_locked" });
 
-    const response = await request(app)
+    const response = await authenticatedRequest()
       .put(`/api/tournaments/${nextTestId()}`)
       .send(updatePayload);
 
@@ -740,7 +764,7 @@ describe("PUT /api/tournaments/:id", () => {
   it("responde sin exponer detalles cuando falla la actualizacion", async () => {
     updateTournament.mockRejectedValue(new Error("database unavailable"));
 
-    const response = await request(app)
+    const response = await authenticatedRequest()
       .put(`/api/tournaments/${nextTestId()}`)
       .send(updatePayload);
 
@@ -768,7 +792,7 @@ describe("PATCH /api/tournaments/:id/status", () => {
       tournament,
     });
 
-    const response = await request(app)
+    const response = await authenticatedRequest()
       .patch(`/api/tournaments/${tournamentId}/status`)
       .send({ status: "cancelled" });
 
@@ -784,7 +808,7 @@ describe("PATCH /api/tournaments/:id/status", () => {
   });
 
   it("rechaza un identificador que no es un entero positivo", async () => {
-    const response = await request(app)
+    const response = await authenticatedRequest()
       .patch("/api/tournaments/invalid-id/status")
       .send({ status: "cancelled" });
 
@@ -796,7 +820,7 @@ describe("PATCH /api/tournaments/:id/status", () => {
   });
 
   it("rechaza un estado desconocido", async () => {
-    const response = await request(app)
+    const response = await authenticatedRequest()
       .patch(`/api/tournaments/${nextTestId()}/status`)
       .send({ status: "unknown" });
 
@@ -811,7 +835,7 @@ describe("PATCH /api/tournaments/:id/status", () => {
   it("responde 404 cuando el torneo no existe", async () => {
     updateTournamentStatus.mockResolvedValue({ outcome: "not_found" });
 
-    const response = await request(app)
+    const response = await authenticatedRequest()
       .patch(`/api/tournaments/${nextTestId()}/status`)
       .send({ status: "cancelled" });
 
@@ -824,7 +848,7 @@ describe("PATCH /api/tournaments/:id/status", () => {
       outcome: "invalid_transition",
     });
 
-    const response = await request(app)
+    const response = await authenticatedRequest()
       .patch(`/api/tournaments/${nextTestId()}/status`)
       .send({ status: "draft" });
 
@@ -837,7 +861,7 @@ describe("PATCH /api/tournaments/:id/status", () => {
   it("responde sin exponer detalles cuando falla la actualizacion", async () => {
     updateTournamentStatus.mockRejectedValue(new Error("database unavailable"));
 
-    const response = await request(app)
+    const response = await authenticatedRequest()
       .patch(`/api/tournaments/${nextTestId()}/status`)
       .send({ status: "cancelled" });
 
@@ -857,7 +881,7 @@ describe("DELETE /api/tournaments/:id", () => {
     const tournamentId = nextTestId();
     deleteTournament.mockResolvedValue({ outcome: "deleted" });
 
-    const response = await request(app).delete(
+    const response = await authenticatedRequest().delete(
       `/api/tournaments/${tournamentId}`,
     );
 
@@ -869,7 +893,9 @@ describe("DELETE /api/tournaments/:id", () => {
   });
 
   it("rechaza un identificador que no es un entero positivo", async () => {
-    const response = await request(app).delete("/api/tournaments/invalid-id");
+    const response = await authenticatedRequest().delete(
+      "/api/tournaments/invalid-id",
+    );
 
     expect(response.status).toBe(400);
     expect(response.body).toEqual({
@@ -881,7 +907,7 @@ describe("DELETE /api/tournaments/:id", () => {
   it("responde 404 cuando el torneo no existe", async () => {
     deleteTournament.mockResolvedValue({ outcome: "not_found" });
 
-    const response = await request(app).delete(
+    const response = await authenticatedRequest().delete(
       `/api/tournaments/${nextTestId()}`,
     );
 
@@ -892,7 +918,7 @@ describe("DELETE /api/tournaments/:id", () => {
   it("rechaza eliminar un torneo que ya no esta en draft", async () => {
     deleteTournament.mockResolvedValue({ outcome: "not_deletable" });
 
-    const response = await request(app).delete(
+    const response = await authenticatedRequest().delete(
       `/api/tournaments/${nextTestId()}`,
     );
 
@@ -905,7 +931,7 @@ describe("DELETE /api/tournaments/:id", () => {
   it("responde sin exponer detalles cuando falla la eliminacion", async () => {
     deleteTournament.mockRejectedValue(new Error("database unavailable"));
 
-    const response = await request(app).delete(
+    const response = await authenticatedRequest().delete(
       `/api/tournaments/${nextTestId()}`,
     );
 
