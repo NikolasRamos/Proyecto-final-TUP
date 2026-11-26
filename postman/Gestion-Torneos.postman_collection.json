@@ -353,7 +353,7 @@
             "method": "DELETE",
             "header": [],
             "url": "{{baseUrl}}/api/teams/{{teamId}}",
-            "description": "Elimina un equipo solamente si no posee historial de inscripciones."
+            "description": "Requiere el token de un administrador o del capitán del equipo indicado en teamId. Devuelve 403 para otros usuarios y 409 si el equipo tiene historial de inscripciones."
           },
           "response": []
         }

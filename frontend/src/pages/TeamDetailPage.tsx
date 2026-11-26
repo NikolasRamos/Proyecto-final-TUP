@@ -51,7 +51,7 @@ function getRequestErrorMessage(error: unknown) {
 
 export default function TeamDetailPage() {
   const { session } = useAuthSession();
-  const token = getCompetitionManagerToken(session);
+  const editToken = getCompetitionManagerToken(session);
   const { id = "" } = useParams();
   const navigate = useNavigate();
   const teamId = Number(id);
@@ -65,12 +65,21 @@ export default function TeamDetailPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [deleteConfirmationId, setDeleteConfirmationId] = useState<
+    number | null
+  >(null);
   const [notice, setNotice] = useState<Notice>(null);
   const state: DetailState =
     result.requestKey === requestKey
       ? result
       : { status: "loading", requestKey };
+  const deleteToken =
+    state.status === "success" &&
+    session.status === "signedIn" &&
+    (session.user.role === "administrador" ||
+      session.user.idUsuario === state.team.captainId)
+      ? session.token
+      : undefined;
 
   useEffect(() => {
     if (!hasValidId) {
@@ -116,7 +125,7 @@ export default function TeamDetailPage() {
   async function handleUpdate(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
-    if (!token || !form || state.status !== "success") {
+    if (!editToken || !form || state.status !== "success") {
       return;
     }
 
@@ -129,7 +138,7 @@ export default function TeamDetailPage() {
     setNotice(null);
 
     try {
-      const response = await updateTeam(teamId, payload, token);
+      const response = await updateTeam(teamId, payload, editToken);
       setResult({ status: "success", requestKey, team: response.data });
       setForm(toFormData(response.data));
       setIsEditing(false);
@@ -153,13 +162,13 @@ export default function TeamDetailPage() {
   }
 
   async function handleDelete() {
-    if (!token) return;
+    if (!deleteToken || deleteConfirmationId !== teamId || isDeleting) return;
 
     setIsDeleting(true);
     setNotice(null);
 
     try {
-      const response = await deleteTeam(teamId, token);
+      const response = await deleteTeam(teamId, deleteToken);
       navigate("/teams", {
         replace: true,
         state: { feedback: response.message },
@@ -172,7 +181,7 @@ export default function TeamDetailPage() {
             ? error.message
             : "No se pudo eliminar el equipo.",
       });
-      setShowDeleteConfirmation(false);
+      setDeleteConfirmationId(null);
     } finally {
       setIsDeleting(false);
     }
@@ -218,27 +227,31 @@ export default function TeamDetailPage() {
               <span className="eyebrow">Equipo #{state.team.id}</span>
               <h1>{state.team.name}</h1>
             </div>
-            {token && !isEditing && (
+            {(editToken || deleteToken) && !isEditing && (
               <div className="detail-actions">
-                <button
-                  className="secondary-button"
-                  type="button"
-                  onClick={() => {
-                    setForm(toFormData(state.team));
-                    setNotice(null);
-                    setShowDeleteConfirmation(false);
-                    setIsEditing(true);
-                  }}
-                >
-                  Editar equipo
-                </button>
-                <button
-                  className="danger-button"
-                  type="button"
-                  onClick={() => setShowDeleteConfirmation(true)}
-                >
-                  Eliminar equipo
-                </button>
+                {editToken && (
+                  <button
+                    className="secondary-button"
+                    type="button"
+                    onClick={() => {
+                      setForm(toFormData(state.team));
+                      setNotice(null);
+                      setDeleteConfirmationId(null);
+                      setIsEditing(true);
+                    }}
+                  >
+                    Editar equipo
+                  </button>
+                )}
+                {deleteToken && (
+                  <button
+                    className="danger-button"
+                    type="button"
+                    onClick={() => setDeleteConfirmationId(teamId)}
+                  >
+                    Eliminar equipo
+                  </button>
+                )}
               </div>
             )}
           </header>
@@ -261,7 +274,7 @@ export default function TeamDetailPage() {
             </div>
           )}
 
-          {showDeleteConfirmation && (
+          {deleteToken && deleteConfirmationId === teamId && (
             <section
               className="delete-confirmation"
               aria-labelledby="delete-team-title"
@@ -278,7 +291,7 @@ export default function TeamDetailPage() {
                 <button
                   className="secondary-button"
                   type="button"
-                  onClick={() => setShowDeleteConfirmation(false)}
+                  onClick={() => setDeleteConfirmationId(null)}
                   disabled={isDeleting}
                 >
                   Cancelar

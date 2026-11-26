@@ -341,7 +341,10 @@ describe("DELETE /api/teams/:id", () => {
     expect(response.body).toEqual({
       message: "Equipo eliminado correctamente",
     });
-    expect(deleteTeam).toHaveBeenCalledWith(teamId);
+    expect(deleteTeam).toHaveBeenCalledWith(teamId, {
+      userId: 1,
+      role: "organizador",
+    });
   });
 
   it("rechaza un identificador que no es un entero positivo", async () => {
@@ -380,6 +383,17 @@ describe("DELETE /api/teams/:id", () => {
     expect(response.body).toEqual({
       message: "No se puede eliminar un equipo con inscripciones registradas",
     });
+  });
+
+  it("responde 403 cuando el usuario no puede eliminar el equipo", async () => {
+    deleteTeam.mockResolvedValue({ outcome: "forbidden" });
+
+    const response = await authenticatedRequest().delete(
+      `/api/teams/${nextTestId()}`,
+    );
+
+    expect(response.status).toBe(403);
+    expect(response.body.message).toMatch(/capitán.*administrador/);
   });
 
   it("responde sin exponer detalles cuando falla la eliminacion", async () => {

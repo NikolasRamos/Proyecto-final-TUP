@@ -122,14 +122,19 @@ describe("teams service", () => {
     ).resolves.toBeNull();
   });
 
-  it("elimina un equipo existente", async () => {
+  it.each([
+    { userId: 1, role: "participante" },
+    { userId: 1, role: "organizador" },
+    { userId: 2, role: "administrador" },
+  ])("elimina un equipo con permiso del actor $role", async (actor) => {
     const team = {
+      captainId: 1,
       destroy: vi.fn().mockResolvedValue(undefined),
     };
     Team.findByPk.mockResolvedValue(team);
     TournamentRegistration.count.mockResolvedValue(0);
 
-    await expect(deleteTeam(201)).resolves.toEqual({
+    await expect(deleteTeam(201, actor)).resolves.toEqual({
       outcome: "deleted",
     });
     expect(Team.findByPk).toHaveBeenCalledWith(201);
@@ -139,10 +144,26 @@ describe("teams service", () => {
     expect(team.destroy).toHaveBeenCalledOnce();
   });
 
+  it.each(["organizador", "participante"])(
+    "deniega el borrado si el %s no es capitán",
+    async (role) => {
+      const team = { captainId: 1, destroy: vi.fn() };
+      Team.findByPk.mockResolvedValue(team);
+
+      await expect(deleteTeam(201, { userId: 2, role })).resolves.toEqual({
+        outcome: "forbidden",
+      });
+      expect(TournamentRegistration.count).not.toHaveBeenCalled();
+      expect(team.destroy).not.toHaveBeenCalled();
+    },
+  );
+
   it("informa cuando el equipo a eliminar no existe", async () => {
     Team.findByPk.mockResolvedValue(null);
 
-    await expect(deleteTeam(201)).resolves.toEqual({
+    await expect(
+      deleteTeam(201, { userId: 1, role: "participante" }),
+    ).resolves.toEqual({
       outcome: "team_not_found",
     });
     expect(TournamentRegistration.count).not.toHaveBeenCalled();
@@ -150,12 +171,15 @@ describe("teams service", () => {
 
   it("no elimina un equipo que tiene historial de inscripciones", async () => {
     const team = {
+      captainId: 1,
       destroy: vi.fn(),
     };
     Team.findByPk.mockResolvedValue(team);
     TournamentRegistration.count.mockResolvedValue(1);
 
-    await expect(deleteTeam(201)).resolves.toEqual({
+    await expect(
+      deleteTeam(201, { userId: 1, role: "participante" }),
+    ).resolves.toEqual({
       outcome: "has_registrations",
     });
     expect(team.destroy).not.toHaveBeenCalled();
@@ -165,12 +189,15 @@ describe("teams service", () => {
     const error = new Error("foreign key violation");
     error.name = "SequelizeForeignKeyConstraintError";
     const team = {
+      captainId: 1,
       destroy: vi.fn().mockRejectedValue(error),
     };
     Team.findByPk.mockResolvedValue(team);
     TournamentRegistration.count.mockResolvedValue(0);
 
-    await expect(deleteTeam(201)).resolves.toEqual({
+    await expect(
+      deleteTeam(201, { userId: 1, role: "participante" }),
+    ).resolves.toEqual({
       outcome: "has_registrations",
     });
   });

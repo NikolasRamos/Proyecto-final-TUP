@@ -162,11 +162,21 @@ export async function deleteTeamHandler(request, response) {
   }
 
   try {
-    const result = await deleteTeam(validation.data);
+    const result = await deleteTeam(validation.data, {
+      userId: response.locals.authUser.idUsuario,
+      role: response.locals.authRole,
+    });
 
     if (result.outcome === "team_not_found") {
       return response.status(404).json({
         message: "Equipo no encontrado",
+      });
+    }
+
+    if (result.outcome === "forbidden") {
+      return response.status(403).json({
+        message:
+          "Solo el capitán del equipo o un administrador puede eliminarlo",
       });
     }
 

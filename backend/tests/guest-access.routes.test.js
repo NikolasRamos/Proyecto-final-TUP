@@ -19,7 +19,6 @@ const managementRoutes = [
   ["post", "/api/tournaments/1/registrations"],
   ["delete", "/api/tournaments/1/registrations/1"],
   ["put", "/api/teams/1"],
-  ["delete", "/api/teams/1"],
   ["get", "/api/teams/1/members"],
   ["post", "/api/teams/1/members"],
   ["delete", "/api/teams/1/members/1"],
@@ -28,12 +27,13 @@ const managementRoutes = [
 describe("Acceso público a torneos y equipos", () => {
   afterEach(() => vi.restoreAllMocks());
 
-  it.each([...managementRoutes, ["post", "/api/teams"]])(
-    "exige iniciar sesión para %s %s",
-    async (method, path) => {
-      await request(app)[method](path).expect(401);
-    },
-  );
+  it.each([
+    ...managementRoutes,
+    ["post", "/api/teams"],
+    ["delete", "/api/teams/1"],
+  ])("exige iniciar sesión para %s %s", async (method, path) => {
+    await request(app)[method](path).expect(401);
+  });
 
   it.each([
     ["", ["open", "in_progress"]],

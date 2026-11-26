@@ -14,9 +14,8 @@ equipos, inscripciones, partidas y estadísticas.
 ## Acceso al sistema
 
 El registro crea cuentas de participante. Los permisos se aplican en la web y
-en la API. La gestión de torneos y equipos corresponde a organizadores y
-administradores. El permiso de crear un equipo propio también está disponible
-para participantes.
+en la API. Los organizadores y administradores gestionan torneos y editan
+equipos. El borrado de equipos corresponde a su capitán o a un administrador.
 
 ### Invitado
 
@@ -42,6 +41,7 @@ para participantes.
 
 - Buscar y consultar los torneos vigentes y los equipos registrados.
 - Crear un equipo propio y quedar registrado como capitán y primer integrante.
+- Borrar un equipo que capitanea si está libre de historial de inscripciones.
 - Las solicitudes de ingreso, las invitaciones y la bandeja de notificaciones
   están planificadas.
 

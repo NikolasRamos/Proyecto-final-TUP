@@ -10,7 +10,9 @@ import {
   removeTeamMemberHandler,
   updateTeamHandler,
 } from "../controllers/teams.controller.js";
+import { requireSession } from "../middlewares/auth.middleware.js";
 import {
+  loadCompetitionRole,
   requireCompetitionManager,
   requireTeamCreator,
 } from "../middlewares/competition-access.middleware.js";
@@ -21,7 +23,12 @@ teamsRouter.get("/", listTeamsHandler);
 teamsRouter.get("/:id", getTeamByIdHandler);
 teamsRouter.post("/", requireTeamCreator, createTeamHandler);
 teamsRouter.put("/:id", requireCompetitionManager, updateTeamHandler);
-teamsRouter.delete("/:id", requireCompetitionManager, deleteTeamHandler);
+teamsRouter.delete(
+  "/:id",
+  requireSession,
+  loadCompetitionRole,
+  deleteTeamHandler,
+);
 teamsRouter.post(
   "/:teamId/members",
   requireCompetitionManager,

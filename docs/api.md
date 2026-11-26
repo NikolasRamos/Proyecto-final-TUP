@@ -57,11 +57,11 @@ estado no visible devuelve una página vacía y un detalle no visible devuelve
 
 La gestión de torneos, la exportación de reportes y el acceso a las
 inscripciones requieren `Authorization: Bearer <token>` de un organizador o
-administrador. Los mismos roles habilitan la edición y eliminación de equipos,
-así como la consulta y gestión de sus integrantes. El listado y el detalle de
-equipos son públicos, y todas las cuentas con un rol base pueden crear equipos.
-En las rutas protegidas, la API devuelve `401` sin sesión válida y `403` si el
-rol actual de la cuenta carece del permiso.
+administrador. Los mismos roles habilitan la edición de equipos y la consulta
+y gestión de sus integrantes. El borrado de un equipo corresponde a su capitán
+o a un administrador. El listado y el detalle de equipos son públicos, y todas
+las cuentas con un rol base pueden crear equipos. En las rutas protegidas, la
+API devuelve `401` sin sesión válida y `403` cuando la cuenta no tiene permiso.
 
 ### Listar
 
@@ -301,8 +301,10 @@ No permite cambiar el identificador ni el capitán.
 
 `DELETE /api/teams/:id`
 
-Solo elimina equipos sin historial de inscripciones. Si existe una inscripción
-activa o retirada responde `409 Conflict`.
+Requiere una sesión del capitán del equipo o de un administrador. La API
+comprueba el capitán registrado mediante el ID de la sesión. Un usuario
+autenticado sin ese permiso recibe `403`. Si el equipo tiene alguna inscripción
+activa o retirada, la API responde `409 Conflict`.
 
 ## Integrantes de equipos
 

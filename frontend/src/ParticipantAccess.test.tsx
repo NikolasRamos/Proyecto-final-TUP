@@ -30,6 +30,21 @@ function renderAsParticipant(path: string) {
         { status: 201 },
       );
     }
+    if (endpoint === "/api/teams/42") {
+      if (options?.method === "DELETE") {
+        return Response.json({ message: "Equipo eliminado correctamente" });
+      }
+      return Response.json({
+        data: {
+          id: 42,
+          name: "Equipo propio",
+          description: null,
+          captainId: profile.idUsuario,
+          createdAt: "2026-11-26T12:00:00Z",
+          updatedAt: "2026-11-26T12:00:00Z",
+        },
+      });
+    }
     return Response.json({
       data: [],
       pagination: { page: 1, limit: 10, total: 0, totalPages: 0 },
@@ -100,6 +115,27 @@ describe("Permisos del participante en React", () => {
       JSON.stringify({ name: "Los Halcones", description: null }),
     );
     expect(new Headers(postRequest?.[1]?.headers).get("Authorization")).toBe(
+      `Bearer ${token}`,
+    );
+  });
+
+  it("permite al participante confirmar el borrado del equipo que capitanea", async () => {
+    const fetchMock = renderAsParticipant("/teams/42");
+    const user = userEvent.setup();
+
+    await user.click(
+      await screen.findByRole("button", { name: "Eliminar equipo" }),
+    );
+    await user.click(screen.getByRole("button", { name: "Sí, eliminar" }));
+
+    expect(
+      await screen.findByText("Equipo eliminado correctamente"),
+    ).toBeInTheDocument();
+    const request = fetchMock.mock.calls.find(
+      ([, options]) => options?.method === "DELETE",
+    );
+    expect(String(request?.[0])).toMatch(/\/api\/teams\/42$/);
+    expect(new Headers(request?.[1]?.headers).get("Authorization")).toBe(
       `Bearer ${token}`,
     );
   });

@@ -230,6 +230,18 @@ describe("pantallas principales de equipos", () => {
     );
   });
 
+  it("oculta el botón de borrar un equipo ajeno al organizador", async () => {
+    vi.mocked(getTeam).mockResolvedValue({ data: { ...team, captainId: 2 } });
+    renderPage("/teams/201");
+
+    expect(
+      await screen.findByRole("button", { name: "Editar equipo" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Eliminar equipo" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("rechaza un identificador inválido sin consultar la API", () => {
     renderPage("/teams/incorrecto");
 

@@ -53,11 +53,15 @@ export async function updateTeam(teamId, teamData) {
   return team.update(teamData);
 }
 
-export async function deleteTeam(teamId) {
+export async function deleteTeam(teamId, { userId, role }) {
   const team = await Team.findByPk(teamId);
 
   if (!team) {
     return { outcome: "team_not_found" };
+  }
+
+  if (role !== "administrador" && team.captainId !== userId) {
+    return { outcome: "forbidden" };
   }
 
   const registrationCount = await TournamentRegistration.count({
