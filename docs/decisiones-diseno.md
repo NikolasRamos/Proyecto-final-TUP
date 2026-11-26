@@ -5,25 +5,18 @@ inscripciones. Su objetivo es permitir que cualquier integrante del grupo pueda
 ubicar el código, explicar el diagnóstico, comparar alternativas y defender las
 decisiones tomadas.
 
-## Estado frente a la consigna
+## Base de la revisión
 
-Fecha de revisión inicial: **13 de octubre de 2026**. Última actualización
-documental: **25 de octubre de 2026**.
+La primera revisión del flujo de inscripciones se hizo el 13 de octubre
+de 2026. Esta guía toma como base `dev` después de integrar los permisos
+del organizador (`e62b639`) y las reglas compartidas (`2672f2b`).
+[Repositorio del grupo](https://github.com/NikolasRamos/Proyecto-final-TUP/tree/dev).
 
-- **Repositorio:**
-  [NikolasRamos/Proyecto-final-TUP](https://github.com/NikolasRamos/Proyecto-final-TUP).
-- **Rama revisada:** `feature/tournaments-teams`.
-- **Commits backend principales:** `b32cc47` y `92906fd`.
-
-| Requisito                                    | Estado del bloque     | Evidencia o acción pendiente                                                                                                                                                                      |
-| -------------------------------------------- | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Proyecto actualizado y repositorio accesible | Parcialmente cumplido | El backend está publicado en `feature/tournaments-teams`, commits `b32cc47` y `92906fd`. Los cambios actuales del frontend y la documentación deben commitearse y subirse antes de la evaluación. |
-| Análisis profundo, concreto y documentado    | Cumplido localmente   | Este documento analiza el flujo real de inscripciones y sus decisiones asociadas. Debe estar en el repositorio remoto para completar formalmente el requisito.                                    |
-| Código y documentación localizables          | Cumplido localmente   | Las referencias siguientes enlazan servicios, controladores, migraciones y pruebas. Antes de presentar se debe comprobar que la rama esté sincronizada.                                           |
-
-Este estado se limita al bloque analizado. El grupo debe verificar por separado
-la documentación y disponibilidad de los bloques de usuarios, autenticación,
-partidas, resultados y cualquier otra responsabilidad distribuida.
+| Requisito | Evidencia |
+| --- | --- |
+| Proyecto y repositorio accesibles | Rama de integración `dev` y [prototipo en Vercel](https://proyecto-final-tup.vercel.app/). |
+| Análisis de código real | Secciones 1 a 5 de este documento, con diagnóstico, alternativas, decisiones y costos. |
+| Código y documentación localizables | Referencias a servicios, migraciones y pruebas. [Índice de documentación](../README.md#documentación). |
 
 ## Resumen ejecutivo
 
@@ -39,9 +32,9 @@ negocio cuando varios equipos intentan inscribirse en un torneo:
 - dos solicitudes concurrentes no deben ocupar el último cupo simultáneamente.
 
 La solución conserva servicios pequeños, validaciones en el borde de la API,
-restricciones en PostgreSQL y transacciones de Sequelize. Se evaluaron patrones
-GoF, pero no se aplicó ninguno formal porque el flujo actual sigue siendo único,
-sin variantes ni necesidad de encolado, deshacer o coordinación reutilizada.
+restricciones en PostgreSQL y transacciones de Sequelize. La inscripción se
+coordina en el servicio. En los formatos, Strategy separa las validaciones
+según la modalidad elegida.
 
 ## 1. Código analizado
 
@@ -238,7 +231,7 @@ revisarse el límite del servicio y reconsiderar Facade, Command u Observer.
 | La base impide duplicados y referencias rotas.                   | Algunas eliminaciones dejan de estar permitidas y requieren respuestas `409`.          |
 | Los resultados `outcome` hacen explícitas las reglas esperables. | Los controladores contienen varias ramas de traducción a HTTP.                         |
 | No hay abstracciones GoF prematuras.                             | Si el caso de uso crece mucho, el servicio deberá refactorizarse.                      |
-| El bloque avanzó sin esperar `users`.                            | Hasta integrar el bloque 1, un ID válido no garantiza que el usuario exista.           |
+| Se mantienen los datos históricos de demostración. | La capitanía y la propiedad de torneos requieren vínculos explícitos con cuentas activas. |
 
 ## Pruebas y comprobaciones
 
@@ -313,8 +306,9 @@ Sequelize registra su ejecución en `SequelizeData`, evitando duplicados, y el
 `down` identifica únicamente los nombres definidos por la carga. Se eligió un
 seeder en lugar de incluir datos en las migraciones porque el esquema es
 obligatorio, mientras que la demostración debe poder agregarse y retirarse sin
-alterar la estructura ni los registros manuales. Los IDs de usuarios son
-temporales hasta integrar autenticación.
+alterar la estructura. Los identificadores históricos de esa carga se conservan
+junto con los nuevos vínculos a cuentas reales
+[descritos en el modelo de datos](database.md#identificadores-y-cuentas-de-usuario).
 
 ### Identificadores del prototipo (25 de octubre de 2026)
 
@@ -341,10 +335,8 @@ npm.cmd run build
 npm.cmd test
 ```
 
-Resultado del 25/10/2026: **15 archivos de prueba y 175 pruebas aprobadas**,
-incluyendo las pruebas actuales del frontend. El commit backend `92906fd` fue
-subido antes de esas incorporaciones visuales; por eso el número del repositorio
-remoto puede ser menor hasta realizar el próximo commit.
+Resultado histórico del 25/10/2026: **15 archivos de prueba y 175 pruebas
+aprobadas**, incluidas las pruebas del frontend de esa revisión.
 
 Casos importantes cubiertos:
 
@@ -474,6 +466,33 @@ inmediata. El backend continúa siendo la autoridad final. Más adelante se pued
 exponer un endpoint de metadatos si las reglas dinámicas necesitan evitar esa
 duplicación.
 
+### Permisos, membresías y notificaciones
+
+El rol habilita acciones generales y la propiedad o la capitanía determina
+el recurso sobre el que se puede actuar. La creación de un torneo toma su
+organizador de la sesión. Vincularlo con la columna de cuenta conserva los
+identificadores históricos sin convertirlos en permisos.
+[Middleware de acceso al torneo](../backend/middlewares/tournament-access.middleware.js) ·
+[Pruebas por rol y propiedad](../backend/tests/guest-access.routes.test.js).
+
+Las solicitudes e invitaciones guardan un trámite por equipo y cuenta. La
+aceptación confirma la membresía en la misma transacción. La bandeja deriva
+los avisos de esos trámites y guarda una lectura por evento y destinatario.
+La unicidad y las transacciones mantienen los datos consistentes. La bandeja
+requiere consultar las solicitudes visibles en cada carga.
+[Servicio de membresías](../backend/services/team-membership-requests.service.js) ·
+[Servicio de avisos](../backend/services/team-notifications.service.js).
+
+### Evidencia de la revisión actual
+
+El commit `2672f2b` pasó **429 pruebas** y compiló el frontend y las imágenes
+de Docker. Se verificó que Vite y la imagen de la API carguen las reglas
+compartidas. La migración `017` y la separación entre cuentas organizadoras se
+verificaron con PostgreSQL local antes del despliegue de `e62b639`. En el
+dominio público se comprobaron salud, catálogos y autenticación de **Mis
+torneos**. El [recorrido manual](development.md#pruebas-manuales-del-prototipo)
+permite repetir esas verificaciones con las cuentas de la entrega.
+
 ## Guion sugerido para la explicación grupal
 
 ### Demostración breve
@@ -484,7 +503,8 @@ duplicación.
 4. Abrir una prueba de cupo, duplicado o reactivación.
 5. Explicar por qué el retiro cambia el estado en lugar de borrar la fila.
 6. Explicar por qué Facade y Command se evaluaron pero no se aplicaron.
-7. Mostrar la limitación pendiente de integración con `users`.
+7. Mostrar cómo la propiedad del torneo y la capitanía se vinculan a cuentas.
+8. Abrir el módulo compartido y señalar qué regla se cambia una sola vez.
 
 ### Diagnóstico en una frase
 
@@ -524,9 +544,11 @@ Strategy encapsula las reglas de cada formato. Las seis modalidades poseen una
 implementación concreta y un registro selecciona la correspondiente mediante
 `modality`. El siguiente paso será extenderlas para generar partidas.
 
-**¿Qué cambiará al integrar usuarios?**
-Se agregarán claves foráneas mediante nuevas migraciones, asociaciones de
-Sequelize y autorización basada en el usuario obtenido del JWT.
+**¿Por qué el identificador anterior no otorga permisos de organizador?**
+
+El identificador anterior podía ingresarse a mano. La API toma la cuenta de
+la sesión y usa `organizerAccountId` para comprobar quién puede gestionar
+ese torneo.
 
 **¿Cuál es el costo del bloqueo?**
 Las operaciones sobre el mismo torneo esperan mientras la transacción está
@@ -537,9 +559,9 @@ activa. Se acepta porque prioriza no exceder el cupo.
 ### En la computadora que se presentará
 
 ```powershell
-git switch feature/tournaments-teams
-git pull --ff-only origin feature/tournaments-teams
-npm install
+git switch dev
+git pull --ff-only origin dev
+npm.cmd ci
 docker compose up -d postgres
 npm.cmd run db:migrate
 npm.cmd test
@@ -551,10 +573,8 @@ anteriores.
 
 ### Lista de control del grupo
 
-- [ ] Commitear y subir el frontend y este documento.
-- [ ] Confirmar que GitHub muestra `docs/decisiones-diseno.md`.
-- [ ] Confirmar que todos tienen acceso al repositorio y a la rama elegida.
-- [ ] Decidir si se presenta esta rama o si se combina con `main`.
+- [ ] Confirmar que los integrantes pueden abrir `dev` y la documentación en GitHub.
+- [ ] Verificar la URL pública y las cuentas de prueba que usará el grupo.
 - [ ] Abrir Docker Desktop antes de iniciar la demostración.
 - [ ] Ejecutar migraciones y pruebas en la computadora de presentación.
 - [ ] Tener Postman preparado con los endpoints de torneos, equipos e
@@ -566,10 +586,10 @@ anteriores.
 - [ ] Cada integrante debe poder abrir una función propia y explicar por qué
       está diseñada de esa manera.
 
-## Conclusión
+## Para la evaluación
 
-El bloque de torneos, equipos e inscripciones cumple técnicamente el análisis
-pedido y posee evidencia concreta en código y pruebas. Para cumplir la consigna
-de forma verificable durante la evaluación todavía es indispensable subir este
-documento y los cambios locales del frontend, acordar la rama que se mostrará y
-comprobar el entorno de presentación.
+Abrí el código del flujo de inscripción, su migración y una prueba de cupo o
+duplicados. Mostrá el registro de [Strategy y reglas compartidas](design-patterns.md)
+para explicar el problema de duplicación que se corrigió. Usá el
+[alcance funcional](product-scope.md) para identificar qué está disponible en la
+demostración y qué sigue en desarrollo.

@@ -31,10 +31,11 @@ trade-offs se documentan por separado.
 
 1. El frontend utiliza los módulos de `frontend/src/api` para enviar HTTP.
 2. Express selecciona una ruta de `backend/routes`.
-3. El controlador valida parámetros y cuerpos mediante un schema de Zod.
-4. El servicio ejecuta reglas de negocio y coordina modelos o transacciones.
-5. El modelo de Sequelize consulta o modifica PostgreSQL.
-6. El controlador transforma el resultado en una respuesta HTTP.
+3. Los middlewares comprueban sesión, rol y acceso al recurso cuando corresponde.
+4. El controlador valida parámetros y cuerpos mediante un schema de Zod.
+5. El servicio aplica las reglas de negocio y coordina modelos o transacciones.
+6. Sequelize consulta o modifica PostgreSQL.
+7. El controlador envía una respuesta HTTP.
 
 Esta separación permite probar reglas y traducciones HTTP de forma
 independiente. No implica por sí sola la aplicación de un patrón GoF.
@@ -44,7 +45,8 @@ independiente. No implica por sí sola la aplicación de un patrón GoF.
 | Carpeta               | Responsabilidad                                  |
 | --------------------- | ------------------------------------------------ |
 | `backend/config`      | Conexión y configuración de Sequelize            |
-| `backend/routes`      | Métodos y rutas públicas de la API               |
+| `backend/routes`      | Métodos y rutas de la API                         |
+| `backend/middlewares` | Sesión, roles y permisos sobre los recursos       |
 | `backend/controllers` | Validación de entrada y respuestas HTTP          |
 | `backend/schemas`     | Contratos y validaciones con Zod                 |
 | `backend/services`    | Reglas de negocio, transacciones y consultas     |
@@ -62,27 +64,36 @@ independiente. No implica por sí sola la aplicación de un patrón GoF.
 | `frontend/src/types`      | Contratos TypeScript de datos y respuestas |
 | `frontend/test`           | Configuración compartida de pruebas        |
 
-Rutas implementadas:
+### Rutas del frontend
 
-| Ruta               | Pantalla                   |
-| ------------------ | -------------------------- |
-| `/`                | Panel interno y resumen    |
-| `/tournaments`     | Listado inicial de torneos |
-| `/tournaments/new` | Creación de torneos        |
-| `/my-tournaments`  | Torneos de la cuenta        |
+| Ruta | Pantalla | Acceso |
+| --- | --- | --- |
+| `/` | Panel y accesos al catálogo | Público |
+| `/login`, `/register` | Inicio de sesión y registro | Público |
+| `/tournaments`, `/tournaments/:id` | Listado y detalle de torneos. La gestión y las inscripciones se muestran según los permisos del torneo. | Según la visibilidad de cada torneo |
+| `/tournaments/new` | Crear torneo | Organizador o administrador |
+| `/my-tournaments` | Listado de torneos de la cuenta | Organizador o administrador |
+| `/teams`, `/teams/:id` | Listado y detalle de equipos | Público. Las acciones requieren los permisos correspondientes. |
+| `/teams/new` | Crear equipo | Participante, organizador o administrador |
+| `/my-teams`, `/team-requests`, `/notifications` | Membresías, trámites y avisos de la cuenta | Sesión válida |
 
-Las rutas de detalle, edición, equipos, autenticación y otros módulos todavía
-deben incorporarse.
+React comprueba la sesión para mostrar las acciones disponibles. Los
+middlewares de Express verifican el rol y la propiedad del recurso al recibir
+una petición. Los formularios y las Strategies utilizan
+[`shared/tournament-format-rules.ts`](../shared/tournament-format-rules.ts)
+para compartir los cupos y cálculos de cada formato.
 
 ## Estructura del repositorio
 
 ```text
 Proyecto-final-TUP/
+├── api/  Entrada de Express para Vercel
 ├── backend/
 │   ├── Dockerfile
 │   ├── config/
 │   ├── controllers/
 │   ├── migrations/
+│   ├── middlewares/
 │   ├── models/
 │   ├── routes/
 │   ├── schemas/
@@ -100,6 +111,7 @@ Proyecto-final-TUP/
 │   │   └── types/
 │   ├── test/
 │   └── vite.config.ts
+├── shared/  Reglas de formatos de torneos
 ├── docs/
 ├── output/
 ├── .dockerignore
@@ -121,7 +133,8 @@ Proyecto-final-TUP/
 - Docker Compose espera que PostgreSQL esté saludable, ejecuta las migraciones
   en un contenedor de una sola ejecución y solo después habilita la API y el
   frontend servido por Nginx.
-- Los módulos de partidas, resultados y clasificaciones no existen todavía.
+- Partidas, resultados y posiciones tienen esquema y modelos. Las rutas
+  iniciales de partidos de Liga siguen fuera del conjunto servido por Express.
 
 ## Decisiones relacionadas
 

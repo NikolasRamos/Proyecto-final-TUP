@@ -28,6 +28,8 @@ Si la API está iniciada, la comprobación debe responder `200 OK`.
 | `teamId`       | Equipo utilizado en consultas y operaciones            |
 | `captainId`    | Usuario capitán al crear un equipo                     |
 | `userId`       | Usuario utilizado para agregar o retirar integrantes   |
+| `teamActorToken` | Token de la cuenta que pide ingreso, invita, responde o consulta sus avisos |
+| `membershipRequestId` | ID del trámite o `requestId` del aviso que querés marcar como leído |
 
 Las peticiones **Crear torneo** y **Crear equipo** guardan automáticamente los
 identificadores devueltos por la API en `tournamentId` y `teamId`. Los demás
@@ -60,6 +62,25 @@ credenciales y tokens vacíos.
 Para probar la creación de un equipo propio, después de iniciar sesión con una
 cuenta participante ejecutá **03 - Equipos → Crear mi equipo como participante**
 mientras esa cuenta siga teniendo ese rol.
+
+## Probar propiedad de torneos y membresías
+
+Para `Mis torneos`, usá el token de la cuenta organizadora en la autorización
+de la petición. La carpeta **02 - Torneos** usa por defecto el token de
+administrador. Creá el torneo con el token del organizador para que quede
+vinculado a esa cuenta y consultalo con la misma sesión. Una segunda cuenta
+organizadora solo lo puede consultar si está abierto o en curso.
+
+En **07 - Solicitudes e invitaciones**, usá `teamActorToken` para cambiar de
+cuenta entre cada acción. Por ejemplo, enviá un pedido como participante,
+copiá su `data.id` a `membershipRequestId` y respondé como capitán del equipo.
+Para probar el flujo inverso, invitá como capitán y respondé como la cuenta
+invitada. En **08 - Notificaciones**, usá el token de la cuenta que recibió el
+aviso y tomá el identificador de su campo `requestId`.
+
+Para probar Vercel, duplicá el ambiente local, cambiá `baseUrl` a
+`https://proyecto-final-tup.vercel.app` e iniciá sesión con cuentas registradas
+en ese ambiente. [Guía de verificación](../docs/deployment-vercel.md#8-desplegar-y-validar).
 
 ## Orden recomendado para una demostración
 

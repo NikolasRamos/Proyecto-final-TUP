@@ -40,7 +40,7 @@ Crear `.env` en la raíz a partir de `.env.example`.
 | `DB_PASSWORD`   | Contraseña local                                | Debe reemplazarse       |
 | `DB_SSL`        | Habilitar SSL para una base administrada        | `false`                 |
 | `DB_POOL_MAX`   | Máximo de conexiones por instancia              | `5`                     |
-| `JWT_SECRET`    | Firma futura de tokens                          | Debe reemplazarse       |
+| `JWT_SECRET`    | Firma y validación de JWT                          | Debe reemplazarse       |
 | `VITE_API_URL`  | URL pública de la API usada al construir Docker | `http://localhost:3000` |
 
 Los valores de `DB_PASSWORD` y `JWT_SECRET` deben ser distintos en cada
@@ -132,7 +132,7 @@ npm run docker:up
 | `npm run dev:web`           | Iniciar Vite                                |
 | `npm run dev:api`           | Iniciar Express con Nodemon                 |
 | `npm start`                 | Iniciar Express sin Nodemon                 |
-| `npm run typecheck`         | Validar TypeScript sin compilar             |
+| `npm run typecheck`         | Validar los tipos del frontend             |
 | `npm run build`             | Validar tipos y generar `dist/frontend`     |
 | `npm run preview`           | Previsualizar la compilación del frontend   |
 | `npm test`                  | Ejecutar Vitest una vez                     |
@@ -144,8 +144,9 @@ npm run docker:up
 | `npm run docker:logs`       | Seguir los registros de todos los servicios |
 | `npm run db:migrate`        | Aplicar migraciones pendientes              |
 | `npm run db:migrate:status` | Consultar las migraciones aplicadas         |
-| `npm run db:seed`           | Cargar los datos de demostración            |
-| `npm run db:seed:undo`      | Retirar solamente los datos de demostración |
+| `npm run db:seed`           | Cargar ejemplos, roles y cuentas de prueba locales |
+| `npm run db:seed:demo`      | Cargar ejemplos y roles |
+| `npm run db:seed:undo`      | Revertir todos los seeders ejecutados en la base seleccionada |
 
 ## Verificación antes de integrar
 
@@ -157,13 +158,33 @@ npm test
 npm run build
 ```
 
-La secuencia comprueba estilo, comportamiento, tipos y compilación. Debe
-detenerse y corregirse el primer error antes de integrar la rama.
+La secuencia comprueba estilo, comportamiento, tipos del frontend y
+compilación. ESLint informa usos de CommonJS en los tres archivos iniciales
+de partidas fuera de las rutas activas. Al revisar otro cambio, compará el
+resultado con la rama de integración y comprobá los archivos modificados.
 
 Vitest, Testing Library y Supertest cubren las verificaciones automatizadas.
-Postman puede utilizarse para explorar manualmente la API y comprobar ejemplos
-del contrato; la colección exportable del grupo todavía debe incorporarse al
-repositorio.
+La [colección de Postman](../postman/README.md) cubre el contrato para las
+pruebas manuales de cada rol.
+
+## Pruebas manuales del prototipo
+
+Prepará la base local con `npm run db:migrate` y `npm run db:seed`. Las cuentas
+locales de ejemplo para administrador, organizador y dos participantes se
+detallan en [el seeder de cuentas de prueba](../backend/seeders/users.cjs).
+Usá dos perfiles del navegador o una ventana privada para mantener sesiones
+distintas.
+
+| Prueba | Resultado esperado |
+| --- | --- |
+| Entrar como invitado y abrir los catálogos | Puede consultar equipos y torneos abiertos o en curso. La web ofrece registro e inicio de sesión. |
+| Registrar una cuenta nueva y consultar la sesión | Aparece el rol participante. Una cuenta administradora puede asignarle el rol organizador mediante Postman. |
+| Crear un equipo como participante | La cuenta se vincula como capitana y el equipo aparece en **Mis equipos**. |
+| Pedir ingreso desde otra cuenta y luego aceptar como capitán | El capitán ve un aviso. Tras aceptar, la otra cuenta ve el equipo en **Mis equipos** y el aviso de respuesta. Marcá el aviso como leído y verificá que cambie su estado. |
+| Invitar a la misma cuenta desde un segundo equipo y rechazar desde su sesión | La cuenta invitada recibe el aviso. La solicitud queda rechazada y el segundo equipo queda fuera de sus membresías. |
+| Crear un torneo como organizador y abrirlo con otra cuenta organizadora | El creador lo ve en **Mis torneos** y puede editarlo. Si lo abre a inscripciones, la otra cuenta puede consultarlo y su edición devuelve `403`. |
+| Inscribir y retirar un equipo en un torneo abierto y descargar el reporte | La inscripción conserva el plantel elegido. El retiro aparece en el historial y el PDF refleja los equipos activos. |
+| Vincular un capitán a un equipo de ejemplo como administrador | El equipo aparece en **Mis equipos** de la cuenta elegida y queda habilitada para sus tareas de capitán. |
 
 ## PowerShell
 
