@@ -1,6 +1,10 @@
+import {
+  MIN_PARTICIPANTS_BY_FORMAT,
+  validateSwissRounds,
+} from "../../../shared/tournament-format-rules.ts";
 import TournamentFormatStrategy from "./TournamentFormatStrategy.js";
 
-export const SWISS_MIN_PARTICIPANTS = 4;
+export const SWISS_MIN_PARTICIPANTS = MIN_PARTICIPANTS_BY_FORMAT.swiss;
 
 export default class SwissTournamentStrategy extends TournamentFormatStrategy {
   constructor() {
@@ -28,21 +32,12 @@ export default class SwissTournamentStrategy extends TournamentFormatStrategy {
       return issues;
     }
 
-    if (
-      !Number.isInteger(tournament.swissRounds) ||
-      tournament.swissRounds < 1
-    ) {
-      issues.push({
-        path: ["swissRounds"],
-        message: "El torneo Suizo debe tener al menos una ronda",
-      });
-    } else if (tournament.swissRounds > tournament.maxParticipants - 1) {
-      issues.push({
-        path: ["swissRounds"],
-        message:
-          "Las rondas no pueden superar la cantidad de rivales distintos disponibles",
-      });
-    }
+    const roundsError = validateSwissRounds(
+      tournament.maxParticipants,
+      tournament.swissRounds,
+    );
+    if (roundsError)
+      issues.push({ path: ["swissRounds"], message: roundsError });
 
     return issues;
   }

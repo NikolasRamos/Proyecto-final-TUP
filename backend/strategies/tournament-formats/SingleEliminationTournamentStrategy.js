@@ -1,7 +1,11 @@
+import {
+  isPowerOfTwo,
+  MIN_PARTICIPANTS_BY_FORMAT,
+} from "../../../shared/tournament-format-rules.ts";
 import TournamentFormatStrategy from "./TournamentFormatStrategy.js";
-import { isPowerOfTwo } from "./tournament-format.utils.js";
 
-export const SINGLE_ELIMINATION_MIN_PARTICIPANTS = 2;
+export const SINGLE_ELIMINATION_MIN_PARTICIPANTS =
+  MIN_PARTICIPANTS_BY_FORMAT.single_elimination;
 export { isPowerOfTwo };
 
 export default class SingleEliminationTournamentStrategy extends TournamentFormatStrategy {

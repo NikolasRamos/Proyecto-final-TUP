@@ -1,5 +1,11 @@
 import { DataTypes, Model } from "sequelize";
 
+import {
+  MIN_GROUP_COUNT,
+  MIN_KNOCKOUT_SLOTS,
+  MIN_SWISS_ROUNDS,
+  MIN_TOURNAMENT_PARTICIPANTS,
+} from "../../shared/tournament-format-rules.ts";
 import database from "../config/database.js";
 
 export const TOURNAMENT_MODALITIES = Object.freeze([
@@ -66,7 +72,7 @@ Tournament.init(
       field: "max_participants",
       validate: {
         isInt: true,
-        min: 2,
+        min: MIN_TOURNAMENT_PARTICIPANTS,
       },
     },
     playoffSpots: {
@@ -76,7 +82,7 @@ Tournament.init(
       field: "playoff_spots",
       validate: {
         isInt: true,
-        min: 2,
+        min: MIN_KNOCKOUT_SLOTS,
       },
     },
     groupCount: {
@@ -86,7 +92,7 @@ Tournament.init(
       field: "group_count",
       validate: {
         isInt: true,
-        min: 2,
+        min: MIN_GROUP_COUNT,
       },
     },
     maxParticipantsPerGroup: {
@@ -106,7 +112,7 @@ Tournament.init(
       field: "swiss_rounds",
       validate: {
         isInt: true,
-        min: 1,
+        min: MIN_SWISS_ROUNDS,
       },
     },
     isTeamTournament: {

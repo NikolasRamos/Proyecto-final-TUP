@@ -1,6 +1,15 @@
 import { type FormEvent, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 
+import {
+  getGroupsPlayoffCapacity,
+  getMaxSwissRounds,
+  MIN_GROUP_COUNT,
+  MIN_KNOCKOUT_SLOTS,
+  MIN_SWISS_ROUNDS,
+  MIN_TOURNAMENT_PARTICIPANTS,
+} from "../../../shared/tournament-format-rules.ts";
+
 import { ApiError } from "../api/client";
 import {
   deleteTournament,
@@ -115,7 +124,7 @@ function toFormData(
     isLegacyGroupsPlayoff &&
     groupCount !== null &&
     maxParticipantsPerGroup !== null
-      ? groupCount * maxParticipantsPerGroup
+      ? getGroupsPlayoffCapacity(groupCount, maxParticipantsPerGroup)
       : tournament.maxParticipants;
   const swissRounds =
     prepareLegacySwissConfiguration &&
@@ -236,7 +245,7 @@ function getQualifiersPerGroup(tournament: Tournament) {
     playoffSpots === undefined ||
     groupCount === null ||
     groupCount === undefined ||
-    groupCount < 2 ||
+    groupCount < MIN_GROUP_COUNT ||
     playoffSpots % groupCount !== 0
   ) {
     return null;
@@ -375,7 +384,7 @@ export default function TournamentDetailPage() {
         Math.max(3, Math.floor(playoffSpots / groupCount) + 1);
       const maxParticipants =
         modality === "groups_playoff"
-          ? groupCount * maxParticipantsPerGroup
+          ? getGroupsPlayoffCapacity(groupCount, maxParticipantsPerGroup)
           : Math.max(current.maxParticipants, rule.minParticipants);
 
       return {
@@ -407,7 +416,10 @@ export default function TournamentDetailPage() {
       const next = { ...current, [field]: value };
       const maxParticipants =
         next.groupCount !== null && next.maxParticipantsPerGroup !== null
-          ? next.groupCount * next.maxParticipantsPerGroup
+          ? getGroupsPlayoffCapacity(
+              next.groupCount,
+              next.maxParticipantsPerGroup,
+            )
           : next.maxParticipants;
 
       return { ...next, maxParticipants };
@@ -621,11 +633,14 @@ export default function TournamentDetailPage() {
 
   const isGroupsPlayoff = form?.modality === "groups_playoff";
   const isSwiss = form?.modality === "swiss";
+  const maxSwissRounds = form
+    ? Math.max(MIN_SWISS_ROUNDS, getMaxSwissRounds(form.maxParticipants))
+    : MIN_SWISS_ROUNDS;
   const editableQualifiersPerGroup =
     isGroupsPlayoff &&
     form.playoffSpots !== null &&
     form.groupCount !== null &&
-    form.groupCount >= 2 &&
+    form.groupCount >= MIN_GROUP_COUNT &&
     form.playoffSpots % form.groupCount === 0
       ? form.playoffSpots / form.groupCount
       : null;
@@ -832,7 +847,7 @@ export default function TournamentDetailPage() {
                         <input
                           id="detail-playoff-spots"
                           type="number"
-                          min={2}
+                          min={MIN_KNOCKOUT_SLOTS}
                           step={1}
                           value={form.playoffSpots ?? ""}
                           onChange={(event) =>
@@ -860,7 +875,7 @@ export default function TournamentDetailPage() {
                         <input
                           id="detail-group-count"
                           type="number"
-                          min={2}
+                          min={MIN_GROUP_COUNT}
                           max={form.playoffSpots ?? undefined}
                           step={1}
                           value={form.groupCount ?? ""}
@@ -944,8 +959,8 @@ export default function TournamentDetailPage() {
                         <input
                           id="detail-swiss-rounds"
                           type="number"
-                          min={1}
-                          max={Math.max(1, form.maxParticipants - 1)}
+                          min={MIN_SWISS_ROUNDS}
+                          max={maxSwissRounds}
                           step={1}
                           value={form.swissRounds ?? ""}
                           onChange={(event) =>
@@ -995,7 +1010,7 @@ export default function TournamentDetailPage() {
                             maxParticipants: form.maxParticipants,
                             swissRounds: form.swissRounds,
                           }) ??
-                          `Máximo sin repetir rivales: ${Math.max(1, form.maxParticipants - 1)} rondas.`)}
+                          `Máximo sin repetir rivales: ${maxSwissRounds} rondas.`)}
                     </div>
                   </fieldset>
                 )}
@@ -1057,7 +1072,7 @@ export default function TournamentDetailPage() {
                   <input
                     id="detail-max-participants"
                     type="number"
-                    min={2}
+                    min={MIN_TOURNAMENT_PARTICIPANTS}
                     step={1}
                     value={form.maxParticipants}
                     onChange={(event) =>

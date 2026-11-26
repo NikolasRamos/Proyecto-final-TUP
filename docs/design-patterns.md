@@ -32,12 +32,20 @@ Facade, Observer, Strategy o Command.
   la extensión futura de su orden de entrada.
 - **Selección:** `tournament-format-strategy.registry.js` obtiene la estrategia
   mediante el identificador `modality`.
-- **Cliente:** React refleja las reglas de cupo para dar retroalimentación
-  inmediata, pero el backend conserva la validación autoritativa.
+- **Reglas compartidas:** las estrategias y los formularios de React reutilizan
+  [los mínimos de cupo y los cálculos de formato](../shared/tournament-format-rules.ts).
+  React da retroalimentación inmediata y el backend vuelve a validar cada petición
+  mediante la estrategia correspondiente.
 - **Extensión:** las seis modalidades poseen una estrategia concreta. Las
   estrategias podrán ampliarse al generar partidas sin modificar las demás.
-- **Costo actual:** las reglas se reflejan también en el frontend. Si se vuelven
-  configurables, será conveniente exponer metadatos desde la API.
+- **Alternativas consideradas:** mantener las dos implementaciones requería
+  actualizar ambas cada vez que cambiara una regla. Consultar las reglas a la
+  API en cada formulario agregaba una dependencia de red para reglas fijas.
+- **Decisión y costo:** compartir las reglas puras en TypeScript permite cambiar
+  los límites y cálculos en un solo lugar. El frontend y el backend deben incluir
+  el módulo al compilar o empaquetar. La API sigue informando todos los campos
+  inválidos y conserva la compatibilidad con torneos anteriores que tienen una
+  configuración incompleta.
 
 ## Decisiones evaluadas
 

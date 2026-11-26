@@ -9,6 +9,7 @@ COPY package.json package-lock.json ./
 RUN npm ci
 
 COPY frontend ./frontend
+COPY shared ./shared
 RUN npm run build
 
 FROM nginx:1.29-alpine

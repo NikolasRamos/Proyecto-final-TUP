@@ -19,6 +19,7 @@ ENV NODE_ENV=production
 RUN npm ci --omit=dev && npm cache clean --force
 
 COPY --chown=node:node backend ./backend
+COPY --chown=node:node shared ./shared
 
 USER node
 EXPOSE 3000
