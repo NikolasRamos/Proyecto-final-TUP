@@ -415,7 +415,8 @@ export default function TeamDetailPage() {
                   <dt>Capitán</dt>
                   <dd>
                     {state.team.captainAccountId
-                      ? `Usuario #${state.team.captainAccountId}`
+                      ? state.team.captainName ??
+                        `Usuario #${state.team.captainAccountId}`
                       : "Sin cuenta vinculada"}
                   </dd>
                 </div>

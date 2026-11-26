@@ -18,7 +18,7 @@ export default function TeamCard({ team }: TeamCardProps) {
       </p>
       <p className="resource-meta">
         {team.captainAccountId
-          ? `Capitán: usuario #${team.captainAccountId}`
+          ? `Capitán: ${team.captainName ?? `Usuario #${team.captainAccountId}`}`
           : "Capitán sin cuenta vinculada"}
       </p>
       <Link
