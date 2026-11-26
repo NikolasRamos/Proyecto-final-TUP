@@ -348,6 +348,30 @@
           "response": []
         },
         {
+          "name": "Asignar capitán",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"captainId\": {{captainId}}\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": "{{baseUrl}}/api/teams/{{teamId}}/captain",
+            "description": "Vincula una cuenta activa como capitana del equipo. Requiere el token de un administrador."
+          },
+          "response": []
+        },
+        {
           "name": "Eliminar equipo",
           "request": {
             "method": "DELETE",

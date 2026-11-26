@@ -2,6 +2,7 @@ import { Router } from "express";
 
 import {
   addTeamMemberHandler,
+  assignTeamCaptainHandler,
   createTeamHandler,
   deleteTeamHandler,
   getTeamByIdHandler,
@@ -10,7 +11,10 @@ import {
   removeTeamMemberHandler,
   updateTeamHandler,
 } from "../controllers/teams.controller.js";
-import { requireSession } from "../middlewares/auth.middleware.js";
+import {
+  requireAdministrator,
+  requireSession,
+} from "../middlewares/auth.middleware.js";
 import {
   loadCompetitionRole,
   requireCompetitionManager,
@@ -23,6 +27,12 @@ teamsRouter.get("/", listTeamsHandler);
 teamsRouter.get("/:id", getTeamByIdHandler);
 teamsRouter.post("/", requireTeamCreator, createTeamHandler);
 teamsRouter.put("/:id", requireCompetitionManager, updateTeamHandler);
+teamsRouter.patch(
+  "/:id/captain",
+  requireSession,
+  requireAdministrator,
+  assignTeamCaptainHandler,
+);
 teamsRouter.delete(
   "/:id",
   requireSession,

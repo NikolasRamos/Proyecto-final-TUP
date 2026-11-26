@@ -5,6 +5,7 @@ export interface Team {
   name: string;
   description: string | null;
   captainId: EntityId;
+  captainAccountId?: EntityId | null;
   createdAt: string;
   updatedAt: string;
 }

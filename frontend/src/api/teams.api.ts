@@ -6,7 +6,7 @@ import type {
   TeamResponse,
   UpdateTeamInput,
 } from "../types/team";
-import { apiDelete, apiGet, apiPost, apiPut } from "./client";
+import { apiDelete, apiGet, apiPatch, apiPost, apiPut } from "./client";
 
 export interface ListTeamsParams {
   search?: string;
@@ -53,6 +53,18 @@ export function updateTeam(
 
 export function deleteTeam(teamId: number, token: string) {
   return apiDelete<{ message: string }>(`/api/teams/${teamId}`, token);
+}
+
+export function assignTeamCaptain(
+  teamId: number,
+  captainId: number,
+  token: string,
+) {
+  return apiPatch<TeamResponse, { captainId: number }>(
+    `/api/teams/${teamId}/captain`,
+    { captainId },
+    token,
+  );
 }
 
 export function listTeamMembers(teamId: number, token: string) {

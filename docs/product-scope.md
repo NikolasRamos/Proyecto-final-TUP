@@ -25,6 +25,7 @@ equipos. El borrado de equipos corresponde a su capitán o a un administrador.
 ### Administrador
 
 - Gestionar usuarios y permisos.
+- Asignar una cuenta activa como capitana de un equipo existente.
 - Administrar torneos, equipos y categorías.
 - Consultar estadísticas generales.
 - Resolver situaciones que requieran privilegios globales.

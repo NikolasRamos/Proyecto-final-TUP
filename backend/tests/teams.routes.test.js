@@ -5,8 +5,10 @@ import request from "supertest";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import app from "../app.js";
+import Role from "../models/role.js";
 import {
   addTeamMember,
+  assignTeamCaptain,
   createTeam,
   deleteTeam,
   getTeamById,
@@ -20,6 +22,7 @@ const authenticatedRequest = useAuthenticatedRequests(app);
 
 vi.mock("../services/teams.service.js", () => ({
   addTeamMember: vi.fn(),
+  assignTeamCaptain: vi.fn(),
   createTeam: vi.fn(),
   deleteTeam: vi.fn(),
   getTeamById: vi.fn(),
@@ -34,6 +37,31 @@ const validPayload = {
   description: "Equipo participante de la liga local",
   captainId: nextTestId(),
 };
+
+describe("PATCH /api/teams/:id/captain", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("deniega la asignación a un organizador", async () => {
+    await authenticatedRequest()
+      .patch("/api/teams/201/captain")
+      .send({ captainId: 7 })
+      .expect(403);
+    expect(assignTeamCaptain).not.toHaveBeenCalled();
+  });
+
+  it("asigna el capitán indicado por un administrador", async () => {
+    Role.findByPk.mockResolvedValueOnce({ nombre: "administrador" });
+    const team = { id: 201, captainId: 7, captainAccountId: 7 };
+    assignTeamCaptain.mockResolvedValue({ outcome: "assigned", team });
+
+    const response = await authenticatedRequest()
+      .patch("/api/teams/201/captain")
+      .send({ captainId: 7 })
+      .expect(200);
+    expect(assignTeamCaptain).toHaveBeenCalledWith(201, 7);
+    expect(response.body.data).toEqual(team);
+  });
+});
 
 describe("GET /api/teams", () => {
   beforeEach(() => {

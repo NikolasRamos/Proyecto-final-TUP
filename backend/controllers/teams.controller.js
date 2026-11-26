@@ -1,5 +1,6 @@
 import {
   addTeamMemberSchema,
+  assignTeamCaptainSchema,
   createOwnTeamSchema,
   createTeamSchema,
   listTeamsQuerySchema,
@@ -9,6 +10,7 @@ import {
 } from "../schemas/team.schema.js";
 import {
   addTeamMember,
+  assignTeamCaptain,
   createTeam,
   deleteTeam,
   getTeamById,
@@ -99,6 +101,11 @@ export async function createTeamHandler(request, response) {
       ? { ...validation.data, captainId: response.locals.authUser.idUsuario }
       : validation.data;
     const team = await createTeam(teamData);
+    if (!team) {
+      return response
+        .status(404)
+        .json({ message: "No se encontró una cuenta activa para el capitán" });
+    }
 
     return response.status(201).json({
       message: "Equipo creado correctamente",
@@ -108,6 +115,36 @@ export async function createTeamHandler(request, response) {
     return response.status(500).json({
       message: "No se pudo crear el equipo",
     });
+  }
+}
+
+export async function assignTeamCaptainHandler(request, response) {
+  const id = teamIdSchema.safeParse(request.params.id);
+  const payload = assignTeamCaptainSchema.safeParse(request.body);
+  if (!id.success || !payload.success) {
+    return response
+      .status(400)
+      .json({ message: "Indicá un equipo y una cuenta válidos" });
+  }
+
+  try {
+    const result = await assignTeamCaptain(id.data, payload.data.captainId);
+    if (result.outcome === "team_not_found") {
+      return response.status(404).json({ message: "Equipo no encontrado" });
+    }
+    if (result.outcome === "captain_not_found") {
+      return response
+        .status(404)
+        .json({ message: "No se encontró una cuenta activa para el capitán" });
+    }
+
+    return response
+      .status(200)
+      .json({ message: "Capitán asignado correctamente", data: result.team });
+  } catch {
+    return response
+      .status(500)
+      .json({ message: "No se pudo asignar el capitán" });
   }
 }
 

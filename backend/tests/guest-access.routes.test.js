@@ -19,6 +19,7 @@ const managementRoutes = [
   ["post", "/api/tournaments/1/registrations"],
   ["delete", "/api/tournaments/1/registrations/1"],
   ["put", "/api/teams/1"],
+  ["patch", "/api/teams/1/captain"],
   ["get", "/api/teams/1/members"],
   ["post", "/api/teams/1/members"],
   ["delete", "/api/teams/1/members/1"],
@@ -107,13 +108,13 @@ describe("Acceso de participantes", () => {
   });
 
   it("crea el equipo y registra al participante como primer integrante", async () => {
-    const transaction = {};
+    const transaction = { LOCK: { SHARE: "SHARE" } };
     vi.spyOn(database, "transaction").mockImplementation((callback) =>
       callback(transaction),
     );
     const create = vi
       .spyOn(Team, "create")
-      .mockResolvedValue({ id: 42, captainId: 1 });
+      .mockResolvedValue({ id: 42, captainId: 1, captainAccountId: 1 });
     const addMember = vi
       .spyOn(TeamMember, "create")
       .mockResolvedValue({ id: 53 });
@@ -125,7 +126,7 @@ describe("Acceso de participantes", () => {
 
     expect(response.body.data.captainId).toBe(1);
     expect(create).toHaveBeenCalledWith(
-      { name: "Los Halcones", captainId: 1 },
+      { name: "Los Halcones", captainId: 1, captainAccountId: 1 },
       { transaction },
     );
     expect(addMember).toHaveBeenCalledWith(

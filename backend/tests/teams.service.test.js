@@ -5,8 +5,10 @@ import database from "../config/database.js";
 import Team from "../models/Team.js";
 import TeamMember from "../models/TeamMember.js";
 import TournamentRegistration from "../models/TournamentRegistration.js";
+import User from "../models/user.js";
 import {
   addTeamMember,
+  assignTeamCaptain,
   createTeam,
   deleteTeam,
   getTeamById,
@@ -18,7 +20,9 @@ import {
 
 vi.mock("../config/database.js", () => ({
   default: {
-    transaction: vi.fn(async (callback) => callback("transaction")),
+    transaction: vi.fn(async (callback) =>
+      callback({ LOCK: { SHARE: "SHARE", UPDATE: "UPDATE" } }),
+    ),
   },
 }));
 
@@ -35,8 +39,11 @@ vi.mock("../models/TeamMember.js", () => ({
     create: vi.fn(),
     findAll: vi.fn(),
     findOne: vi.fn(),
+    findOrCreate: vi.fn(),
   },
 }));
+
+vi.mock("../models/user.js", () => ({ default: { findByPk: vi.fn() } }));
 
 vi.mock("../models/TournamentRegistration.js", () => ({
   default: {
@@ -52,18 +59,56 @@ describe("teams service", () => {
   it("delega la creacion al modelo", async () => {
     const teamData = { name: "Los Halcones", captainId: 1 };
     const createdTeam = { id: 201, ...teamData };
+    User.findByPk.mockResolvedValue({ idUsuario: 1 });
     Team.create.mockResolvedValue(createdTeam);
     TeamMember.create.mockResolvedValue({ id: 401 });
 
     await expect(createTeam(teamData)).resolves.toBe(createdTeam);
     expect(database.transaction).toHaveBeenCalledOnce();
-    expect(Team.create).toHaveBeenCalledWith(teamData, {
-      transaction: "transaction",
-    });
+    expect(Team.create).toHaveBeenCalledWith(
+      { ...teamData, captainAccountId: 1 },
+      { transaction: expect.any(Object) },
+    );
     expect(TeamMember.create).toHaveBeenCalledWith(
       { teamId: 201, userId: 1 },
-      { transaction: "transaction" },
+      { transaction: expect.any(Object) },
     );
+  });
+
+  it("vincula al capitán y asegura su membresía en la misma transacción", async () => {
+    const team = { update: vi.fn() };
+    Team.findByPk.mockResolvedValue(team);
+    User.findByPk.mockResolvedValue({ idUsuario: 7 });
+
+    await expect(assignTeamCaptain(201, 7)).resolves.toEqual({
+      outcome: "assigned",
+      team,
+    });
+    const { transaction } = Team.findByPk.mock.calls[0][1];
+    expect(Team.findByPk).toHaveBeenCalledWith(201, {
+      transaction,
+      lock: "UPDATE",
+    });
+    expect(TeamMember.findOrCreate).toHaveBeenCalledWith({
+      where: { teamId: 201, userId: 7 },
+      transaction,
+    });
+    expect(team.update).toHaveBeenCalledWith(
+      { captainId: 7, captainAccountId: 7 },
+      { transaction },
+    );
+  });
+
+  it("rechaza la asignación si la cuenta no está activa", async () => {
+    const team = { update: vi.fn() };
+    Team.findByPk.mockResolvedValue(team);
+    User.findByPk.mockResolvedValue(null);
+
+    await expect(assignTeamCaptain(201, 7)).resolves.toEqual({
+      outcome: "captain_not_found",
+    });
+    expect(TeamMember.findOrCreate).not.toHaveBeenCalled();
+    expect(team.update).not.toHaveBeenCalled();
   });
 
   it("lista los equipos mas recientes primero", async () => {
@@ -129,6 +174,7 @@ describe("teams service", () => {
   ])("elimina un equipo con permiso del actor $role", async (actor) => {
     const team = {
       captainId: 1,
+      captainAccountId: 1,
       destroy: vi.fn().mockResolvedValue(undefined),
     };
     Team.findByPk.mockResolvedValue(team);
@@ -137,9 +183,13 @@ describe("teams service", () => {
     await expect(deleteTeam(201, actor)).resolves.toEqual({
       outcome: "deleted",
     });
-    expect(Team.findByPk).toHaveBeenCalledWith(201);
+    expect(Team.findByPk).toHaveBeenCalledWith(201, {
+      transaction: expect.any(Object),
+      lock: "UPDATE",
+    });
     expect(TournamentRegistration.count).toHaveBeenCalledWith({
       where: { teamId: 201 },
+      transaction: expect.any(Object),
     });
     expect(team.destroy).toHaveBeenCalledOnce();
   });
@@ -147,7 +197,7 @@ describe("teams service", () => {
   it.each(["organizador", "participante"])(
     "deniega el borrado si el %s no es capitán",
     async (role) => {
-      const team = { captainId: 1, destroy: vi.fn() };
+      const team = { captainId: 1, captainAccountId: 1, destroy: vi.fn() };
       Team.findByPk.mockResolvedValue(team);
 
       await expect(deleteTeam(201, { userId: 2, role })).resolves.toEqual({
@@ -157,6 +207,16 @@ describe("teams service", () => {
       expect(team.destroy).not.toHaveBeenCalled();
     },
   );
+
+  it("un ID de capitán de demostración no concede permiso de borrado", async () => {
+    const team = { captainId: 1, captainAccountId: null, destroy: vi.fn() };
+    Team.findByPk.mockResolvedValue(team);
+
+    await expect(
+      deleteTeam(201, { userId: 1, role: "participante" }),
+    ).resolves.toEqual({ outcome: "forbidden" });
+    expect(team.destroy).not.toHaveBeenCalled();
+  });
 
   it("informa cuando el equipo a eliminar no existe", async () => {
     Team.findByPk.mockResolvedValue(null);
@@ -172,6 +232,7 @@ describe("teams service", () => {
   it("no elimina un equipo que tiene historial de inscripciones", async () => {
     const team = {
       captainId: 1,
+      captainAccountId: 1,
       destroy: vi.fn(),
     };
     Team.findByPk.mockResolvedValue(team);
@@ -190,6 +251,7 @@ describe("teams service", () => {
     error.name = "SequelizeForeignKeyConstraintError";
     const team = {
       captainId: 1,
+      captainAccountId: 1,
       destroy: vi.fn().mockRejectedValue(error),
     };
     Team.findByPk.mockResolvedValue(team);
@@ -323,6 +385,7 @@ describe("teams service", () => {
     });
     expect(TeamMember.findOne).toHaveBeenCalledWith({
       where: { teamId: 201, userId: 2 },
+      transaction: expect.any(Object),
     });
     expect(membership.destroy).toHaveBeenCalledOnce();
   });

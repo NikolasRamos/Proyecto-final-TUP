@@ -281,8 +281,9 @@ cuerpo incluye `captainId`:
 }
 ```
 
-El identificador se genera automáticamente. El capitán se registra como primer
-integrante dentro de la misma transacción.
+El identificador se genera automáticamente. El capitán debe tener una cuenta
+activa. Su cuenta se vincula y se registra como primer integrante dentro de la
+misma transacción. Si la cuenta indicada no está activa, se devuelve `404`.
 
 ### Actualizar
 
@@ -296,6 +297,18 @@ integrante dentro de la misma transacción.
 ```
 
 No permite cambiar el identificador ni el capitán.
+
+### Asignar capitán
+
+`PATCH /api/teams/:id/captain` requiere un token de administrador. Recibe
+`{"captainId": 7}` con el ID de una cuenta activa. Si la asignación se completa,
+devuelve `200` con los datos del equipo y garantiza que la cuenta figure como
+integrante. Repetir la asignación conserva una sola membresía.
+
+La migración `014` agrega `captainAccountId` a las respuestas de equipos. El
+campo queda inicialmente vacío para los equipos preexistentes. El administrador
+puede vincularlos desde el detalle del equipo. La API usa el vínculo para
+comprobar el permiso de borrado del capitán.
 
 ### Eliminar
 
@@ -444,8 +457,8 @@ con la cuenta administradora para habilitar otras cuentas del equipo.
 - La edición por propiedad de un equipo y las solicitudes de ingreso están
   pendientes. La creación de un equipo por un participante usa su cuenta activa
   como capitán.
-- La validación de los identificadores de usuario indicados manualmente por
-  organizadores o administradores sigue pendiente.
+- La validación de los identificadores de organizador e integrante indicados
+  manualmente sigue pendiente.
 - Las rutas de partidas y resultados aún no están implementadas.
 - Todavía no existe una especificación OpenAPI; este documento debe verificarse
   contra las pruebas y el comportamiento real.

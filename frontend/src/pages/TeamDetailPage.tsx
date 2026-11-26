@@ -8,6 +8,7 @@ import {
   useAuthSession,
 } from "../auth/auth-session";
 import ResourceListSkeleton from "../components/ResourceListSkeleton";
+import TeamCaptainForm from "../components/TeamCaptainForm";
 import type { Team, UpdateTeamInput } from "../types/team";
 
 interface TeamFormData {
@@ -52,6 +53,10 @@ function getRequestErrorMessage(error: unknown) {
 export default function TeamDetailPage() {
   const { session } = useAuthSession();
   const editToken = getCompetitionManagerToken(session);
+  const adminToken =
+    session.status === "signedIn" && session.user.role === "administrador"
+      ? session.token
+      : undefined;
   const { id = "" } = useParams();
   const navigate = useNavigate();
   const teamId = Number(id);
@@ -69,6 +74,9 @@ export default function TeamDetailPage() {
     number | null
   >(null);
   const [notice, setNotice] = useState<Notice>(null);
+  const [captainFormTeamId, setCaptainFormTeamId] = useState<number | null>(
+    null,
+  );
   const state: DetailState =
     result.requestKey === requestKey
       ? result
@@ -77,7 +85,7 @@ export default function TeamDetailPage() {
     state.status === "success" &&
     session.status === "signedIn" &&
     (session.user.role === "administrador" ||
-      session.user.idUsuario === state.team.captainId)
+      session.user.idUsuario === state.team.captainAccountId)
       ? session.token
       : undefined;
 
@@ -227,33 +235,48 @@ export default function TeamDetailPage() {
               <span className="eyebrow">Equipo #{state.team.id}</span>
               <h1>{state.team.name}</h1>
             </div>
-            {(editToken || deleteToken) && !isEditing && (
-              <div className="detail-actions">
-                {editToken && (
-                  <button
-                    className="secondary-button"
-                    type="button"
-                    onClick={() => {
-                      setForm(toFormData(state.team));
-                      setNotice(null);
-                      setDeleteConfirmationId(null);
-                      setIsEditing(true);
-                    }}
-                  >
-                    Editar equipo
-                  </button>
-                )}
-                {deleteToken && (
-                  <button
-                    className="danger-button"
-                    type="button"
-                    onClick={() => setDeleteConfirmationId(teamId)}
-                  >
-                    Eliminar equipo
-                  </button>
-                )}
-              </div>
-            )}
+            {(editToken || deleteToken) &&
+              !isEditing &&
+              captainFormTeamId !== teamId && (
+                <div className="detail-actions">
+                  {editToken && (
+                    <button
+                      className="secondary-button"
+                      type="button"
+                      onClick={() => {
+                        setForm(toFormData(state.team));
+                        setNotice(null);
+                        setDeleteConfirmationId(null);
+                        setIsEditing(true);
+                      }}
+                    >
+                      Editar equipo
+                    </button>
+                  )}
+                  {deleteToken && (
+                    <button
+                      className="danger-button"
+                      type="button"
+                      onClick={() => setDeleteConfirmationId(teamId)}
+                    >
+                      Eliminar equipo
+                    </button>
+                  )}
+                  {adminToken && (
+                    <button
+                      className="secondary-button"
+                      type="button"
+                      onClick={() => {
+                        setNotice(null);
+                        setDeleteConfirmationId(null);
+                        setCaptainFormTeamId(teamId);
+                      }}
+                    >
+                      Asignar capitán
+                    </button>
+                  )}
+                </div>
+              )}
           </header>
 
           {notice && (
@@ -272,6 +295,24 @@ export default function TeamDetailPage() {
                   </ul>
                 )}
             </div>
+          )}
+
+          {adminToken && captainFormTeamId === teamId && (
+            <TeamCaptainForm
+              teamId={teamId}
+              token={adminToken}
+              onCancel={() => setCaptainFormTeamId(null)}
+              onAssigned={(response) => {
+                setResult({
+                  status: "success",
+                  requestKey,
+                  team: response.data,
+                });
+                setForm(toFormData(response.data));
+                setNotice({ type: "success", message: response.message });
+                setCaptainFormTeamId(null);
+              }}
+            />
           )}
 
           {deleteToken && deleteConfirmationId === teamId && (
@@ -371,7 +412,11 @@ export default function TeamDetailPage() {
               <dl className="detail-grid">
                 <div>
                   <dt>Capitán</dt>
-                  <dd>Usuario #{state.team.captainId}</dd>
+                  <dd>
+                    {state.team.captainAccountId
+                      ? `Usuario #${state.team.captainAccountId}`
+                      : "Sin cuenta vinculada"}
+                  </dd>
                 </div>
                 <div>
                   <dt>Creado</dt>

@@ -16,11 +16,28 @@ const profile = {
   role: "participante",
 };
 
-function renderAsParticipant(path: string) {
+function renderSession(
+  path: string,
+  role = "participante",
+  captainAccountId: number | null = profile.idUsuario,
+) {
   window.sessionStorage.setItem("gestion-torneos.session", token);
   const fetchMock = vi.fn<typeof fetch>(async (input, options) => {
     const endpoint = new URL(String(input), "http://localhost:3000").pathname;
-    if (endpoint === "/api/auth/me") return Response.json({ data: profile });
+    if (endpoint === "/api/auth/me")
+      return Response.json({ data: { ...profile, role } });
+    if (endpoint === "/api/users") {
+      return Response.json({
+        data: [
+          {
+            idUsuario: 9,
+            nombre: "Nueva capitana",
+            email: "capitana@example.test",
+          },
+        ],
+        totalPages: 1,
+      });
+    }
     if (endpoint === "/api/teams" && options?.method === "POST") {
       return Response.json(
         {
@@ -40,6 +57,21 @@ function renderAsParticipant(path: string) {
           name: "Equipo propio",
           description: null,
           captainId: profile.idUsuario,
+          captainAccountId,
+          createdAt: "2026-11-26T12:00:00Z",
+          updatedAt: "2026-11-26T12:00:00Z",
+        },
+      });
+    }
+    if (endpoint === "/api/teams/42/captain" && options?.method === "PATCH") {
+      return Response.json({
+        message: "Capitán asignado correctamente",
+        data: {
+          id: 42,
+          name: "Equipo propio",
+          description: null,
+          captainId: 9,
+          captainAccountId: 9,
           createdAt: "2026-11-26T12:00:00Z",
           updatedAt: "2026-11-26T12:00:00Z",
         },
@@ -67,7 +99,7 @@ describe("Permisos del participante en React", () => {
   });
 
   it("ofrece el catálogo público y un acceso para crear equipos", async () => {
-    renderAsParticipant("/");
+    renderSession("/");
 
     expect(
       await screen.findByRole("link", { name: "Crear equipo" }),
@@ -84,7 +116,7 @@ describe("Permisos del participante en React", () => {
   });
 
   it("redirige una URL de creación de torneos hacia el listado vigente", async () => {
-    renderAsParticipant("/tournaments/new");
+    renderSession("/tournaments/new");
 
     expect(
       await screen.findByRole("heading", { name: "Torneos vigentes" }),
@@ -95,7 +127,7 @@ describe("Permisos del participante en React", () => {
   });
 
   it("envía la sesión y los datos del equipo sin pedir el ID del capitán", async () => {
-    const fetchMock = renderAsParticipant("/teams/new");
+    const fetchMock = renderSession("/teams/new");
     const user = userEvent.setup();
 
     await user.type(
@@ -120,7 +152,7 @@ describe("Permisos del participante en React", () => {
   });
 
   it("permite al participante confirmar el borrado del equipo que capitanea", async () => {
-    const fetchMock = renderAsParticipant("/teams/42");
+    const fetchMock = renderSession("/teams/42");
     const user = userEvent.setup();
 
     await user.click(
@@ -136,6 +168,42 @@ describe("Permisos del participante en React", () => {
     );
     expect(String(request?.[0])).toMatch(/\/api\/teams\/42$/);
     expect(new Headers(request?.[1]?.headers).get("Authorization")).toBe(
+      `Bearer ${token}`,
+    );
+  });
+
+  it("un capitán de demostración no puede borrar por coincidencia de ID", async () => {
+    renderSession("/teams/42", "participante", null);
+
+    expect(await screen.findByText("Sin cuenta vinculada")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Eliminar equipo" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("un administrador puede elegir la cuenta y ver el cambio de capitán", async () => {
+    const fetchMock = renderSession("/teams/42", "administrador", null);
+    const user = userEvent.setup();
+
+    await user.click(
+      await screen.findByRole("button", { name: "Asignar capitán" }),
+    );
+    const selector = await screen.findByLabelText("Cuenta para capitán");
+    await user.selectOptions(
+      selector,
+      screen.getByRole("option", { name: /Nueva capitana/ }),
+    );
+    await user.click(screen.getByRole("button", { name: "Guardar capitán" }));
+
+    expect(
+      await screen.findByText("Capitán asignado correctamente"),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Usuario #9")).toBeInTheDocument();
+    const patch = fetchMock.mock.calls.find(
+      ([, options]) => options?.method === "PATCH",
+    );
+    expect(patch?.[1]?.body).toBe(JSON.stringify({ captainId: 9 }));
+    expect(new Headers(patch?.[1]?.headers).get("Authorization")).toBe(
       `Bearer ${token}`,
     );
   });

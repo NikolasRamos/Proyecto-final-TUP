@@ -35,6 +35,7 @@ const team = {
   name: "Los Halcones",
   description: "Equipo de prueba",
   captainId: 1,
+  captainAccountId: 1,
   createdAt: "2026-10-13T12:00:00.000Z",
   updatedAt: "2026-10-13T12:00:00.000Z",
 };
@@ -231,7 +232,9 @@ describe("pantallas principales de equipos", () => {
   });
 
   it("oculta el botón de borrar un equipo ajeno al organizador", async () => {
-    vi.mocked(getTeam).mockResolvedValue({ data: { ...team, captainId: 2 } });
+    vi.mocked(getTeam).mockResolvedValue({
+      data: { ...team, captainId: 2, captainAccountId: 2 },
+    });
     renderPage("/teams/201");
 
     expect(

@@ -252,12 +252,14 @@ async function upsertTeam(queryInterface, team, transaction) {
   );
 
   if (teamId) {
-    await queryInterface.sequelize.query(
+    const [updated] = await queryInterface.sequelize.query(
       `UPDATE teams
        SET description = :description, captain_id = :captainId, updated_at = NOW()
-       WHERE id = :teamId`,
+       WHERE id = :teamId AND captain_account_id IS NULL
+       RETURNING id`,
       { replacements: { ...team, teamId }, transaction },
     );
+    if (updated.length === 0) return teamId;
   } else {
     const [rows] = await queryInterface.sequelize.query(
       `INSERT INTO teams (name, description, captain_id, created_at, updated_at)
