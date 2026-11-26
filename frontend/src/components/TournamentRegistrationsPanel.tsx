@@ -339,7 +339,7 @@ export default function TournamentRegistrationsPanel({
                         }
                       />
                       <span>
-                        Usuario #{member.userId}
+                        {member.nombre ?? `Usuario #${member.userId}`}
                         {member.isCaptain ? " · Capitán" : ""}
                       </span>
                     </label>
