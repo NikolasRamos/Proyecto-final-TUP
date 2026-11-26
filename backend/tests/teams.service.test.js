@@ -373,12 +373,14 @@ describe("teams service", () => {
         {
           id: 301,
           userId: 1,
+          nombre: null,
           isCaptain: true,
           joinedAt,
         },
         {
           id: 302,
           userId: 2,
+          nombre: null,
           isCaptain: false,
           joinedAt,
         },
@@ -391,6 +393,21 @@ describe("teams service", () => {
       attributes: ["id", "userId", "createdAt"],
       where: { teamId: 201 },
       order: [["createdAt", "ASC"]],
+      raw: true,
+    });
+  });
+
+  it("incluye el nombre de los integrantes del equipo", async () => {
+    Team.findByPk.mockResolvedValue({ id: 201, captainId: 1 });
+    TeamMember.findAll.mockResolvedValue([{ id: 301, userId: 1, createdAt: new Date() }]);
+    User.findAll.mockResolvedValue([{ idUsuario: 1, nombre: "Niko" }]);
+
+    const result = await listTeamMembers(201);
+
+    expect(result.members[0].nombre).toBe("Niko");
+    expect(User.findAll).toHaveBeenCalledWith({
+      attributes: ["idUsuario", "nombre"],
+      where: { idUsuario: { [Op.in]: [1] } },
       raw: true,
     });
   });

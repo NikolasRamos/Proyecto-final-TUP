@@ -208,11 +208,16 @@ export async function listTeamMembers(teamId) {
     raw: true,
   });
 
+  const namesById = await getUserNamesByIds(
+    memberships.map((membership) => membership.userId),
+  );
+
   return {
     outcome: "found",
     members: memberships.map((membership) => ({
       id: membership.id,
       userId: membership.userId,
+      nombre: namesById.get(membership.userId) ?? null,
       isCaptain: membership.userId === team.captainId,
       joinedAt: membership.createdAt,
     })),
