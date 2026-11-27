@@ -7,6 +7,7 @@ import TeamMember from "../models/TeamMember.js";
 import Tournament from "../models/Tournament.js";
 import TournamentRegistration from "../models/TournamentRegistration.js";
 import TournamentRegistrationMember from "../models/TournamentRegistrationMember.js";
+import User from "../models/user.js";
 import {
   listTournamentRegistrations,
   registerTeamInTournament,
@@ -61,6 +62,10 @@ vi.mock("../models/TournamentRegistrationMember.js", () => ({
   },
 }));
 
+vi.mock("../models/user.js", () => ({
+  default: { findAll: vi.fn() },
+}));
+
 describe("registrations service", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -68,6 +73,7 @@ describe("registrations service", () => {
     TournamentRegistrationMember.bulkCreate.mockResolvedValue([]);
     TournamentRegistrationMember.destroy.mockResolvedValue(0);
     TournamentRegistrationMember.findAll.mockResolvedValue([]);
+    User.findAll.mockResolvedValue([]);
   });
 
   it("inscribe un equipo cuando el torneo esta abierto y tiene cupo", async () => {
@@ -368,6 +374,10 @@ describe("registrations service", () => {
       { registrationId: 301, userId: 1 },
       { registrationId: 301, userId: 2 },
     ]);
+    User.findAll.mockResolvedValue([
+      { idUsuario: 1, nombre: "Niko" },
+      { idUsuario: 2, nombre: "Ana" },
+    ]);
 
     await expect(
       listTournamentRegistrations(101, {
@@ -385,6 +395,7 @@ describe("registrations service", () => {
           registeredAt,
           updatedAt,
           memberIds: [1, 2],
+          memberNames: ["Niko", "Ana"],
           team: { id: 201, name: "Los Halcones" },
         },
       ],
@@ -409,6 +420,11 @@ describe("registrations service", () => {
         ["registrationId", "ASC"],
         ["createdAt", "ASC"],
       ],
+      raw: true,
+    });
+    expect(User.findAll).toHaveBeenCalledWith({
+      attributes: ["idUsuario", "nombre"],
+      where: { idUsuario: { [Op.in]: [1, 2] } },
       raw: true,
     });
   });
