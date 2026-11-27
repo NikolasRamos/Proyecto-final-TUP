@@ -163,6 +163,7 @@ export async function getTeamById(teamId) {
   if (!team) return team;
 
   await attachCaptainNames([team]);
+  await attachMemberNames([team]);
   return team;
 }
 

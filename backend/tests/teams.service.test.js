@@ -208,6 +208,23 @@ describe("teams service", () => {
     expect(Team.findByPk).toHaveBeenCalledWith(teamId);
   });
 
+  it("incluye los nombres de los integrantes en el detalle", async () => {
+    const team = { id: 201 };
+    Team.findByPk.mockResolvedValue(team);
+    TeamMember.findAll.mockResolvedValue([
+      { teamId: 201, userId: 7 },
+      { teamId: 201, userId: 8 },
+    ]);
+    User.findAll.mockResolvedValue([
+      { idUsuario: 7, nombre: "Niko" },
+      { idUsuario: 8, nombre: "Ana" },
+    ]);
+
+    const result = await getTeamById(201);
+
+    expect(result.memberNames).toEqual(["Niko", "Ana"]);
+  });
+
   it("actualiza un equipo existente", async () => {
     const teamId = 201;
     const teamData = { name: "Halcones renovados" };
