@@ -5,7 +5,11 @@ import Team from "../models/Team.js";
 import TeamMember from "../models/TeamMember.js";
 import TeamMembershipRequest from "../models/TeamMembershipRequest.js";
 import User from "../models/user.js";
-import { linkTeamMember, lockTeam } from "./teams.service.js";
+import {
+  attachMemberNames,
+  linkTeamMember,
+  lockTeam,
+} from "./teams.service.js";
 
 function findActiveAccount(userId, transaction) {
   return User.findByPk(userId, {
@@ -166,8 +170,8 @@ export function listMembershipRequests(
   );
 }
 
-export function listMyTeams(userId, { page, limit }) {
-  return paginate(
+export async function listMyTeams(userId, { page, limit }) {
+  const result = await paginate(
     `
     SELECT t.id, t.name, t.description, t.captain_id AS "captainId",
       t.captain_account_id AS "captainAccountId", u.nombre AS "captainName",
@@ -181,4 +185,7 @@ export function listMyTeams(userId, { page, limit }) {
     limit,
     "name ASC, id ASC",
   );
+
+  await attachMemberNames(result.data);
+  return result;
 }

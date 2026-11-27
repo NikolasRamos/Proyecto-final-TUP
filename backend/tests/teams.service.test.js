@@ -57,6 +57,7 @@ describe("teams service", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     User.findAll.mockResolvedValue([]);
+    TeamMember.findAll.mockResolvedValue([]);
   });
 
   it("delega la creacion al modelo", async () => {
@@ -168,6 +169,34 @@ describe("teams service", () => {
       raw: true,
     });
     expect(result.rows[0].captainName).toBe("Niko");
+  });
+
+  it("incluye los nombres de los integrantes en el listado", async () => {
+    Team.findAndCountAll.mockResolvedValue({
+      count: 1,
+      rows: [{ id: 201, captainAccountId: 7 }],
+    });
+    TeamMember.findAll.mockResolvedValue([
+      { teamId: 201, userId: 7 },
+      { teamId: 201, userId: 8 },
+    ]);
+    User.findAll.mockResolvedValue([
+      { idUsuario: 7, nombre: "Niko" },
+      { idUsuario: 8, nombre: "Ana" },
+    ]);
+
+    const result = await listTeams({ page: 1, limit: 10 });
+
+    expect(TeamMember.findAll).toHaveBeenCalledWith({
+      attributes: ["teamId", "userId"],
+      where: { teamId: { [Op.in]: [201] } },
+      order: [
+        ["createdAt", "ASC"],
+        ["id", "ASC"],
+      ],
+      raw: true,
+    });
+    expect(result.rows[0].memberNames).toEqual(["Niko", "Ana"]);
   });
 
   it("busca un equipo por su clave primaria", async () => {

@@ -1,15 +1,27 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import database from "../config/database.js";
+import TeamMember from "../models/TeamMember.js";
+import User from "../models/user.js";
 import { listMyTeams } from "../services/team-membership-requests.service.js";
 
 vi.mock("../config/database.js", () => ({
   default: { query: vi.fn() },
 }));
 
+vi.mock("../models/TeamMember.js", () => ({
+  default: { findAll: vi.fn() },
+}));
+
+vi.mock("../models/user.js", () => ({
+  default: { findAll: vi.fn() },
+}));
+
 describe("team membership requests service", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    TeamMember.findAll.mockResolvedValue([]);
+    User.findAll.mockResolvedValue([]);
   });
 
   it("incluye el nombre del capitán en el listado de mis equipos", async () => {
@@ -32,5 +44,29 @@ describe("team membership requests service", () => {
       'LEFT JOIN usuario u ON u."idUsuario" = t.captain_account_id',
     );
     expect(options.bind).toEqual({ userId: 6, limit: 10, offset: 0 });
+  });
+
+  it("incluye los nombres de los integrantes en mis equipos", async () => {
+    const team = {
+      id: 42,
+      name: "Los Halcones",
+      captainAccountId: 6,
+      captainName: "Niko",
+    };
+    database.query
+      .mockResolvedValueOnce([team])
+      .mockResolvedValueOnce([{ total: 1 }]);
+    TeamMember.findAll.mockResolvedValue([
+      { teamId: 42, userId: 6 },
+      { teamId: 42, userId: 8 },
+    ]);
+    User.findAll.mockResolvedValue([
+      { idUsuario: 6, nombre: "Niko" },
+      { idUsuario: 8, nombre: "Ana" },
+    ]);
+
+    const result = await listMyTeams(6, { page: 1, limit: 10 });
+
+    expect(result.data[0].memberNames).toEqual(["Niko", "Ana"]);
   });
 });

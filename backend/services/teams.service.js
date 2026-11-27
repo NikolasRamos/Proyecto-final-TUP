@@ -37,6 +37,48 @@ async function attachCaptainNames(teams) {
   }
 }
 
+function setMemberNames(team, names) {
+  if (!team) return team;
+
+  if (typeof team.setDataValue === "function") {
+    team.setDataValue("memberNames", names);
+  } else {
+    team.memberNames = names;
+  }
+  return team;
+}
+
+export async function attachMemberNames(teams) {
+  const teamIds = teams.map((team) => team?.id).filter(Boolean);
+  if (teamIds.length === 0) return;
+
+  const memberships =
+    (await TeamMember.findAll({
+      attributes: ["teamId", "userId"],
+      where: { teamId: { [Op.in]: teamIds } },
+      order: [
+        ["createdAt", "ASC"],
+        ["id", "ASC"],
+      ],
+      raw: true,
+    })) ?? [];
+
+  const namesById = await getUserNamesByIds(
+    memberships.map((membership) => membership.userId),
+  );
+  const namesByTeam = new Map();
+
+  for (const membership of memberships) {
+    const names = namesByTeam.get(membership.teamId) ?? [];
+    names.push(namesById.get(membership.userId) ?? null);
+    namesByTeam.set(membership.teamId, names);
+  }
+
+  for (const team of teams) {
+    setMemberNames(team, namesByTeam.get(team.id) ?? []);
+  }
+}
+
 export function lockTeam(teamId, transaction) {
   return Team.findByPk(teamId, { transaction, lock: transaction.LOCK.UPDATE });
 }
@@ -112,6 +154,7 @@ export async function listTeams({ search, page, limit }) {
   });
 
   await attachCaptainNames(result.rows);
+  await attachMemberNames(result.rows);
   return result;
 }
 
