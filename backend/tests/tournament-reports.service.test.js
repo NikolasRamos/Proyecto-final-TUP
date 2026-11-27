@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import Team from "../models/Team.js";
 import Tournament from "../models/Tournament.js";
 import TournamentRegistration from "../models/TournamentRegistration.js";
+import User from "../models/user.js";
 import { getTournamentReportData } from "../services/tournament-reports.service.js";
 
 vi.mock("../models/Team.js", () => ({
@@ -18,9 +19,14 @@ vi.mock("../models/TournamentRegistration.js", () => ({
   default: { findAll: vi.fn() },
 }));
 
+vi.mock("../models/user.js", () => ({
+  default: { findAll: vi.fn() },
+}));
+
 describe("tournament reports service", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    User.findAll.mockResolvedValue([]);
   });
 
   it("informa cuando el torneo no existe", async () => {
@@ -30,6 +36,21 @@ describe("tournament reports service", () => {
       outcome: "not_found",
     });
     expect(TournamentRegistration.findAll).not.toHaveBeenCalled();
+  });
+
+  it("incluye el nombre del organizador en el reporte", async () => {
+    Tournament.findByPk.mockResolvedValue({ id: 101, organizerId: 7 });
+    TournamentRegistration.findAll.mockResolvedValue([]);
+    User.findAll.mockResolvedValue([{ idUsuario: 7, nombre: "Niko" }]);
+
+    const result = await getTournamentReportData(101);
+
+    expect(result.report.tournament.organizerName).toBe("Niko");
+    expect(User.findAll).toHaveBeenCalledWith({
+      attributes: ["idUsuario", "nombre"],
+      where: { idUsuario: { [Op.in]: [7] } },
+      raw: true,
+    });
   });
 
   it("reúne el torneo y todos sus equipos activos", async () => {

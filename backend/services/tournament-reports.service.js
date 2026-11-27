@@ -3,6 +3,7 @@ import { Op } from "sequelize";
 import Team from "../models/Team.js";
 import Tournament from "../models/Tournament.js";
 import TournamentRegistration from "../models/TournamentRegistration.js";
+import { getUserNamesByIds } from "./user-names.service.js";
 
 export async function getTournamentReportData(tournamentId) {
   const tournament = await Tournament.findByPk(tournamentId, { raw: true });
@@ -10,6 +11,9 @@ export async function getTournamentReportData(tournamentId) {
   if (!tournament) {
     return { outcome: "not_found" };
   }
+
+  const namesById = await getUserNamesByIds([tournament.organizerId]);
+  tournament.organizerName = namesById.get(tournament.organizerId) ?? null;
 
   const registrations = await TournamentRegistration.findAll({
     attributes: ["id", "teamId", "createdAt"],
