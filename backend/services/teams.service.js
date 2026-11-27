@@ -63,12 +63,19 @@ export async function attachMemberNames(teams) {
       raw: true,
     })) ?? [];
 
+  const captainIdsByTeam = new Map(
+    teams.map((team) => [team.id, team?.captainId]),
+  );
+  const nonCaptainMemberships = memberships.filter(
+    (membership) =>
+      captainIdsByTeam.get(membership.teamId) !== membership.userId,
+  );
   const namesById = await getUserNamesByIds(
-    memberships.map((membership) => membership.userId),
+    nonCaptainMemberships.map((membership) => membership.userId),
   );
   const namesByTeam = new Map();
 
-  for (const membership of memberships) {
+  for (const membership of nonCaptainMemberships) {
     const names = namesByTeam.get(membership.teamId) ?? [];
     names.push(namesById.get(membership.userId) ?? null);
     namesByTeam.set(membership.teamId, names);

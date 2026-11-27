@@ -46,10 +46,11 @@ describe("team membership requests service", () => {
     expect(options.bind).toEqual({ userId: 6, limit: 10, offset: 0 });
   });
 
-  it("incluye los nombres de los integrantes en mis equipos", async () => {
+  it("incluye los integrantes en mis equipos sin repetir al capitán", async () => {
     const team = {
       id: 42,
       name: "Los Halcones",
+      captainId: 6,
       captainAccountId: 6,
       captainName: "Niko",
     };
@@ -59,14 +60,16 @@ describe("team membership requests service", () => {
     TeamMember.findAll.mockResolvedValue([
       { teamId: 42, userId: 6 },
       { teamId: 42, userId: 8 },
+      { teamId: 42, userId: 9 },
     ]);
     User.findAll.mockResolvedValue([
       { idUsuario: 6, nombre: "Niko" },
       { idUsuario: 8, nombre: "Ana" },
+      { idUsuario: 9, nombre: "Lu" },
     ]);
 
     const result = await listMyTeams(6, { page: 1, limit: 10 });
 
-    expect(result.data[0].memberNames).toEqual(["Niko", "Ana"]);
+    expect(result.data[0].memberNames).toEqual(["Ana", "Lu"]);
   });
 });

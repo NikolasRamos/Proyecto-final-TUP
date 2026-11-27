@@ -86,14 +86,14 @@ describe("pantallas principales de equipos", () => {
 
   it("muestra los nombres de los integrantes en el listado", async () => {
     vi.mocked(listTeams).mockResolvedValue({
-      data: [{ ...team, memberNames: ["Niko", "Ana"] }],
+      data: [{ ...team, memberNames: ["Ana", "Lu"] }],
       pagination: { page: 1, limit: 10, total: 1, totalPages: 1 },
     });
 
     renderPage("/teams");
 
     expect(
-      await screen.findByText("Integrantes: Niko, Ana"),
+      await screen.findByText("Integrantes: Ana, Lu"),
     ).toBeInTheDocument();
   });
 
@@ -182,6 +182,20 @@ describe("pantallas principales de equipos", () => {
     renderPage("/teams/201");
 
     expect(await screen.findByText("Niko")).toBeInTheDocument();
+  });
+
+  it("muestra los nombres de los integrantes en el detalle", async () => {
+    vi.mocked(getTeam).mockResolvedValue({
+      data: { ...team, memberNames: ["Ana", "Lu"] },
+    });
+
+    renderPage("/teams/201");
+
+    expect(
+      await screen.findByRole("heading", { name: "Integrantes" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Ana")).toBeInTheDocument();
+    expect(screen.getByText("Lu")).toBeInTheDocument();
   });
 
   it("edita el nombre y la descripción del equipo", async () => {

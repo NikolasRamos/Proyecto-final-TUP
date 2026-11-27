@@ -171,18 +171,20 @@ describe("teams service", () => {
     expect(result.rows[0].captainName).toBe("Niko");
   });
 
-  it("incluye los nombres de los integrantes en el listado", async () => {
+  it("incluye los nombres de los integrantes sin repetir al capitán", async () => {
     Team.findAndCountAll.mockResolvedValue({
       count: 1,
-      rows: [{ id: 201, captainAccountId: 7 }],
+      rows: [{ id: 201, captainId: 7, captainAccountId: 7 }],
     });
     TeamMember.findAll.mockResolvedValue([
       { teamId: 201, userId: 7 },
       { teamId: 201, userId: 8 },
+      { teamId: 201, userId: 9 },
     ]);
     User.findAll.mockResolvedValue([
       { idUsuario: 7, nombre: "Niko" },
       { idUsuario: 8, nombre: "Ana" },
+      { idUsuario: 9, nombre: "Lu" },
     ]);
 
     const result = await listTeams({ page: 1, limit: 10 });
@@ -196,7 +198,7 @@ describe("teams service", () => {
       ],
       raw: true,
     });
-    expect(result.rows[0].memberNames).toEqual(["Niko", "Ana"]);
+    expect(result.rows[0].memberNames).toEqual(["Ana", "Lu"]);
   });
 
   it("busca un equipo por su clave primaria", async () => {
@@ -208,21 +210,23 @@ describe("teams service", () => {
     expect(Team.findByPk).toHaveBeenCalledWith(teamId);
   });
 
-  it("incluye los nombres de los integrantes en el detalle", async () => {
-    const team = { id: 201 };
+  it("incluye los integrantes del detalle sin repetir al capitán", async () => {
+    const team = { id: 201, captainId: 7 };
     Team.findByPk.mockResolvedValue(team);
     TeamMember.findAll.mockResolvedValue([
       { teamId: 201, userId: 7 },
       { teamId: 201, userId: 8 },
+      { teamId: 201, userId: 9 },
     ]);
     User.findAll.mockResolvedValue([
       { idUsuario: 7, nombre: "Niko" },
       { idUsuario: 8, nombre: "Ana" },
+      { idUsuario: 9, nombre: "Lu" },
     ]);
 
     const result = await getTeamById(201);
 
-    expect(result.memberNames).toEqual(["Niko", "Ana"]);
+    expect(result.memberNames).toEqual(["Ana", "Lu"]);
   });
 
   it("actualiza un equipo existente", async () => {

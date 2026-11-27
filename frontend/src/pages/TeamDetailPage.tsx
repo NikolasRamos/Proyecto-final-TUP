@@ -435,6 +435,24 @@ export default function TeamDetailPage() {
               </dl>
             </section>
           )}
+          {state.status === "success" &&
+            state.team.memberNames !== undefined && (
+              <section
+                className="detail-card"
+                aria-labelledby="team-members-title"
+              >
+                <h2 id="team-members-title">Integrantes</h2>
+                {state.team.memberNames.length > 0 ? (
+                  <ul className="member-list">
+                    {state.team.memberNames.map((name, index) => (
+                      <li key={index}>{name ?? "Nombre no disponible"}</li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p>Este equipo todavía no tiene integrantes.</p>
+                )}
+              </section>
+            )}
           {session.status === "signedIn" &&
             !isEditing &&
             captainFormTeamId !== teamId &&
