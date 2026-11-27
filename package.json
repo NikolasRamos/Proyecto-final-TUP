@@ -26,6 +26,8 @@
     "db:migrate": "sequelize-cli db:migrate --config backend/config/config.cjs --migrations-path backend/migrations",
     "db:migrate:status": "sequelize-cli db:migrate:status --config backend/config/config.cjs --migrations-path backend/migrations",
     "db:seed": "sequelize-cli db:seed:all --config backend/config/config.cjs --seeders-path backend/seeders",
+    "db:seed:local": "sequelize-cli db:seed:all --env development --config backend/config/local-demo-seeders.cjs --seeders-path backend/seeders/local-demo",
+    "db:seed:local:undo": "sequelize-cli db:seed:undo:all --env development --config backend/config/local-demo-seeders.cjs --seeders-path backend/seeders/local-demo",
     "db:seed:demo": "sequelize-cli db:seed --config backend/config/config.cjs --seeders-path backend/seeders --seed 001-demo-data.cjs roles.cjs",
     "seed:roles": "node backend/seeders/roles.cjs",
     "seed:users": "node backend/seeders/users.cjs",

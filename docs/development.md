@@ -184,6 +184,34 @@ distintas.
 | Inscribir y retirar un equipo en un torneo abierto y descargar el reporte    | La inscripción conserva el plantel elegido. El retiro aparece en el historial y el PDF refleja los equipos activos.                                                      |
 | Vincular un capitán a un equipo de ejemplo como administrador                | El equipo aparece en **Mis equipos** de la cuenta elegida y queda habilitada para sus tareas de capitán.                                                                 |
 
+### Demo local con cuentas vinculadas
+
+Desde la raíz, con el `.env` apuntando a PostgreSQL local:
+
+```powershell
+docker compose up -d postgres
+npm.cmd run db:migrate
+npm.cmd run db:seed:local
+npm.cmd run dev
+```
+
+Las seis cuentas de prueba usan `DemoLocal123` en local.
+
+| Cuenta | Qué mostrar |
+| --- | --- |
+| `organizador.demo@torneos.test` | **Mis torneos** muestra una Liga abierta y una Copa en borrador. La Liga tiene dos equipos inscritos, uno retirado y planteles. |
+| `organizador2.demo@torneos.test` | **Mis torneos** muestra un Suizo y un torneo de Grupos + Playoff. Puede consultar la Liga ajena desde el catálogo. |
+| `alex.demo@torneos.test` | Capitán de **Rayo Norte**, ve el pedido de Cristi y una invitación de Bela a **Brújula Sur**. |
+| `bela.demo@torneos.test` | Capitana de **Brújula Sur**, integra **Rayo Norte** y tiene un aviso de aceptación marcado como leído. |
+| `cristi.demo@torneos.test` | Capitán de **Faro del Río**, integra **Brújula Sur** y tiene un pedido de ingreso pendiente en **Rayo Norte**. |
+| `admin.demo@torneos.test` | Puede gestionar los torneos de ambos organizadores y comprobar los permisos administrativos. |
+
+Una segunda ejecución conserva los datos existentes. `npm.cmd run db:seed:local:undo`
+retira los casos de esta demo y deja sus cuentas para volver a usarlas. Para
+reconocer los equipos y torneos, el retiro usa el nombre y la descripción
+`Demostración local del Grupo 16`. Si alguno tiene inscripciones adicionales,
+retiralas antes de eliminarlo de la demo.
+
 ## PowerShell
 
 Si la política de ejecución bloquea `npm.ps1`, utilizar el ejecutable

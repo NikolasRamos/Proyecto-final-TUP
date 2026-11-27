@@ -102,6 +102,10 @@ Servicios locales:
 
 ## Datos de demostración
 
+Para una demo local con cuentas vinculadas, aplicá las migraciones y ejecutá
+`npm run db:seed:local`. La carga deja preparados **Mis torneos**, **Mis equipos**,
+inscripciones con plantel, solicitudes y notificaciones. [Cuentas y recorrido de la demo](docs/development.md#demo-local-con-cuentas-vinculadas).
+
 Para probar en una **base local**, ejecutá la carga desde la raíz con PostgreSQL iniciado y las migraciones aplicadas.
 
 ```bash

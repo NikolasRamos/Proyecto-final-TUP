@@ -2,15 +2,18 @@
 
 const ROLES = ["administrador", "organizador", "participante"];
 
-module.exports = {
-  async up(queryInterface) {
-    const now = new Date();
+async function ensureRoles(queryInterface, transaction) {
+  const now = new Date();
+  await queryInterface.bulkInsert(
+    "rol",
+    ROLES.map((nombre) => ({ nombre, createdAt: now, updatedAt: now })),
+    { ignoreDuplicates: true, transaction },
+  );
+}
 
-    await queryInterface.bulkInsert(
-      "rol",
-      ROLES.map((nombre) => ({ nombre, createdAt: now, updatedAt: now })),
-    );
-  },
+module.exports = {
+  ensureRoles,
+  up: (queryInterface) => ensureRoles(queryInterface),
 
   async down(queryInterface) {
     await queryInterface.bulkDelete("rol", { nombre: ROLES });
