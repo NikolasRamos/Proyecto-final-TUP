@@ -1,7 +1,7 @@
 import {
   MIN_PARTICIPANTS_BY_FORMAT,
   validateSwissRounds,
-} from "../../../shared/tournament-format-rules.ts";
+} from "../../../shared/tournament-format-rules.js";
 import TournamentFormatStrategy from "./TournamentFormatStrategy.js";
 
 export const SWISS_MIN_PARTICIPANTS = MIN_PARTICIPANTS_BY_FORMAT.swiss;

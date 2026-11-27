@@ -1,7 +1,7 @@
 import {
   getGroupsPlayoffCapacity,
   validateGroupsPlayoffConfiguration,
-} from "../../../shared/tournament-format-rules.ts";
+} from "../../../shared/tournament-format-rules.js";
 import TournamentFormatStrategy from "./TournamentFormatStrategy.js";
 
 const CONFIGURATION_FIELDS = [

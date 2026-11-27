@@ -6,7 +6,7 @@ import {
   MIN_SWISS_ROUNDS,
   MIN_SWISS_ROUNDS_MESSAGE,
   MIN_TOURNAMENT_PARTICIPANTS,
-} from "../../shared/tournament-format-rules.ts";
+} from "../../shared/tournament-format-rules.js";
 import {
   TOURNAMENT_MODALITIES,
   TOURNAMENT_STATUSES,

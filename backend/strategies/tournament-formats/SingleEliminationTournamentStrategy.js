@@ -1,7 +1,7 @@
 import {
   isPowerOfTwo,
   MIN_PARTICIPANTS_BY_FORMAT,
-} from "../../../shared/tournament-format-rules.ts";
+} from "../../../shared/tournament-format-rules.js";
 import TournamentFormatStrategy from "./TournamentFormatStrategy.js";
 
 export const SINGLE_ELIMINATION_MIN_PARTICIPANTS =

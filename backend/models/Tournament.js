@@ -5,7 +5,7 @@ import {
   MIN_KNOCKOUT_SLOTS,
   MIN_SWISS_ROUNDS,
   MIN_TOURNAMENT_PARTICIPANTS,
-} from "../../shared/tournament-format-rules.ts";
+} from "../../shared/tournament-format-rules.js";
 import database from "../config/database.js";
 
 export const TOURNAMENT_MODALITIES = Object.freeze([
