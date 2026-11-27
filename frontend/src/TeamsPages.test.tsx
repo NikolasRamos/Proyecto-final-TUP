@@ -73,6 +73,30 @@ describe("pantallas principales de equipos", () => {
     });
   });
 
+  it("muestra el nombre del capitán en el listado", async () => {
+    vi.mocked(listTeams).mockResolvedValue({
+      data: [{ ...team, captainName: "Niko" }],
+      pagination: { page: 1, limit: 10, total: 1, totalPages: 1 },
+    });
+
+    renderPage("/teams");
+
+    expect(await screen.findByText("Capitán: Niko")).toBeInTheDocument();
+  });
+
+  it("muestra los nombres de los integrantes en el listado", async () => {
+    vi.mocked(listTeams).mockResolvedValue({
+      data: [{ ...team, memberNames: ["Ana", "Lu"] }],
+      pagination: { page: 1, limit: 10, total: 1, totalPages: 1 },
+    });
+
+    renderPage("/teams");
+
+    expect(
+      await screen.findByText("Integrantes: Ana, Lu"),
+    ).toBeInTheDocument();
+  });
+
   it("busca equipos y navega entre páginas", async () => {
     vi.mocked(listTeams).mockImplementation((params = {}) =>
       Promise.resolve({
@@ -148,6 +172,30 @@ describe("pantallas principales de equipos", () => {
     expect(screen.getByText("Equipo de prueba")).toBeInTheDocument();
     expect(screen.getByText("Usuario #1")).toBeInTheDocument();
     expect(getTeam).toHaveBeenCalledWith(201);
+  });
+
+  it("muestra el nombre del capitán en el detalle", async () => {
+    vi.mocked(getTeam).mockResolvedValue({
+      data: { ...team, captainName: "Niko" },
+    });
+
+    renderPage("/teams/201");
+
+    expect(await screen.findByText("Niko")).toBeInTheDocument();
+  });
+
+  it("muestra los nombres de los integrantes en el detalle", async () => {
+    vi.mocked(getTeam).mockResolvedValue({
+      data: { ...team, memberNames: ["Ana", "Lu"] },
+    });
+
+    renderPage("/teams/201");
+
+    expect(
+      await screen.findByRole("heading", { name: "Integrantes" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Ana")).toBeInTheDocument();
+    expect(screen.getByText("Lu")).toBeInTheDocument();
   });
 
   it("edita el nombre y la descripción del equipo", async () => {

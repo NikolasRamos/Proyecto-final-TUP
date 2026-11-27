@@ -339,7 +339,7 @@ export default function TournamentRegistrationsPanel({
                         }
                       />
                       <span>
-                        Usuario #{member.userId}
+                        {member.nombre ?? `Usuario #${member.userId}`}
                         {member.isCaptain ? " · Capitán" : ""}
                       </span>
                     </label>
@@ -418,7 +418,11 @@ export default function TournamentRegistrationsPanel({
                     : "integrantes"}{" "}
                   (
                   {registration.memberIds
-                    .map((memberId) => `Usuario #${memberId}`)
+                    .map(
+                      (memberId, index) =>
+                        registration.memberNames?.[index] ??
+                        `Usuario #${memberId}`,
+                    )
                     .join(", ")}
                   )
                 </p>

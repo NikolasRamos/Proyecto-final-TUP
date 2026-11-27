@@ -43,7 +43,9 @@ vi.mock("../models/TeamMember.js", () => ({
   },
 }));
 
-vi.mock("../models/user.js", () => ({ default: { findByPk: vi.fn() } }));
+vi.mock("../models/user.js", () => ({
+  default: { findAll: vi.fn(), findByPk: vi.fn() },
+}));
 
 vi.mock("../models/TournamentRegistration.js", () => ({
   default: {
@@ -54,6 +56,8 @@ vi.mock("../models/TournamentRegistration.js", () => ({
 describe("teams service", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    User.findAll.mockResolvedValue([]);
+    TeamMember.findAll.mockResolvedValue([]);
   });
 
   it("delega la creacion al modelo", async () => {
@@ -73,6 +77,18 @@ describe("teams service", () => {
       { teamId: 201, userId: 1, accountLinked: true },
       { transaction: expect.any(Object) },
     );
+  });
+
+  it("devuelve el nombre del capitán al crear un equipo", async () => {
+    const teamData = { name: "Los Halcones", captainId: 1 };
+    const createdTeam = { id: 201, ...teamData };
+    User.findByPk.mockResolvedValue({ idUsuario: 1, nombre: "Niko" });
+    Team.create.mockResolvedValue(createdTeam);
+    TeamMember.create.mockResolvedValue({ id: 401 });
+
+    const team = await createTeam(teamData);
+
+    expect(team.captainName).toBe("Niko");
   });
 
   it("vincula al capitán y asegura su membresía en la misma transacción", async () => {
@@ -138,6 +154,53 @@ describe("teams service", () => {
     ]);
   });
 
+  it("incluye el nombre del capitán en el listado", async () => {
+    Team.findAndCountAll.mockResolvedValue({
+      count: 1,
+      rows: [{ id: 201, captainAccountId: 7 }],
+    });
+    User.findAll.mockResolvedValue([{ idUsuario: 7, nombre: "Niko" }]);
+
+    const result = await listTeams({ page: 1, limit: 10 });
+
+    expect(User.findAll).toHaveBeenCalledWith({
+      attributes: ["idUsuario", "nombre"],
+      where: { idUsuario: { [Op.in]: [7] } },
+      raw: true,
+    });
+    expect(result.rows[0].captainName).toBe("Niko");
+  });
+
+  it("incluye los nombres de los integrantes sin repetir al capitán", async () => {
+    Team.findAndCountAll.mockResolvedValue({
+      count: 1,
+      rows: [{ id: 201, captainId: 7, captainAccountId: 7 }],
+    });
+    TeamMember.findAll.mockResolvedValue([
+      { teamId: 201, userId: 7 },
+      { teamId: 201, userId: 8 },
+      { teamId: 201, userId: 9 },
+    ]);
+    User.findAll.mockResolvedValue([
+      { idUsuario: 7, nombre: "Niko" },
+      { idUsuario: 8, nombre: "Ana" },
+      { idUsuario: 9, nombre: "Lu" },
+    ]);
+
+    const result = await listTeams({ page: 1, limit: 10 });
+
+    expect(TeamMember.findAll).toHaveBeenCalledWith({
+      attributes: ["teamId", "userId"],
+      where: { teamId: { [Op.in]: [201] } },
+      order: [
+        ["createdAt", "ASC"],
+        ["id", "ASC"],
+      ],
+      raw: true,
+    });
+    expect(result.rows[0].memberNames).toEqual(["Ana", "Lu"]);
+  });
+
   it("busca un equipo por su clave primaria", async () => {
     const teamId = 201;
     const team = { id: teamId };
@@ -145,6 +208,25 @@ describe("teams service", () => {
 
     await expect(getTeamById(teamId)).resolves.toBe(team);
     expect(Team.findByPk).toHaveBeenCalledWith(teamId);
+  });
+
+  it("incluye los integrantes del detalle sin repetir al capitán", async () => {
+    const team = { id: 201, captainId: 7 };
+    Team.findByPk.mockResolvedValue(team);
+    TeamMember.findAll.mockResolvedValue([
+      { teamId: 201, userId: 7 },
+      { teamId: 201, userId: 8 },
+      { teamId: 201, userId: 9 },
+    ]);
+    User.findAll.mockResolvedValue([
+      { idUsuario: 7, nombre: "Niko" },
+      { idUsuario: 8, nombre: "Ana" },
+      { idUsuario: 9, nombre: "Lu" },
+    ]);
+
+    const result = await getTeamById(201);
+
+    expect(result.memberNames).toEqual(["Ana", "Lu"]);
   });
 
   it("actualiza un equipo existente", async () => {
@@ -341,12 +423,14 @@ describe("teams service", () => {
         {
           id: 301,
           userId: 1,
+          nombre: null,
           isCaptain: true,
           joinedAt,
         },
         {
           id: 302,
           userId: 2,
+          nombre: null,
           isCaptain: false,
           joinedAt,
         },
@@ -359,6 +443,21 @@ describe("teams service", () => {
       attributes: ["id", "userId", "createdAt"],
       where: { teamId: 201 },
       order: [["createdAt", "ASC"]],
+      raw: true,
+    });
+  });
+
+  it("incluye el nombre de los integrantes del equipo", async () => {
+    Team.findByPk.mockResolvedValue({ id: 201, captainId: 1 });
+    TeamMember.findAll.mockResolvedValue([{ id: 301, userId: 1, createdAt: new Date() }]);
+    User.findAll.mockResolvedValue([{ idUsuario: 1, nombre: "Niko" }]);
+
+    const result = await listTeamMembers(201);
+
+    expect(result.members[0].nombre).toBe("Niko");
+    expect(User.findAll).toHaveBeenCalledWith({
+      attributes: ["idUsuario", "nombre"],
+      where: { idUsuario: { [Op.in]: [1] } },
       raw: true,
     });
   });

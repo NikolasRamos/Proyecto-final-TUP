@@ -18,9 +18,19 @@ export default function TeamCard({ team }: TeamCardProps) {
       </p>
       <p className="resource-meta">
         {team.captainAccountId
-          ? `Capitán: usuario #${team.captainAccountId}`
+          ? `Capitán: ${team.captainName ?? `Usuario #${team.captainAccountId}`}`
           : "Capitán sin cuenta vinculada"}
       </p>
+      {team.memberNames !== undefined && (
+        <p className="resource-meta">
+          Integrantes:{" "}
+          {team.memberNames.length > 0
+            ? team.memberNames
+                .filter((name): name is string => Boolean(name))
+                .join(", ") || "Sin nombres disponibles"
+            : "Sin integrantes"}
+        </p>
+      )}
       <Link
         className="resource-detail-link"
         to={`/teams/${team.id}`}

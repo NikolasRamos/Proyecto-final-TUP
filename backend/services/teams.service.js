@@ -5,13 +5,85 @@ import Team from "../models/Team.js";
 import TeamMember from "../models/TeamMember.js";
 import TournamentRegistration from "../models/TournamentRegistration.js";
 import User from "../models/user.js";
+import { getUserNamesByIds } from "./user-names.service.js";
 
 function findActiveCaptain(captainId, transaction) {
   return User.findByPk(captainId, {
-    attributes: ["idUsuario"],
+    attributes: ["idUsuario", "nombre"],
     transaction,
     lock: transaction.LOCK.SHARE,
   });
+}
+
+function setCaptainName(team, captainName) {
+  if (!team) return team;
+
+  const name = captainName ?? null;
+  if (typeof team.setDataValue === "function") {
+    team.setDataValue("captainName", name);
+  } else {
+    team.captainName = name;
+  }
+  return team;
+}
+
+async function attachCaptainNames(teams) {
+  const namesById = await getUserNamesByIds(
+    teams.map((team) => team?.captainAccountId),
+  );
+
+  for (const team of teams) {
+    setCaptainName(team, namesById.get(team?.captainAccountId));
+  }
+}
+
+function setMemberNames(team, names) {
+  if (!team) return team;
+
+  if (typeof team.setDataValue === "function") {
+    team.setDataValue("memberNames", names);
+  } else {
+    team.memberNames = names;
+  }
+  return team;
+}
+
+export async function attachMemberNames(teams) {
+  const teamIds = teams.map((team) => team?.id).filter(Boolean);
+  if (teamIds.length === 0) return;
+
+  const memberships =
+    (await TeamMember.findAll({
+      attributes: ["teamId", "userId"],
+      where: { teamId: { [Op.in]: teamIds } },
+      order: [
+        ["createdAt", "ASC"],
+        ["id", "ASC"],
+      ],
+      raw: true,
+    })) ?? [];
+
+  const captainIdsByTeam = new Map(
+    teams.map((team) => [team.id, team?.captainId]),
+  );
+  const nonCaptainMemberships = memberships.filter(
+    (membership) =>
+      captainIdsByTeam.get(membership.teamId) !== membership.userId,
+  );
+  const namesById = await getUserNamesByIds(
+    nonCaptainMemberships.map((membership) => membership.userId),
+  );
+  const namesByTeam = new Map();
+
+  for (const membership of nonCaptainMemberships) {
+    const names = namesByTeam.get(membership.teamId) ?? [];
+    names.push(namesById.get(membership.userId) ?? null);
+    namesByTeam.set(membership.teamId, names);
+  }
+
+  for (const team of teams) {
+    setMemberNames(team, namesByTeam.get(team.id) ?? []);
+  }
 }
 
 export function lockTeam(teamId, transaction) {
@@ -47,7 +119,7 @@ export function createTeam(teamData) {
       { transaction },
     );
 
-    return team;
+    return setCaptainName(team, captain.nombre);
   });
 }
 
@@ -64,11 +136,14 @@ export function assignTeamCaptain(teamId, captainId) {
       { captainId: captain.idUsuario, captainAccountId: captain.idUsuario },
       { transaction },
     );
-    return { outcome: "assigned", team };
+    return {
+      outcome: "assigned",
+      team: setCaptainName(team, captain.nombre),
+    };
   });
 }
 
-export function listTeams({ search, page, limit }) {
+export async function listTeams({ search, page, limit }) {
   const where = {};
 
   if (search) {
@@ -78,16 +153,25 @@ export function listTeams({ search, page, limit }) {
     ];
   }
 
-  return Team.findAndCountAll({
+  const result = await Team.findAndCountAll({
     where,
     order: [["createdAt", "DESC"]],
     limit,
     offset: (page - 1) * limit,
   });
+
+  await attachCaptainNames(result.rows);
+  await attachMemberNames(result.rows);
+  return result;
 }
 
-export function getTeamById(teamId) {
-  return Team.findByPk(teamId);
+export async function getTeamById(teamId) {
+  const team = await Team.findByPk(teamId);
+  if (!team) return team;
+
+  await attachCaptainNames([team]);
+  await attachMemberNames([team]);
+  return team;
 }
 
 export async function updateTeam(teamId, teamData) {
@@ -97,7 +181,9 @@ export async function updateTeam(teamId, teamData) {
     return null;
   }
 
-  return team.update(teamData);
+  const updatedTeam = await team.update(teamData);
+  await attachCaptainNames([updatedTeam]);
+  return updatedTeam;
 }
 
 export async function deleteTeam(teamId, { userId, role }) {
@@ -173,11 +259,16 @@ export async function listTeamMembers(teamId) {
     raw: true,
   });
 
+  const namesById = await getUserNamesByIds(
+    memberships.map((membership) => membership.userId),
+  );
+
   return {
     outcome: "found",
     members: memberships.map((membership) => ({
       id: membership.id,
       userId: membership.userId,
+      nombre: namesById.get(membership.userId) ?? null,
       isCaptain: membership.userId === team.captainId,
       joinedAt: membership.createdAt,
     })),

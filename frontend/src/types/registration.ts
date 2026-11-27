@@ -8,6 +8,7 @@ export interface TournamentRegistration {
   registeredAt: string;
   updatedAt: string;
   memberIds: EntityId[];
+  memberNames?: (string | null)[];
   team: {
     id: EntityId;
     name: string | null;

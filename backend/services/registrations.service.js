@@ -6,6 +6,7 @@ import TeamMember from "../models/TeamMember.js";
 import Tournament from "../models/Tournament.js";
 import TournamentRegistration from "../models/TournamentRegistration.js";
 import TournamentRegistrationMember from "../models/TournamentRegistrationMember.js";
+import { getUserNamesByIds } from "./user-names.service.js";
 
 export function registerTeamInTournament(tournamentId, teamId, memberIds) {
   return database.transaction(async (transaction) => {
@@ -205,19 +206,27 @@ export async function listTournamentRegistrations(
     memberIdsByRegistration.set(member.registrationId, memberIds);
   }
 
+  const namesById = await getUserNamesByIds(
+    registrationMembers.map((member) => member.userId),
+  );
+
   return {
     outcome: "found",
     count,
-    registrations: rows.map((registration) => ({
-      id: registration.id,
-      status: registration.status,
-      registeredAt: registration.createdAt,
-      updatedAt: registration.updatedAt,
-      memberIds: memberIdsByRegistration.get(registration.id) ?? [],
-      team: teamsById.get(registration.teamId) ?? {
-        id: registration.teamId,
-        name: null,
-      },
-    })),
+    registrations: rows.map((registration) => {
+      const memberIds = memberIdsByRegistration.get(registration.id) ?? [];
+      return {
+        id: registration.id,
+        status: registration.status,
+        registeredAt: registration.createdAt,
+        updatedAt: registration.updatedAt,
+        memberIds,
+        memberNames: memberIds.map((userId) => namesById.get(userId) ?? null),
+        team: teamsById.get(registration.teamId) ?? {
+          id: registration.teamId,
+          name: null,
+        },
+      };
+    }),
   };
 }
