@@ -1,6 +1,7 @@
+import { MIN_PARTICIPANTS_BY_FORMAT } from "../../../shared/tournament-format-rules.ts";
 import TournamentFormatStrategy from "./TournamentFormatStrategy.js";
 
-export const GAUNTLET_MIN_PARTICIPANTS = 2;
+export const GAUNTLET_MIN_PARTICIPANTS = MIN_PARTICIPANTS_BY_FORMAT.gauntlet;
 
 export default class GauntletTournamentStrategy extends TournamentFormatStrategy {
   constructor() {

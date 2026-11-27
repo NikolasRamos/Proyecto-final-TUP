@@ -63,6 +63,7 @@ const tournament = {
   endDate: "2026-12-10",
   status: "draft" as const,
   organizerId: 1,
+  organizerAccountId: 1,
   createdAt: "2026-10-13T12:00:00.000Z",
   updatedAt: "2026-10-13T12:00:00.000Z",
 };
@@ -180,6 +181,24 @@ describe("TournamentDetailPage", () => {
     expect(
       await screen.findByText("Reporte descargado correctamente"),
     ).toBeInTheDocument();
+  });
+
+  it("oculta las acciones de gestión al abrir un torneo ajeno", async () => {
+    vi.mocked(getTournament).mockResolvedValue({
+      data: { ...tournament, status: "open", organizerAccountId: 2 },
+    });
+    renderPage();
+
+    expect(
+      await screen.findByRole("heading", { name: tournament.name }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Editar torneo" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Exportar reporte" }),
+    ).not.toBeInTheDocument();
+    expect(listTournamentRegistrations).not.toHaveBeenCalled();
   });
 
   it("edita los datos permitidos y actualiza la vista", async () => {

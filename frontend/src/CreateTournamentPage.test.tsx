@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { testToken } from "../test/signed-in";
 import App from "./App";
-import { createTournament } from "./api/tournaments.api";
+import { createTournament, listTournaments } from "./api/tournaments.api";
 
 vi.mock("./auth/AuthProvider", async () => {
   const { SignedInTestProvider } = await import("../test/signed-in");
@@ -24,8 +24,6 @@ vi.mock("./api/tournaments.api", () => ({
   updateTournamentStatus: vi.fn(),
 }));
 
-const organizerId = 1;
-
 async function completeRequiredFields() {
   const user = userEvent.setup();
 
@@ -41,10 +39,6 @@ async function completeRequiredFields() {
   await user.type(screen.getByLabelText("Cierre de inscripción"), "2026-11-01");
   await user.type(screen.getByLabelText("Fecha de inicio"), "2026-11-05");
   await user.type(screen.getByLabelText("Fecha de finalización"), "2026-12-10");
-  await user.type(
-    screen.getByLabelText("ID del organizador"),
-    String(organizerId),
-  );
 
   return user;
 }
@@ -52,6 +46,29 @@ async function completeRequiredFields() {
 describe("CreateTournamentPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it("abre Mis torneos desde el menú y consulta el listado de la cuenta", async () => {
+    const user = userEvent.setup();
+    vi.mocked(listTournaments).mockResolvedValue({
+      data: [],
+      pagination: { page: 1, limit: 10, total: 0, totalPages: 0 },
+    });
+    render(
+      <MemoryRouter initialEntries={["/tournaments/new"]}>
+        <App />
+      </MemoryRouter>,
+    );
+
+    await user.click(screen.getByRole("link", { name: "Mis torneos" }));
+
+    expect(
+      screen.getByRole("heading", { name: "Mis torneos" }),
+    ).toBeInTheDocument();
+    expect(listTournaments).toHaveBeenCalledWith(
+      expect.objectContaining({ mine: true }),
+      testToken,
+    );
   });
 
   it("presenta todos los datos necesarios para crear un torneo", () => {
@@ -95,7 +112,9 @@ describe("CreateTournamentPage", () => {
     expect(
       screen.getByLabelText("Máximo de integrantes por equipo"),
     ).toHaveValue(2);
-    expect(screen.getByLabelText("ID del organizador")).toBeRequired();
+    expect(
+      screen.queryByLabelText("ID del organizador"),
+    ).not.toBeInTheDocument();
   });
 
   it("muestra la regla de participantes de Gauntlet", async () => {
@@ -184,7 +203,8 @@ describe("CreateTournamentPage", () => {
         startDate: "2026-11-05",
         endDate: "2026-12-10",
         status: "draft",
-        organizerId,
+        organizerId: 1,
+        organizerAccountId: 1,
         createdAt: "2026-11-13T12:00:00.000Z",
         updatedAt: "2026-11-13T12:00:00.000Z",
       },
@@ -318,7 +338,8 @@ describe("CreateTournamentPage", () => {
         startDate: "2026-11-05",
         endDate: "2026-12-10",
         status: "draft",
-        organizerId,
+        organizerId: 1,
+        organizerAccountId: 1,
         createdAt: "2026-11-13T12:00:00.000Z",
         updatedAt: "2026-11-13T12:00:00.000Z",
       },
@@ -393,7 +414,8 @@ describe("CreateTournamentPage", () => {
         startDate: "2026-11-05",
         endDate: "2026-12-10",
         status: "draft",
-        organizerId,
+        organizerId: 1,
+        organizerAccountId: 1,
         createdAt: "2026-10-13T12:00:00.000Z",
         updatedAt: "2026-10-13T12:00:00.000Z",
       },
@@ -419,7 +441,6 @@ describe("CreateTournamentPage", () => {
         registrationDeadline: "2026-11-01",
         startDate: "2026-11-05",
         endDate: "2026-12-10",
-        organizerId,
       },
       testToken,
     );
@@ -445,7 +466,8 @@ describe("CreateTournamentPage", () => {
         startDate: "2026-11-05",
         endDate: "2026-12-10",
         status: "draft",
-        organizerId,
+        organizerId: 1,
+        organizerAccountId: 1,
         createdAt: "2026-10-13T12:00:00.000Z",
         updatedAt: "2026-10-13T12:00:00.000Z",
       },

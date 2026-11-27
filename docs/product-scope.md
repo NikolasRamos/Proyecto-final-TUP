@@ -1,118 +1,46 @@
-# Alcance funcional del producto
+# Alcance funcional del prototipo
 
-Este documento describe qué problema busca resolver el sistema, quiénes lo
-utilizarán y qué funcionalidades están implementadas o planificadas. No
-reemplaza la documentación técnica ni implica que todo el alcance ya exista.
+El Grupo 16 desarrolla una aplicación para organizar torneos, administrar equipos e inscripciones y consultar la información de cada competencia.
 
-## Objetivo
+## Acceso y permisos
 
-Centralizar la creación, administración y seguimiento de torneos. Los
-organizadores podrán configurar competencias, administrar equipos, registrar
-resultados y consultar posiciones. Los participantes podrán consultar sus
-equipos, inscripciones, partidas y estadísticas.
+El registro público crea una cuenta con rol participante. La API usa la cuenta de la sesión y consulta su rol actual antes de ejecutar una operación protegida.
 
-## Acceso al sistema
+| Perfil | Acciones disponibles |
+| --- | --- |
+| Invitado | Buscar y consultar torneos abiertos o en curso y consultar el catálogo de equipos. |
+| Participante | Además de consultar los catálogos, puede crear un equipo como capitán, pedir ingreso a otro equipo y responder sus invitaciones. |
+| Organizador | Crea torneos a nombre de su cuenta y ve sus torneos privados junto con los torneos públicos del catálogo. Puede gestionar sus propios torneos, sus inscripciones y su reporte. El rol también habilita la edición de equipos y la gestión directa de integrantes. |
+| Administrador | Puede gestionar todos los torneos y equipos, vincular capitanes a cuentas activas y asignar roles a cuentas participantes mediante la API. |
 
-El registro crea cuentas de participante. Los permisos se aplican en la web y
-en la API. Los organizadores y administradores gestionan torneos y editan
-equipos. El borrado de equipos corresponde a su capitán o a un administrador.
+Cualquier cuenta con sesión puede usar **Mis equipos**, **Solicitudes** y **Notificaciones**. El capitán vinculado puede enviar invitaciones y responder pedidos de ingreso. Solo el capitán vinculado o un administrador puede eliminar un equipo, y el historial de inscripciones bloquea esa operación.
 
-### Invitado
+**Mis torneos** muestra los torneos que creó la cuenta autenticada. Los torneos de demostración sin organizador vinculado quedan bajo gestión administrativa. La [referencia de la API](api.md) detalla los permisos por operación.
 
-- Buscar y consultar torneos con inscripción abierta o en curso.
-- Buscar y consultar los equipos registrados.
+## Funcionalidades disponibles
 
-### Administrador
+| Módulo | Implementación |
+| --- | --- |
+| Torneos | Búsqueda, filtros, orden, paginación, detalle, creación, edición y eliminación de borradores. Seis formatos con validaciones específicas. |
+| Equipos | Catálogo, detalle, creación, edición, eliminación, integrantes y asignación de capitanes. El catálogo admite búsqueda y paginación. |
+| Membresías | Solicitudes e invitaciones con aceptación o rechazo. **Mis equipos** muestra las membresías vinculadas a la cuenta. |
+| Notificaciones | Bandeja privada con avisos de solicitudes e invitaciones, estado de lectura y acceso al trámite. |
+| Inscripciones | Alta, listado y retiro de equipos desde el detalle del torneo. El organizador selecciona el plantel que representa al equipo. |
+| Reportes | PDF con datos del torneo, ocupación y equipos activos. |
+| Usuarios | Registro, inicio y cierre de sesión, consulta de la cuenta y asignación de roles desde Postman. |
+| Entorno de entrega | Aplicación pública en [Vercel](https://proyecto-final-tup.vercel.app/) con PostgreSQL administrado en Neon. |
 
-- Gestionar usuarios y permisos.
-- Asignar una cuenta activa como capitana de un equipo existente.
-- Administrar torneos, equipos y categorías.
-- Consultar estadísticas generales.
-- Resolver situaciones que requieran privilegios globales.
+## Reglas del dominio
 
-### Organizador
+- Los torneos comienzan en borrador. Solo los borradores se eliminan físicamente.
+- Liga, Eliminación simple, Grupos + Playoff, Suizo, Free-for-all y Gauntlet validan sus cupos y su configuración mediante [Strategy y reglas compartidas](design-patterns.md).
+- Grupos + Playoff deriva el cupo total de la cantidad de grupos y su tamaño. Suizo limita las rondas a la cantidad de rivales distintos.
+- Las inscripciones de equipos se gestionan mientras el torneo está abierto. Un retiro libera el cupo y conserva la fila con estado `withdrawn`.
+- Los pedidos e invitaciones pendientes son únicos por cuenta y equipo. La aprobación registra o vincula la membresía.
+- Los torneos individuales se pueden configurar. La inscripción disponible en esta versión es por equipos.
 
-- Crear y configurar torneos.
-- Administrar estados, fechas, modalidad y cupos.
-- Gestionar inscripciones.
-- Generar enfrentamientos y cargar resultados.
-- Consultar tablas de posiciones.
+## Funcionalidades pendientes
 
-### Participante
-
-- Buscar y consultar los torneos vigentes y los equipos registrados.
-- Crear un equipo propio y quedar registrado como capitán y primer integrante.
-- Borrar un equipo que capitanea si está libre de historial de inscripciones.
-- Pedir ingreso a un equipo o responder una invitación en **Solicitudes**.
-- Invitar a una cuenta registrada y responder solicitudes en equipos que capitanea.
-- Ver sus membresías vinculadas en **Mis equipos**.
-- Consultar y marcar como leídos los avisos de equipos en **Notificaciones**.
-
-## Estado por módulo
-
-| Módulo                   | Estado                 | Alcance actual                                                                                          |
-| ------------------------ | ---------------------- | ------------------------------------------------------------------------------------------------------- |
-| Torneos                  | En desarrollo avanzado | CRUD, catálogo de seis formatos y una Strategy de validación concreta para cada modalidad               |
-| Equipos                  | En desarrollo avanzado | CRUD y listado con búsqueda y paginación en API y frontend; integrantes disponibles todavía solo en API |
-| Inscripciones            | En desarrollo avanzado | Alta, retiro lógico, cupos, duplicados y listado en API y desde el detalle del torneo                   |
-| Reportes                 | Prototipo implementado | PDF por torneo con información general, ocupación y equipos activos                                     |
-| Usuarios y autenticación | En desarrollo avanzado | Registro, inicio de sesión, asignación de roles y acceso público de solo lectura a los catálogos        |
-| Partidas y resultados    | Base de datos iniciada | Migraciones y modelos disponibles; todavía sin endpoints, reglas de aplicación ni pantallas             |
-| Clasificaciones          | Base de datos iniciada | Tabla y modelo de posiciones disponibles; el cálculo automático todavía está pendiente                  |
-| Estadísticas             | Pendiente              | Solo existen espacios planificados en la interfaz                                                       |
-
-## Reglas implementadas
-
-- Un torneo comienza en estado `draft`.
-- Los formatos disponibles son Liga, Eliminación simple, Grupos + Playoff,
-  Suizo, Free-for-all y Gauntlet.
-- Una Liga requiere al menos 3 participantes, tanto individual como por
-  equipos.
-- Eliminación simple requiere un cupo potencia de dos (`2`, `4`, `8`, `16`,
-  etc.) para generar una llave completa sin partidos libres.
-- Grupos + Playoff configura lugares de playoff, grupos y máximo por grupo desde
-  la creación o edición en borrador. El cupo total se deriva de la cantidad de
-  grupos y su límite; la configuración queda bloqueada al abrir inscripciones.
-- Suizo requiere al menos 4 participantes y permite definir sus rondas entre 1
-  y la cantidad de rivales distintos. La interfaz muestra una recomendación y
-  las rondas quedan bloqueadas al iniciar el torneo.
-- Free-for-all requiere al menos 3 participantes; la composición concreta de
-  cada partida se definirá al implementar los enfrentamientos.
-- Gauntlet requiere al menos 2 participantes; el orden de ingreso y la regla de
-  permanencia del ganador se implementarán con las partidas.
-- Las transiciones de estado siguen un flujo controlado.
-- Solo los torneos `draft` pueden eliminarse físicamente.
-- Un equipo registra automáticamente a su capitán como integrante.
-- Un usuario no puede repetirse dentro del mismo equipo.
-- El capitán no puede eliminarse de su equipo.
-- Solo un torneo `open` admite altas o retiros de inscripciones.
-- El cupo no puede superarse aunque existan solicitudes concurrentes.
-- Retirar un equipo conserva el historial mediante el estado `withdrawn`.
-- Un equipo con historial de inscripciones no puede eliminarse.
-
-## Funcionalidades planificadas
-
-1. Perfiles y permisos por rol y por propiedad de los recursos.
-2. Integración de organizadores, capitanes e integrantes con usuarios reales.
-3. Gestión de integrantes desde el frontend.
-4. Completar las transiciones posteriores al estado `open` desde el detalle del torneo.
-5. Extender las Strategies con la generación de enfrentamientos.
-6. Registro de resultados e historial de partidas.
-7. Cálculo de victorias, derrotas, empates, puntos y posiciones.
-8. Estadísticas de torneos, equipos y participantes.
-9. Ampliar los reportes con resultados, posiciones y estadísticas.
-10. Despliegue conectado del frontend, la API y la base de datos.
-
-## Fuera del alcance actual
-
-No deben presentarse como funcionalidades terminadas:
-
-- permisos de gestión por rol y por propiedad de torneos y equipos;
-- gestión de partidas o resultados mediante API o frontend;
-- cálculo de clasificaciones automáticas;
-- estadísticas reales;
-- integración referencial con la tabla `users`;
-- despliegue productivo.
-
-Estas capacidades pueden figurar como objetivos futuros, pero la documentación
-y las demostraciones deben diferenciarlas claramente del comportamiento actual.
+- Inscripción de participantes individuales y controles de interfaz para las transiciones posteriores a la apertura de inscripciones.
+- Integración del calendario de Liga y de sus resultados y posiciones. El repositorio contiene su trabajo inicial y el esquema de datos. Las rutas de partidas permanecen deshabilitadas mientras se completa la integración.
+- Generación de enfrentamientos de los demás formatos, estadísticas y reportes con resultados.

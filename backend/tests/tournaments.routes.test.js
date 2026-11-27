@@ -13,7 +13,7 @@ import {
   updateTournamentStatus,
 } from "../services/tournaments.service.js";
 
-const authenticatedRequest = useAuthenticatedRequests(app);
+const authenticatedRequest = useAuthenticatedRequests(app, "administrador");
 
 vi.mock("../services/tournaments.service.js", () => ({
   createTournament: vi.fn(),
@@ -35,7 +35,6 @@ const validPayload = {
   registrationDeadline: "2026-11-01",
   startDate: "2026-11-05",
   endDate: "2026-12-10",
-  organizerId: nextTestId(),
 };
 
 describe("GET /api/tournaments", () => {
@@ -225,24 +224,30 @@ describe("POST /api/tournaments", () => {
     vi.clearAllMocks();
   });
 
-  it("crea un torneo valido", async () => {
+  it("crea un torneo con la cuenta de sesión aunque se envíen otros IDs", async () => {
     const createdTournament = {
       id: nextTestId(),
       ...validPayload,
+      organizerId: 1,
+      organizerAccountId: 1,
       status: "draft",
     };
     createTournament.mockResolvedValue(createdTournament);
 
     const response = await authenticatedRequest()
       .post("/api/tournaments")
-      .send(validPayload);
+      .send({ ...validPayload, organizerId: 90, organizerAccountId: 91 });
 
     expect(response.status).toBe(201);
     expect(response.body).toEqual({
       message: "Torneo creado correctamente",
       data: createdTournament,
     });
-    expect(createTournament).toHaveBeenCalledWith(validPayload);
+    expect(createTournament).toHaveBeenCalledWith({
+      ...validPayload,
+      organizerId: 1,
+      organizerAccountId: 1,
+    });
   });
 
   it.each(["league", "single_elimination", "free_for_all", "gauntlet"])(
@@ -261,7 +266,11 @@ describe("POST /api/tournaments", () => {
         .send(payload);
 
       expect(response.status).toBe(201);
-      expect(createTournament).toHaveBeenCalledWith(payload);
+      expect(createTournament).toHaveBeenCalledWith({
+        ...payload,
+        organizerId: 1,
+        organizerAccountId: 1,
+      });
     },
   );
 
@@ -285,7 +294,11 @@ describe("POST /api/tournaments", () => {
       .send(payload);
 
     expect(response.status).toBe(201);
-    expect(createTournament).toHaveBeenCalledWith(payload);
+    expect(createTournament).toHaveBeenCalledWith({
+      ...payload,
+      organizerId: 1,
+      organizerAccountId: 1,
+    });
   });
 
   it("rechaza Grupos + Playoff sin su configuracion", async () => {
@@ -344,7 +357,11 @@ describe("POST /api/tournaments", () => {
       .send(payload);
 
     expect(response.status).toBe(201);
-    expect(createTournament).toHaveBeenCalledWith(payload);
+    expect(createTournament).toHaveBeenCalledWith({
+      ...payload,
+      organizerId: 1,
+      organizerAccountId: 1,
+    });
   });
 
   it("rechaza un torneo Suizo sin cantidad de rondas", async () => {
@@ -459,7 +476,11 @@ describe("POST /api/tournaments", () => {
       .send(payload);
 
     expect(response.status).toBe(201);
-    expect(createTournament).toHaveBeenCalledWith(payload);
+    expect(createTournament).toHaveBeenCalledWith({
+      ...payload,
+      organizerId: 1,
+      organizerAccountId: 1,
+    });
   });
 
   it("crea un torneo individual sin limites de equipo", async () => {
@@ -481,7 +502,11 @@ describe("POST /api/tournaments", () => {
       .send(individualPayload);
 
     expect(response.status).toBe(201);
-    expect(createTournament).toHaveBeenCalledWith(individualPayload);
+    expect(createTournament).toHaveBeenCalledWith({
+      ...individualPayload,
+      organizerId: 1,
+      organizerAccountId: 1,
+    });
   });
 
   it("rechaza un torneo individual con limites de equipo", async () => {
@@ -599,7 +624,7 @@ describe("PUT /api/tournaments/:id", () => {
     const updatedTournament = {
       id: tournamentId,
       ...updatePayload,
-      organizerId: validPayload.organizerId,
+      organizerId: 1,
       status: "draft",
     };
     updateTournament.mockResolvedValue({
@@ -675,7 +700,7 @@ describe("PUT /api/tournaments/:id", () => {
     const updatedTournament = {
       id: tournamentId,
       ...legacyPayload,
-      organizerId: validPayload.organizerId,
+      organizerId: 1,
       status: "open",
     };
     updateTournament.mockResolvedValue({
@@ -704,7 +729,7 @@ describe("PUT /api/tournaments/:id", () => {
     const updatedTournament = {
       id: tournamentId,
       ...legacyPayload,
-      organizerId: validPayload.organizerId,
+      organizerId: 1,
       status: "open",
     };
     updateTournament.mockResolvedValue({
@@ -731,7 +756,7 @@ describe("PUT /api/tournaments/:id", () => {
     const updatedTournament = {
       id: tournamentId,
       ...legacyPayload,
-      organizerId: validPayload.organizerId,
+      organizerId: 1,
       status: "open",
     };
     updateTournament.mockResolvedValue({

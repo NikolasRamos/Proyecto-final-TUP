@@ -1,6 +1,14 @@
 import { type FormEvent, useState } from "react";
 import { Link } from "react-router";
 
+import {
+  getGroupsPlayoffCapacity,
+  getMaxSwissRounds,
+  MIN_GROUP_COUNT,
+  MIN_KNOCKOUT_SLOTS,
+  MIN_SWISS_ROUNDS,
+} from "../../../shared/tournament-format-rules.ts";
+
 import { ApiError } from "../api/client";
 import { createTournament } from "../api/tournaments.api";
 import {
@@ -37,7 +45,6 @@ interface TournamentFormData {
   registrationDeadline: string;
   startDate: string;
   endDate: string;
-  organizerId: string;
 }
 
 type SubmitState =
@@ -50,7 +57,7 @@ const initialForm: TournamentFormData = {
   name: "",
   description: "",
   modality: "league",
-  maxParticipants: 3,
+  maxParticipants: getTournamentFormatUiRule("league").minParticipants,
   playoffSpots: 8,
   groupCount: 4,
   maxParticipantsPerGroup: 4,
@@ -61,7 +68,6 @@ const initialForm: TournamentFormData = {
   registrationDeadline: "",
   startDate: "",
   endDate: "",
-  organizerId: "",
 };
 
 function validateDates(form: TournamentFormData) {
@@ -142,7 +148,10 @@ export default function CreateTournamentPage() {
     setForm((current) => {
       const maxParticipants =
         modality === "groups_playoff"
-          ? current.groupCount * current.maxParticipantsPerGroup
+          ? getGroupsPlayoffCapacity(
+              current.groupCount,
+              current.maxParticipantsPerGroup,
+            )
           : Math.max(current.maxParticipants, rule.minParticipants);
 
       return { ...current, modality, maxParticipants };
@@ -162,7 +171,10 @@ export default function CreateTournamentPage() {
 
       return {
         ...next,
-        maxParticipants: next.groupCount * next.maxParticipantsPerGroup,
+        maxParticipants: getGroupsPlayoffCapacity(
+          next.groupCount,
+          next.maxParticipantsPerGroup,
+        ),
       };
     });
 
@@ -204,17 +216,6 @@ export default function CreateTournamentPage() {
       return;
     }
 
-    const organizerId = Number(form.organizerId);
-
-    if (!Number.isInteger(organizerId) || organizerId <= 0) {
-      setSubmitState({
-        status: "error",
-        message: "El identificador del organizador no es válido.",
-        details: [],
-      });
-      return;
-    }
-
     const {
       playoffSpots,
       groupCount,
@@ -228,7 +229,6 @@ export default function CreateTournamentPage() {
       description: form.description.trim() || null,
       minTeamMembers: form.isTeamTournament ? form.minTeamMembers : null,
       maxTeamMembers: form.isTeamTournament ? form.maxTeamMembers : null,
-      organizerId,
       ...(form.modality === "groups_playoff"
         ? { playoffSpots, groupCount, maxParticipantsPerGroup }
         : {}),
@@ -269,13 +269,17 @@ export default function CreateTournamentPage() {
   const isSubmitting = submitState.status === "submitting";
   const isGroupsPlayoff = form.modality === "groups_playoff";
   const isSwiss = form.modality === "swiss";
+  const maxSwissRounds = Math.max(
+    MIN_SWISS_ROUNDS,
+    getMaxSwissRounds(form.maxParticipants),
+  );
   const formatRule = getTournamentFormatUiRule(form.modality);
   const groupConfigurationError = isGroupsPlayoff
     ? getGroupsPlayoffConfigurationError(form)
     : null;
   const qualifiersPerGroup =
     isGroupsPlayoff &&
-    form.groupCount >= 2 &&
+    form.groupCount >= MIN_GROUP_COUNT &&
     form.playoffSpots % form.groupCount === 0
       ? form.playoffSpots / form.groupCount
       : null;
@@ -360,7 +364,7 @@ export default function CreateTournamentPage() {
                     id="playoffSpots"
                     name="playoffSpots"
                     type="number"
-                    min={2}
+                    min={MIN_KNOCKOUT_SLOTS}
                     step={1}
                     value={form.playoffSpots}
                     onChange={(event) =>
@@ -383,7 +387,7 @@ export default function CreateTournamentPage() {
                     id="groupCount"
                     name="groupCount"
                     type="number"
-                    min={2}
+                    min={MIN_GROUP_COUNT}
                     max={form.playoffSpots}
                     step={1}
                     value={form.groupCount}
@@ -456,8 +460,8 @@ export default function CreateTournamentPage() {
                     id="swissRounds"
                     name="swissRounds"
                     type="number"
-                    min={1}
-                    max={Math.max(1, form.maxParticipants - 1)}
+                    min={MIN_SWISS_ROUNDS}
+                    max={maxSwissRounds}
                     step={1}
                     value={form.swissRounds}
                     onChange={(event) =>
@@ -484,8 +488,7 @@ export default function CreateTournamentPage() {
                 {getSwissConfigurationError(form) ?? (
                   <>
                     Máximo sin repetir rivales:{" "}
-                    <strong>{Math.max(1, form.maxParticipants - 1)}</strong>{" "}
-                    rondas.
+                    <strong>{maxSwissRounds}</strong> rondas.
                   </>
                 )}
               </div>
@@ -647,28 +650,6 @@ export default function CreateTournamentPage() {
               required
               disabled={isSubmitting}
             />
-          </div>
-
-          <div className="form-field field-full">
-            <label htmlFor="organizerId">ID del organizador</label>
-            <input
-              id="organizerId"
-              name="organizerId"
-              type="number"
-              min={1}
-              step={1}
-              value={form.organizerId}
-              onChange={(event) =>
-                updateField("organizerId", event.target.value)
-              }
-              placeholder="Ejemplo: 1"
-              aria-describedby="organizer-hint"
-              required
-              disabled={isSubmitting}
-            />
-            <span className="field-hint" id="organizer-hint">
-              Campo temporal hasta que se integre el bloque de usuarios.
-            </span>
           </div>
         </div>
 

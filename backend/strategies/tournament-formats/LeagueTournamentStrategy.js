@@ -1,6 +1,7 @@
+import { MIN_PARTICIPANTS_BY_FORMAT } from "../../../shared/tournament-format-rules.ts";
 import TournamentFormatStrategy from "./TournamentFormatStrategy.js";
 
-export const LEAGUE_MIN_PARTICIPANTS = 3;
+export const LEAGUE_MIN_PARTICIPANTS = MIN_PARTICIPANTS_BY_FORMAT.league;
 
 export default class LeagueTournamentStrategy extends TournamentFormatStrategy {
   constructor() {

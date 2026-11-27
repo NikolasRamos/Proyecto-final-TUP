@@ -10,7 +10,7 @@ import {
   withdrawTeamFromTournament,
 } from "../services/registrations.service.js";
 
-const authenticatedRequest = useAuthenticatedRequests(app);
+const authenticatedRequest = useAuthenticatedRequests(app, "administrador");
 
 vi.mock("../services/registrations.service.js", () => ({
   listTournamentRegistrations: vi.fn(),

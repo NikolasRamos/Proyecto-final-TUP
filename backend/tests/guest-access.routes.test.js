@@ -11,6 +11,7 @@ import { useAuthenticatedRequests } from "./authenticated-request.js";
 
 const managementRoutes = [
   ["post", "/api/tournaments"],
+  ["get", "/api/tournaments/mine"],
   ["put", "/api/tournaments/1"],
   ["patch", "/api/tournaments/1/status"],
   ["delete", "/api/tournaments/1"],
@@ -83,6 +84,96 @@ describe("Acceso público a torneos y equipos", () => {
     expect(find).toHaveBeenCalledWith({
       where: { id: 1, status: { [Op.in]: ["open", "in_progress"] } },
     });
+  });
+});
+
+describe("Acceso del organizador a torneos", () => {
+  const organizerRequest = useAuthenticatedRequests(app);
+
+  it("combina la búsqueda con torneos públicos y propios", async () => {
+    const find = vi.spyOn(Tournament, "findAndCountAll").mockResolvedValue({
+      count: 0,
+      rows: [],
+    });
+
+    await organizerRequest().get("/api/tournaments?search=copa").expect(200);
+
+    expect(find).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          [Op.or]: [
+            { name: { [Op.iLike]: "%copa%" } },
+            { description: { [Op.iLike]: "%copa%" } },
+          ],
+          [Op.and]: [
+            {
+              [Op.or]: [
+                { status: { [Op.in]: ["open", "in_progress"] } },
+                { organizerAccountId: 1 },
+              ],
+            },
+          ],
+        },
+      }),
+    );
+  });
+
+  it("filtra Mis torneos por la cuenta de sesión", async () => {
+    const find = vi.spyOn(Tournament, "findAndCountAll").mockResolvedValue({
+      count: 0,
+      rows: [],
+    });
+
+    await organizerRequest()
+      .get("/api/tournaments/mine?status=draft&page=2&limit=5")
+      .expect(200);
+
+    expect(find).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { organizerAccountId: 1, status: "draft" },
+        offset: 5,
+        limit: 5,
+      }),
+    );
+  });
+
+  it("permite gestionar un torneo de la cuenta", async () => {
+    const update = vi.fn().mockResolvedValue({ id: 1, status: "open" });
+    vi.spyOn(Tournament, "findByPk").mockResolvedValue({
+      organizerAccountId: 1,
+      status: "draft",
+      update,
+    });
+
+    await organizerRequest()
+      .patch("/api/tournaments/1/status")
+      .send({ status: "open" })
+      .expect(200);
+
+    expect(update).toHaveBeenCalledWith({ status: "open" });
+  });
+
+  it.each(
+    managementRoutes.filter(([, path]) =>
+      path.startsWith("/api/tournaments/1"),
+    ),
+  )("bloquea la gestión de un torneo ajeno en %s %s", async (method, path) => {
+    vi.spyOn(Tournament, "findByPk").mockResolvedValue({
+      organizerAccountId: 2,
+      status: "open",
+    });
+
+    await organizerRequest()[method](path).expect(403);
+  });
+
+  it("no concede permisos por coincidencia con el identificador anterior", async () => {
+    vi.spyOn(Tournament, "findByPk").mockResolvedValue({
+      organizerId: 1,
+      organizerAccountId: null,
+      status: "draft",
+    });
+
+    await organizerRequest().delete("/api/tournaments/1").expect(404);
   });
 });
 

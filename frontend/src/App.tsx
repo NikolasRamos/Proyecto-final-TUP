@@ -79,6 +79,7 @@ function AppRoutes() {
       </Route>
       <Route element={<RequireCreationAccess resource="tournaments" />}>
         <Route path="/tournaments/new" element={<CreateTournamentPage />} />
+        <Route path="/my-tournaments" element={<TournamentsPage mine />} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />
     </Routes>

@@ -5,7 +5,7 @@ import app from "../app.js";
 import { createTournamentReportPdf } from "../reports/tournament-report.pdf.js";
 import { getTournamentReportData } from "../services/tournament-reports.service.js";
 
-const authenticatedRequest = useAuthenticatedRequests(app);
+const authenticatedRequest = useAuthenticatedRequests(app, "administrador");
 
 vi.mock("../reports/tournament-report.pdf.js", () => ({
   createTournamentReportPdf: vi.fn(),

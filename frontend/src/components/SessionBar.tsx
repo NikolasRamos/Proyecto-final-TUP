@@ -1,6 +1,9 @@
 import { Link, useMatch } from "react-router";
 
-import { useAuthSession } from "../auth/auth-session";
+import {
+  getCompetitionManagerToken,
+  useAuthSession,
+} from "../auth/auth-session";
 
 export default function SessionBar() {
   const { session, signOut, retry } = useAuthSession();
@@ -29,6 +32,11 @@ export default function SessionBar() {
         )}
         {session.status === "signedIn" && (
           <>
+            {getCompetitionManagerToken(session) && (
+              <Link className="secondary-link" to="/my-tournaments">
+                Mis torneos
+              </Link>
+            )}
             <Link className="secondary-link" to="/my-teams">
               Mis equipos
             </Link>

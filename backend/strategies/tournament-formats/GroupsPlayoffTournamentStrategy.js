@@ -1,5 +1,8 @@
+import {
+  getGroupsPlayoffCapacity,
+  validateGroupsPlayoffConfiguration,
+} from "../../../shared/tournament-format-rules.ts";
 import TournamentFormatStrategy from "./TournamentFormatStrategy.js";
-import { isPowerOfTwo } from "./tournament-format.utils.js";
 
 const CONFIGURATION_FIELDS = [
   ["playoffSpots", "Debe indicar la cantidad de lugares del playoff"],
@@ -25,52 +28,19 @@ export default class GroupsPlayoffTournamentStrategy extends TournamentFormatStr
       return issues;
     }
 
-    const { playoffSpots, groupCount, maxParticipantsPerGroup } = tournament;
+    issues.push(
+      ...validateGroupsPlayoffConfiguration(tournament).map(
+        ({ field, message }) => ({
+          path: [field],
+          message,
+        }),
+      ),
+    );
 
-    if (!isPowerOfTwo(playoffSpots)) {
-      issues.push({
-        path: ["playoffSpots"],
-        message:
-          "Los lugares del playoff deben ser una potencia de 2 (2, 4, 8, 16...)",
-      });
-    }
-
-    const validGroupCount = Number.isInteger(groupCount) && groupCount >= 2;
-
-    if (!validGroupCount) {
-      issues.push({
-        path: ["groupCount"],
-        message: "El torneo debe tener al menos 2 grupos",
-      });
-    } else if (groupCount > playoffSpots) {
-      issues.push({
-        path: ["groupCount"],
-        message:
-          "La cantidad de grupos no puede superar los lugares del playoff",
-      });
-    } else if (playoffSpots % groupCount !== 0) {
-      issues.push({
-        path: ["groupCount"],
-        message:
-          "La cantidad de grupos debe dividir exactamente los lugares del playoff",
-      });
-    } else if (isPowerOfTwo(playoffSpots)) {
-      const qualifiersPerGroup = playoffSpots / groupCount;
-
-      if (
-        !Number.isInteger(maxParticipantsPerGroup) ||
-        maxParticipantsPerGroup <= qualifiersPerGroup
-      ) {
-        issues.push({
-          path: ["maxParticipantsPerGroup"],
-          message:
-            "El maximo por grupo debe ser mayor que los clasificados por grupo",
-        });
-      }
-    }
-
-    const expectedMaxParticipants = groupCount * maxParticipantsPerGroup;
-
+    const expectedMaxParticipants = getGroupsPlayoffCapacity(
+      tournament.groupCount,
+      tournament.maxParticipantsPerGroup,
+    );
     if (
       Number.isInteger(expectedMaxParticipants) &&
       tournament.maxParticipants !== expectedMaxParticipants

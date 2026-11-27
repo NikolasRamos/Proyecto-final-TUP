@@ -10,6 +10,7 @@ y su guía de uso en [`postman/README.md`](../postman/README.md).
 ## Convenciones
 
 - URL local: `http://localhost:3000`.
+- URL de producción: [aplicación en Vercel](https://proyecto-final-tup.vercel.app/).
 - Prefijo actual: `/api`.
 - Solicitudes y respuestas: JSON.
 - Identificadores: enteros positivos autoincrementales.
@@ -49,19 +50,16 @@ Comprueba que Express responde.
 
 ### Acceso por rol
 
-Los invitados y participantes pueden buscar y consultar torneos con inscripción
-abierta (`open`) o en curso (`in_progress`). La API aplica ese límite al
-listado, al total de la paginación y a la consulta por ID. Un filtro por un
-estado no visible devuelve una página vacía y un detalle no visible devuelve
-`404`. Los organizadores y administradores pueden consultar todos los estados.
+Invitados y participantes pueden consultar torneos abiertos (`open`) o en curso
+(`in_progress`). El organizador también puede consultar sus propios torneos en
+cualquier estado y el administrador puede consultar todos. La API aplica el
+alcance al listado paginado y al detalle. Un detalle fuera del alcance responde
+`404`.
 
-La gestión de torneos, la exportación de reportes y el acceso a las
-inscripciones requieren `Authorization: Bearer <token>` de un organizador o
-administrador. Los mismos roles habilitan la edición de equipos y la consulta
-y gestión de sus integrantes. El borrado de un equipo corresponde a su capitán
-o a un administrador. El listado y el detalle de equipos son públicos, y todas
-las cuentas con un rol base pueden crear equipos. En las rutas protegidas, la
-API devuelve `401` sin sesión válida y `403` cuando la cuenta no tiene permiso.
+Para crear torneos se requiere rol organizador o administrador. La edición, los
+cambios de estado, la eliminación, el reporte y las inscripciones requieren ser
+organizador del torneo o administrador. Las operaciones protegidas requieren
+`Authorization: Bearer <token>`.
 
 ### Listar
 
@@ -104,6 +102,14 @@ ambos formatos todavía está pendiente.
 GET /api/tournaments?search=apertura&status=open&page=1&limit=10&sortBy=name&order=asc
 ```
 
+Invitados y participantes ven torneos abiertos y en curso. Un organizador
+también ve sus propios torneos en cualquier estado. Los administradores pueden
+consultar todos los torneos.
+
+`GET /api/tournaments/mine` devuelve solo los torneos vinculados a la cuenta
+de sesión. Admite los mismos filtros y paginación. Requiere rol de organizador
+o administrador.
+
 ### Consultar
 
 `GET /api/tournaments/:id`
@@ -127,8 +133,7 @@ GET /api/tournaments?search=apertura&status=open&page=1&limit=10&sortBy=name&ord
   "maxTeamMembers": 5,
   "registrationDeadline": "2026-11-01",
   "startDate": "2026-11-05",
-  "endDate": "2026-12-10",
-  "organizerId": 1
+  "endDate": "2026-12-10"
 }
 ```
 
@@ -150,10 +155,15 @@ Reglas principales:
 - si el formato es `gauntlet`, el cupo mínimo es 2;
 - el cierre de inscripción no puede ser posterior al inicio;
 - la finalización no puede ser anterior al inicio;
-- `organizerId` debe ser un entero positivo;
+- el servidor asigna como organizador a la cuenta de sesión;
 - el servidor genera el identificador y el estado inicial `draft`.
 
 Respuesta correcta: `201 Created`.
+
+Solo un organizador del torneo o un administrador puede editarlo, cambiar su
+estado, eliminarlo, gestionar inscripciones y exportar el reporte. La gestión
+de un torneo ajeno visible devuelve `403`. Los torneos ajenos fuera del
+catálogo público devuelven `404` para el organizador.
 
 Ejemplo de configuración de Grupos + Playoff:
 
@@ -240,6 +250,14 @@ torneo y la fecha de generación.
 - `500`: no se pudo reunir la información o generar el documento.
 
 ## Equipos
+
+### Permisos de equipos
+
+El listado y el detalle son públicos. Cualquier cuenta con un rol base puede
+crear equipos. El organizador y el administrador pueden actualizar equipos y
+gestionar integrantes mediante las rutas directas. El capitán vinculado usa las
+rutas de solicitudes e invitaciones para incorporar integrantes con su
+consentimiento. El borrado corresponde al capitán vinculado o a un administrador.
 
 ### Listar
 
@@ -428,13 +446,16 @@ torneo está `open`.
 - `POST /api/auth/register` recibe `nombre`, `email` y `password`. Devuelve
   `201` con los datos de la cuenta. El servidor asigna el rol `participante`.
   Un correo ya registrado devuelve `409`.
-- `POST /api/auth/login` recibe `email` y `password`. Devuelve `200` con un
-  JWT y los datos de la cuenta si las credenciales son correctas.
+- `POST /api/auth/login` recibe `email` y `password`. Devuelve `200` con `token`
+  (JWT con vigencia de 8 horas) y `data` con la cuenta. Credenciales incorrectas
+  devuelven `401`.
 - `GET /api/auth/me` recibe `Authorization: Bearer <token>` y devuelve la cuenta
   autenticada con `idUsuario`, `nombre`, `email`, `idRol` y `role`. El nombre del
   rol se lee de la base y refleja las asignaciones posteriores al login. Si la
-  sesión falta o ya no es válida, devuelve `401`.
-- Ambos endpoints normalizan el correo y excluyen la contraseña de la respuesta.
+  sesión falta o ya no es válida, devuelve `401`. Si la cuenta carece de un rol
+  disponible, devuelve `403`.
+- El registro y el inicio de sesión normalizan el correo y excluyen la
+  contraseña de la respuesta.
   Para emitir tokens, el servidor necesita configurar `JWT_SECRET`.
 
 ### Asignar un rol a una cuenta nueva
@@ -491,11 +512,8 @@ con la cuenta administradora para habilitar otras cuentas del equipo.
 
 ## Limitaciones actuales
 
-- La edición por propiedad de un equipo y las solicitudes de ingreso están
-  pendientes. La creación de un equipo por un participante usa su cuenta activa
-  como capitán.
-- La validación de los identificadores de organizador e integrante indicados
-  manualmente sigue pendiente.
-- Las rutas de partidas y resultados aún no están implementadas.
-- Todavía no existe una especificación OpenAPI; este documento debe verificarse
-  contra las pruebas y el comportamiento real.
+- Los torneos individuales admiten configuración. Las rutas de inscripción
+  aceptan equipos con su plantel.
+- Las rutas iniciales de partidas y clasificaciones están deshabilitadas
+  mientras se completa su integración.
+- Esta referencia y la colección de Postman describen el contrato disponible.

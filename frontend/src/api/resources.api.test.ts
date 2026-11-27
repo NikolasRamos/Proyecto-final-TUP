@@ -199,7 +199,6 @@ describe("API de recursos", () => {
       registrationDeadline: tournament.registrationDeadline,
       startDate: tournament.startDate,
       endDate: tournament.endDate,
-      organizerId: tournament.organizerId,
     };
 
     await createTournament(payload, token);

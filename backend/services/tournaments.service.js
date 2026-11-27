@@ -3,7 +3,16 @@ import { Op } from "sequelize";
 import Tournament from "../models/Tournament.js";
 import { getUserNamesByIds } from "./user-names.service.js";
 
-const publicTournamentStatuses = ["open", "in_progress"];
+export const publicTournamentStatuses = Object.freeze(["open", "in_progress"]);
+
+function tournamentVisibility(organizerAccountId, statuses) {
+  const publicTournaments = { status: { [Op.in]: statuses } };
+  return organizerAccountId === undefined
+    ? publicTournaments
+    : {
+        [Op.or]: [publicTournaments, { organizerAccountId }],
+      };
+}
 
 const allowedStatusTransitions = Object.freeze({
   draft: ["open", "cancelled"],
@@ -27,7 +36,7 @@ export function listTournaments(
     sortBy = "createdAt",
     order = "desc",
   },
-  { publicOnly = false } = {},
+  { publicOnly = false, organizerAccountId } = {},
 ) {
   const where = {};
 
@@ -38,7 +47,12 @@ export function listTournaments(
     ];
   }
 
-  if (publicOnly) {
+  if (publicOnly && organizerAccountId !== undefined) {
+    where[Op.and] = [
+      tournamentVisibility(organizerAccountId, publicTournamentStatuses),
+    ];
+    if (status) where.status = status;
+  } else if (publicOnly) {
     const visibleStatuses = status
       ? publicTournamentStatuses.filter(
           (visibleStatus) => visibleStatus === status,
@@ -47,6 +61,10 @@ export function listTournaments(
     where.status = { [Op.in]: visibleStatuses };
   } else if (status) {
     where.status = status;
+  }
+
+  if (!publicOnly && organizerAccountId !== undefined) {
+    where.organizerAccountId = organizerAccountId;
   }
 
   if (modality) {

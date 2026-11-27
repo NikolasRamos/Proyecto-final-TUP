@@ -5,7 +5,13 @@ demostración del repositorio. Las instrucciones de respaldo y restauración
 quedan disponibles si en otro despliegue se necesitan conservar los datos de
 Render.
 
-## Arquitectura objetivo
+## Publicación del prototipo
+
+El grupo integra el código en `dev`. La versión pública se publica desde un
+commit de esa rama mediante Vercel CLI. GitHub y Vercel tienen pasos de
+publicación separados. [Sitio del prototipo](https://proyecto-final-tup.vercel.app/).
+
+## Arquitectura del despliegue
 
 ```text
 Navegador
@@ -197,22 +203,39 @@ con la conexión directa desde una terminal controlada.
 
 ## 8. Desplegar y validar
 
-Después del despliegue, realizar estas comprobaciones en orden:
+1. Sincronizá `dev` y comprobá que el directorio de trabajo esté limpio.
+   Trabajá desde la raíz vinculada al proyecto del grupo.
+2. Prepará una compilación de producción sin asignarle el dominio público.
 
-1. Abrir `https://PROYECTO.vercel.app/api/health`; debe responder estado `ok`.
-2. Abrir la página inicial.
-3. Recargar directamente una ruta interna, por ejemplo `/tournaments`.
-4. Listar y abrir el detalle de un torneo existente.
-5. Crear, editar y eliminar un torneo de prueba.
-6. Listar equipos, abrir un detalle y probar sus integrantes.
-7. Inscribir y retirar un equipo de un torneo.
-8. Descargar el reporte PDF.
-9. Probar inicio de sesión y operaciones protegidas si la integración de
-   autenticación está habilitada.
-10. Revisar **Logs** en Vercel y comprobar que no existan errores de conexión.
+   ```powershell
+   git switch dev
+   git pull --ff-only origin dev
+   git status --short
+   npx.cmd --yes vercel@latest deploy --prod --skip-domain
+   ```
 
-La colección de Postman puede duplicarse con un ambiente `Vercel` cuya
-variable `baseUrl` sea la URL del proyecto, sin barra final.
+3. Si el commit incluye migraciones, aplicalas en Neon y verificá el estado
+   del esquema antes de activar la versión. [Aplicar migraciones](#5-aplicar-migraciones-pendientes).
+4. Cuando la compilación esté lista, reemplazá `URL_DEL_DESPLIEGUE` por la URL
+   informada por Vercel y activala en el dominio público.
+
+   ```powershell
+   npx.cmd --yes vercel@latest promote URL_DEL_DESPLIEGUE
+   ```
+
+   [Despliegue con Vercel CLI](https://vercel.com/docs/cli/deploy) · [Promover una versión](https://vercel.com/docs/cli/promote).
+
+5. Confirmá que `GET /api/health` responde `200` y `status: ok`. Listá torneos y
+   equipos para verificar también la conexión con Neon.
+6. Abrí una URL interna directamente. La API de **Mis torneos** debe responder
+   `401` si se consulta sin sesión. Con una cuenta organizadora, comprobá que
+   aparezcan sus torneos y que una segunda cuenta no pueda editarlos.
+7. Probá **Mis equipos**, solicitudes y notificaciones con cuentas de
+   demostración preparadas para el ambiente publicado. Revisá los registros del
+   backend en Vercel si falla una operación.
+
+Para repetir las consultas en Postman, usá un ambiente `Vercel` con la URL del
+sitio como `baseUrl`. [Guía de Postman](../postman/README.md).
 
 ## 9. Comparar datos antes de retirar Render
 

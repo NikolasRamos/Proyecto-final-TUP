@@ -1,6 +1,8 @@
+import { MIN_PARTICIPANTS_BY_FORMAT } from "../../../shared/tournament-format-rules.ts";
 import TournamentFormatStrategy from "./TournamentFormatStrategy.js";
 
-export const FREE_FOR_ALL_MIN_PARTICIPANTS = 3;
+export const FREE_FOR_ALL_MIN_PARTICIPANTS =
+  MIN_PARTICIPANTS_BY_FORMAT.free_for_all;
 
 export default class FreeForAllTournamentStrategy extends TournamentFormatStrategy {
   constructor() {

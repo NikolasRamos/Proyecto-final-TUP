@@ -1,6 +1,13 @@
 import { z } from "zod";
 
 import {
+  MIN_GROUP_COUNT,
+  MIN_KNOCKOUT_SLOTS,
+  MIN_SWISS_ROUNDS,
+  MIN_SWISS_ROUNDS_MESSAGE,
+  MIN_TOURNAMENT_PARTICIPANTS,
+} from "../../shared/tournament-format-rules.ts";
+import {
   TOURNAMENT_MODALITIES,
   TOURNAMENT_STATUSES,
 } from "../models/Tournament.js";
@@ -33,17 +40,26 @@ const tournamentFields = {
   maxParticipants: z
     .number()
     .int("La cantidad maxima de participantes debe ser un numero entero")
-    .min(2, "El torneo debe admitir al menos 2 participantes"),
+    .min(
+      MIN_TOURNAMENT_PARTICIPANTS,
+      `El torneo debe admitir al menos ${MIN_TOURNAMENT_PARTICIPANTS} participantes`,
+    ),
   playoffSpots: z
     .number({ error: "Los lugares del playoff deben ser un numero" })
     .int("Los lugares del playoff deben ser un numero entero")
-    .min(2, "El playoff debe admitir al menos 2 participantes")
+    .min(
+      MIN_KNOCKOUT_SLOTS,
+      `El playoff debe admitir al menos ${MIN_KNOCKOUT_SLOTS} participantes`,
+    )
     .nullable()
     .optional(),
   groupCount: z
     .number({ error: "La cantidad de grupos debe ser un numero" })
     .int("La cantidad de grupos debe ser un numero entero")
-    .min(2, "El torneo debe tener al menos 2 grupos")
+    .min(
+      MIN_GROUP_COUNT,
+      `El torneo debe tener al menos ${MIN_GROUP_COUNT} grupos`,
+    )
     .nullable()
     .optional(),
   maxParticipantsPerGroup: z
@@ -55,7 +71,7 @@ const tournamentFields = {
   swissRounds: z
     .number({ error: "La cantidad de rondas debe ser un numero" })
     .int("La cantidad de rondas debe ser un numero entero")
-    .min(1, "El torneo Suizo debe tener al menos una ronda")
+    .min(MIN_SWISS_ROUNDS, MIN_SWISS_ROUNDS_MESSAGE)
     .nullable()
     .optional(),
   isTeamTournament: z.boolean({
@@ -251,10 +267,7 @@ function validateTournamentUpdate(tournament, context) {
 }
 
 export const createTournamentSchema = z
-  .object({
-    ...tournamentFields,
-    organizerId: entityIdSchema,
-  })
+  .object(tournamentFields)
   .superRefine(validateTournament);
 
 export const updateTournamentSchema = z

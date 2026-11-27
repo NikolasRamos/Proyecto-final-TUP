@@ -6,22 +6,27 @@ evolucionar sin perder sincronización entre ambientes.
 
 ## Modelo actual
 
-```mermaid
-erDiagram
-    TOURNAMENTS ||--o{ TOURNAMENT_REGISTRATIONS : recibe
-    TEAMS ||--o{ TOURNAMENT_REGISTRATIONS : participa
-    TEAMS ||--o{ TEAM_MEMBERS : contiene
-    TOURNAMENTS ||--o{ MATCHES : programa
-    TEAMS ||--o{ MATCHES : disputa
-    MATCHES ||--o| RESULTS : registra
-    TOURNAMENTS ||--o{ STANDINGS : clasifica
-    TEAMS ||--o{ STANDINGS : ocupa
-```
+El [diagrama entidad-relación](diagrama-entidad-relacion.md) distingue las
+claves foráneas de los vínculos que verifica la aplicación.
+
+### `rol` y `usuario`
+
+`rol` tiene un `idRol` y un nombre único. `usuario` guarda `idUsuario`,
+nombre, correo único y el hash de la contraseña. `usuario.idRol` referencia a
+`rol.idRol`. La baja lógica de una cuenta usa `deletedAt`. La API comprueba
+que la cuenta siga activa y utiliza su rol vigente para autorizar operaciones.
 
 ### `tournaments`
 
 Almacena nombre, descripción, formato en la columna `modality`, cupo, fechas,
 estado y `organizer_id`. Los identificadores son enteros autoincrementales.
+
+La migración `017-link-tournament-organizer-accounts.cjs` agrega
+`organizer_account_id` y un índice para el listado Mis torneos. El servidor
+guarda ahí el ID de la cuenta autenticada al crear un torneo. Los torneos
+anteriores conservan `organizer_id` y quedan sin una cuenta vinculada, porque
+ese identificador originalmente se ingresaba manualmente. Los administradores
+pueden seguir gestionando esos torneos.
 
 La migración `012-add-groups-playoff-configuration.cjs` agrega:
 
@@ -55,23 +60,37 @@ anterior `group_stage` en `groups_playoff`. Se conserva el nombre de columna
 `modality` para no romper el contrato existente; en el dominio y la interfaz se
 presenta como formato del torneo.
 
+La migración `009` agrega `is_team_tournament`, `min_team_members` y
+`max_team_members`. Un torneo individual conserva ambos límites vacíos. Los
+torneos por equipos admiten límites opcionales para filas anteriores al cambio.
+
 Índices principales:
 
-- `organizer_id`;
+- `organizer_id` y `organizer_account_id`;
 - `status`.
 
-### `teams`
+### `teams` y `team_members`
 
-Almacena nombre, descripción y `captain_id`. El capitán se incorpora también
-a `team_members` cuando se crea el equipo.
+`teams` almacena el nombre, la descripción y el `captain_id` histórico.
+La migración `014` agrega `captain_account_id` para identificar la cuenta que
+puede actuar como capitán. Un administrador puede vincular capitanes desde el
+detalle de los equipos de demostración.
 
-### `team_members`
+`team_members.team_id` tiene una clave foránea con borrado en cascada. La
+combinación `team_id + user_id` es única. Desde la migración `015`,
+`account_linked` distingue las membresías verificadas de las filas históricas.
+**Mis equipos** solo devuelve membresías vinculadas a la cuenta autenticada.
 
-Relaciona equipos con identificadores numéricos de usuarios.
+### `team_membership_requests` y `team_notification_reads`
 
-- `team_id` referencia `teams.id`.
-- La eliminación de un equipo elimina sus integrantes mediante `CASCADE`.
-- La combinación `team_id + user_id` es única.
+La migración `015` guarda solicitudes e invitaciones en
+`team_membership_requests` con equipo, cuenta, iniciador, tipo y estado. Su
+índice único parcial permite un solo trámite `pending` por equipo y cuenta.
+La aceptación actualiza el trámite y vincula la membresía en una transacción.
+
+La migración `016` guarda lecturas en `team_notification_reads`. La clave
+compuesta combina `request_id`, `user_id` y `event`. Los avisos se calculan
+desde los trámites visibles. La tabla registra qué cuenta leyó cada evento.
 
 ### `tournament_registrations`
 
@@ -81,6 +100,13 @@ Relaciona torneos y equipos con estado `registered` o `withdrawn`.
 - `team_id` referencia `teams.id`.
 - Ambas claves usan `ON DELETE RESTRICT` para conservar el historial.
 - La combinación `tournament_id + team_id` es única.
+
+### `tournament_registration_members`
+
+La migración `010` guarda el plantel elegido para una inscripción. Cada fila
+referencia a `tournament_registrations.id` con borrado en cascada y el par
+`registration_id + user_id` es único. Reactivar una inscripción reemplaza el
+plantel anterior.
 
 ### `matches`
 
@@ -107,26 +133,18 @@ victorias, empates, derrotas, goles, diferencia y puntos.
 - `team_id` referencia `teams.id`.
 - La combinación `tournament_id + team_id` es única.
 
-## Integración pendiente con usuarios
+## Identificadores y cuentas de usuario
 
-`tournaments.organizer_id`, `teams.captain_id` y
-`team_members.user_id` ya almacenan enteros positivos, pero todavía no poseen claves
-foráneas hacia `users.id`.
-
-Cuando la tabla `users` esté disponible se deben crear migraciones nuevas para:
-
-- agregar las claves foráneas;
-- utilizar `ON UPDATE CASCADE`;
-- utilizar `ON DELETE RESTRICT` donde exista información histórica;
-- agregar las asociaciones de Sequelize;
-- devolver datos públicos del usuario en lugar de solamente su identificador.
-
-Las migraciones existentes no deben modificarse para incorporar esta relación.
+La tabla `usuario` identifica cada cuenta con `idUsuario`. Los identificadores
+del prototipo (`tournaments.organizer_id`, `teams.captain_id` y
+`team_members.user_id`) pueden contener datos anteriores a la autenticación.
+Los permisos de propiedad de torneos y capitanía se comprueban con
+`organizer_account_id` y `captain_account_id`, respectivamente.
 
 ## Identificadores simplificados del prototipo
 
 Las entidades del bloque utilizan `INTEGER` autoincremental para facilitar las
-pruebas, las URLs y la integración con `users.idUsuario`. El tipo se encuentra
+pruebas, las URLs y la integración con `usuario.idUsuario`. El tipo se encuentra
 centralizado en el schema `backend/schemas/id.schema.js` y en el tipo
 `frontend/src/types/id.ts`, por lo que el resto del código trata cada ID como
 un valor opaco.
@@ -218,25 +236,18 @@ Aplicar migraciones:
 npm run db:migrate
 ```
 
-Ejecutar el seeder de demostración:
+Para cargar torneos, equipos, integrantes de demostración y roles en una base
+nueva, usar:
 
 ```bash
-npm run db:seed
+npm run db:seed:demo
 ```
 
-El archivo `backend/seeders/001-demo-data.cjs` carga 6 torneos, 16 equipos,
-96 integrantes y sus inscripciones. `SequelizeData` registra su ejecución, por
-lo que repetir el comando no duplica registros.
-
-Retirar solamente los datos creados por los seeders:
-
-```bash
-npm run db:seed:undo
-```
-
-Los IDs de usuario son temporales y no tienen clave foránea hasta integrar el
-módulo de autenticación. Los registros manuales no forman parte del `down` del
-seeder.
+En local, `npm run db:seed` también crea cuatro cuentas ficticias. Sequelize
+registra las ejecuciones en `SequelizeData`. Los datos históricos de ejemplo
+conservan sus IDs y se vinculan a cuentas mediante las operaciones descritas
+arriba. Para operar sobre una base administrada, ver la
+[guía de despliegue](deployment-vercel.md).
 
 Detener PostgreSQL conservando los datos:
 
@@ -247,15 +258,8 @@ docker compose down
 El volumen `postgres_data` mantiene la información entre reinicios. Eliminar
 el volumen borra los datos locales y solo debe hacerse de manera intencional.
 
-Como las migraciones iniciales se renombraron de marcas temporales a la
-secuencia `001` a `005`, las bases locales anteriores deben reconstruirse una
-sola vez. Este procedimiento está permitido únicamente mientras contengan
-datos de prueba:
-
-```bash
-docker compose down -v
-npm run docker:up
-```
+Si una base de prueba registra los nombres históricos, seguir el procedimiento
+para bases descartables de la [guía de desarrollo](development.md#docker-y-base-de-datos).
 
 ## Reglas para cambios del esquema
 

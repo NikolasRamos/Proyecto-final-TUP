@@ -91,7 +91,7 @@ function isSortOption(value: string | null): value is SortOption {
   ].includes(value ?? "");
 }
 
-export default function TournamentsPage() {
+export default function TournamentsPage({ mine = false }: { mine?: boolean }) {
   const { session } = useAuthSession();
   const token = getCompetitionManagerToken(session);
   const visibleStatuses = token ? tournamentStatuses : publicTournamentStatuses;
@@ -120,6 +120,7 @@ export default function TournamentsPage() {
     "asc" | "desc",
   ];
   const requestKey = [
+    mine,
     search,
     status ?? "",
     modality ?? "",
@@ -149,6 +150,7 @@ export default function TournamentsPage() {
 
     void listTournaments(
       {
+        ...(mine ? { mine: true } : {}),
         search: search || undefined,
         status,
         modality,
@@ -204,6 +206,7 @@ export default function TournamentsPage() {
     search,
     status,
     modality,
+    mine,
     page,
     limit,
     sortBy,
@@ -251,11 +254,13 @@ export default function TournamentsPage() {
       <header className="list-page-header">
         <div>
           <span className="eyebrow">Competencias</span>
-          <h1>Torneos</h1>
+          <h1>{mine ? "Mis torneos" : "Torneos"}</h1>
           <p>
-            {token
-              ? "Consultá los torneos registrados y su información principal."
-              : "Buscá torneos con inscripción abierta o en curso."}
+            {mine
+              ? "Consultá los torneos que creaste con tu cuenta."
+              : token
+                ? "Consultá los torneos registrados y su información principal."
+                : "Buscá torneos con inscripción abierta o en curso."}
           </p>
         </div>
         {token && (
