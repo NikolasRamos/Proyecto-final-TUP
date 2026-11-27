@@ -140,6 +140,16 @@ describe("TournamentDetailPage", () => {
     expect(getTournament).toHaveBeenCalledWith(101, testToken);
   });
 
+  it("muestra el nombre del organizador cuando viene en la respuesta", async () => {
+    vi.mocked(getTournament).mockResolvedValue({
+      data: { ...tournament, organizerName: "Niko" },
+    });
+
+    renderPage();
+
+    expect(await screen.findByText("Niko")).toBeInTheDocument();
+  });
+
   it("descarga el reporte exportable del torneo", async () => {
     const user = userEvent.setup();
     const report = new Blob(["%PDF-1.3"], { type: "application/pdf" });
@@ -676,6 +686,28 @@ describe("TournamentDetailPage", () => {
       await screen.findByLabelText("Equipo a inscribir"),
       "201",
     );
+
+    expect(await screen.findByText(/Niko/)).toBeInTheDocument();
+    expect(screen.getByText(/Ana/)).toBeInTheDocument();
+  });
+
+  it("muestra los nombres del plantel en las inscripciones", async () => {
+    vi.mocked(listTournamentRegistrations).mockResolvedValue({
+      data: [
+        {
+          id: 301,
+          status: "registered",
+          registeredAt: "2026-10-30T12:00:00.000Z",
+          updatedAt: "2026-10-30T12:00:00.000Z",
+          memberIds: [1, 2],
+          memberNames: ["Niko", "Ana"],
+          team: { id: 201, name: "Los Halcones" },
+        },
+      ],
+      pagination: { page: 1, limit: 100, total: 1, totalPages: 1 },
+    });
+
+    renderPage();
 
     expect(await screen.findByText(/Niko/)).toBeInTheDocument();
     expect(screen.getByText(/Ana/)).toBeInTheDocument();
