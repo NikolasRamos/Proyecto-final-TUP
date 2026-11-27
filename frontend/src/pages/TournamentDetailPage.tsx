@@ -1278,7 +1278,10 @@ export default function TournamentDetailPage() {
                 </div>
                 <div>
                   <dt>Organizador temporal</dt>
-                  <dd>Usuario #{state.tournament.organizerId}</dd>
+                  <dd>
+                    {state.tournament.organizerName ??
+                      `Usuario #${state.tournament.organizerId}`}
+                  </dd>
                 </div>
                 <div>
                   <dt>Creado</dt>
