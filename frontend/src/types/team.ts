@@ -7,6 +7,7 @@ export interface Team {
   captainId: EntityId;
   captainAccountId?: EntityId | null;
   captainName?: string | null;
+  memberNames?: (string | null)[];
   createdAt: string;
   updatedAt: string;
 }

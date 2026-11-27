@@ -84,6 +84,19 @@ describe("pantallas principales de equipos", () => {
     expect(await screen.findByText("Capitán: Niko")).toBeInTheDocument();
   });
 
+  it("muestra los nombres de los integrantes en el listado", async () => {
+    vi.mocked(listTeams).mockResolvedValue({
+      data: [{ ...team, memberNames: ["Niko", "Ana"] }],
+      pagination: { page: 1, limit: 10, total: 1, totalPages: 1 },
+    });
+
+    renderPage("/teams");
+
+    expect(
+      await screen.findByText("Integrantes: Niko, Ana"),
+    ).toBeInTheDocument();
+  });
+
   it("busca equipos y navega entre páginas", async () => {
     vi.mocked(listTeams).mockImplementation((params = {}) =>
       Promise.resolve({
