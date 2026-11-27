@@ -12,8 +12,9 @@ export async function getTournamentReportData(tournamentId) {
     return { outcome: "not_found" };
   }
 
-  const namesById = await getUserNamesByIds([tournament.organizerId]);
-  tournament.organizerName = namesById.get(tournament.organizerId) ?? null;
+  const { organizerAccountId } = tournament;
+  const namesById = await getUserNamesByIds([organizerAccountId]);
+  tournament.organizerName = namesById.get(organizerAccountId) ?? null;
 
   const registrations = await TournamentRegistration.findAll({
     attributes: ["id", "teamId", "createdAt"],

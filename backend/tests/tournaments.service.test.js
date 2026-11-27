@@ -102,7 +102,7 @@ describe("tournaments service", () => {
   });
 
   it("incluye el nombre del organizador en el detalle", async () => {
-    const tournament = { id: 101, organizerId: 7 };
+    const tournament = { id: 101, organizerId: 3, organizerAccountId: 7 };
     Tournament.findByPk.mockResolvedValue(tournament);
     User.findAll.mockResolvedValue([{ idUsuario: 7, nombre: "Niko" }]);
 
@@ -114,6 +114,19 @@ describe("tournaments service", () => {
       where: { idUsuario: { [Op.in]: [7] } },
       raw: true,
     });
+  });
+
+  it("conserva un torneo histórico sin atribuirlo a otra cuenta", async () => {
+    Tournament.findByPk.mockResolvedValue({
+      id: 101,
+      organizerId: 7,
+      organizerAccountId: null,
+    });
+
+    const result = await getTournamentById(101);
+
+    expect(result.organizerName).toBeNull();
+    expect(User.findAll).not.toHaveBeenCalled();
   });
 
   it("actualiza un torneo existente", async () => {

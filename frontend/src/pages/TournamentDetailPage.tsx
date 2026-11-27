@@ -1300,10 +1300,12 @@ export default function TournamentDetailPage() {
                   <dd>{formatDate(state.tournament.endDate)}</dd>
                 </div>
                 <div>
-                  <dt>Organizador temporal</dt>
+                  <dt>Organizador</dt>
                   <dd>
                     {state.tournament.organizerName ??
-                      `Usuario #${state.tournament.organizerId}`}
+                      (state.tournament.organizerAccountId
+                        ? `Usuario #${state.tournament.organizerAccountId}`
+                        : "Sin cuenta vinculada")}
                   </dd>
                 </div>
                 <div>

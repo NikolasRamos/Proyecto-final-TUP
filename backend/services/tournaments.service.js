@@ -97,8 +97,9 @@ export async function getTournamentById(
 
   if (!tournament) return tournament;
 
-  const namesById = await getUserNamesByIds([tournament.organizerId]);
-  const organizerName = namesById.get(tournament.organizerId) ?? null;
+  const { organizerAccountId } = tournament;
+  const namesById = await getUserNamesByIds([organizerAccountId]);
+  const organizerName = namesById.get(organizerAccountId) ?? null;
 
   if (typeof tournament.setDataValue === "function") {
     tournament.setDataValue("organizerName", organizerName);

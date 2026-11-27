@@ -86,7 +86,10 @@ function drawInformationGrid(document, tournament) {
       ["Fecha de finalizacion", formatDate(tournament.endDate)],
       [
         "Organizador",
-        tournament.organizerName ?? `Usuario #${tournament.organizerId}`,
+        tournament.organizerName ??
+          (tournament.organizerAccountId
+            ? `Usuario #${tournament.organizerAccountId}`
+            : "Sin cuenta vinculada"),
       ],
     ],
   ];

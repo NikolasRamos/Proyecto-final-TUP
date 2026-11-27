@@ -39,7 +39,11 @@ describe("tournament reports service", () => {
   });
 
   it("incluye el nombre del organizador en el reporte", async () => {
-    Tournament.findByPk.mockResolvedValue({ id: 101, organizerId: 7 });
+    Tournament.findByPk.mockResolvedValue({
+      id: 101,
+      organizerId: 3,
+      organizerAccountId: 7,
+    });
     TournamentRegistration.findAll.mockResolvedValue([]);
     User.findAll.mockResolvedValue([{ idUsuario: 7, nombre: "Niko" }]);
 

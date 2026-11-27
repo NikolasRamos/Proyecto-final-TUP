@@ -41,6 +41,7 @@ export interface Tournament {
   endDate: string;
   status: TournamentStatus;
   organizerId: EntityId;
+  organizerAccountId?: EntityId | null;
   organizerName?: string | null;
   createdAt: string;
   updatedAt: string;
