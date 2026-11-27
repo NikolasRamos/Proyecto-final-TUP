@@ -6,7 +6,11 @@ const SALT_ROUNDS = 10;
 const PASSWORD = "Password123";
 
 const USERS = [
-  { nombre: "Administrador", email: "admin@torneos.test", rol: "administrador" },
+  {
+    nombre: "Administrador",
+    email: "admin@torneos.test",
+    rol: "administrador",
+  },
   {
     nombre: "Organizador",
     email: "organizador@torneos.test",
@@ -46,7 +50,14 @@ module.exports = {
           );
         }
 
-        return { nombre, email, password, idRol, createdAt: now, updatedAt: now };
+        return {
+          nombre,
+          email,
+          password,
+          idRol,
+          createdAt: now,
+          updatedAt: now,
+        };
       }),
     );
   },

@@ -21,15 +21,15 @@ Si la API está iniciada, la comprobación debe responder `200 OK`.
 
 ## Variables utilizadas
 
-| Variable       | Uso                                                    |
-| -------------- | ------------------------------------------------------ |
-| `baseUrl`      | Dirección de la API local                              |
-| `tournamentId` | Torneo utilizado en consultas, cambios e inscripciones |
-| `teamId`       | Equipo utilizado en consultas y operaciones            |
-| `captainId`    | Usuario capitán al crear un equipo                     |
-| `userId`       | Usuario utilizado para agregar o retirar integrantes   |
-| `teamActorToken` | Token de la cuenta que pide ingreso, invita, responde o consulta sus avisos |
-| `membershipRequestId` | ID del trámite o `requestId` del aviso que querés marcar como leído |
+| Variable              | Uso                                                                         |
+| --------------------- | --------------------------------------------------------------------------- |
+| `baseUrl`             | Dirección de la API local                                                   |
+| `tournamentId`        | Torneo utilizado en consultas, cambios e inscripciones                      |
+| `teamId`              | Equipo utilizado en consultas y operaciones                                 |
+| `captainId`           | Usuario capitán al crear un equipo                                          |
+| `userId`              | Usuario utilizado para agregar o retirar integrantes                        |
+| `teamActorToken`      | Token de la cuenta que pide ingreso, invita, responde o consulta sus avisos |
+| `membershipRequestId` | ID del trámite o `requestId` del aviso que querés marcar como leído         |
 
 Las peticiones **Crear torneo** y **Crear equipo** guardan automáticamente los
 identificadores devueltos por la API en `tournamentId` y `teamId`. Los demás

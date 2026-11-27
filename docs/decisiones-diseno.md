@@ -12,10 +12,10 @@ de 2026. Esta guía toma como base `dev` después de integrar los permisos
 del organizador (`e62b639`) y las reglas compartidas (`2672f2b`).
 [Repositorio del grupo](https://github.com/NikolasRamos/Proyecto-final-TUP/tree/dev).
 
-| Requisito | Evidencia |
-| --- | --- |
-| Proyecto y repositorio accesibles | Rama de integración `dev` y [prototipo en Vercel](https://proyecto-final-tup.vercel.app/). |
-| Análisis de código real | Secciones 1 a 5 de este documento, con diagnóstico, alternativas, decisiones y costos. |
+| Requisito                           | Evidencia                                                                                              |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| Proyecto y repositorio accesibles   | Rama de integración `dev` y [prototipo en Vercel](https://proyecto-final-tup.vercel.app/).             |
+| Análisis de código real             | Secciones 1 a 5 de este documento, con diagnóstico, alternativas, decisiones y costos.                 |
 | Código y documentación localizables | Referencias a servicios, migraciones y pruebas. [Índice de documentación](../README.md#documentación). |
 
 ## Resumen ejecutivo
@@ -224,14 +224,14 @@ revisarse el límite del servicio y reconsiderar Facade, Command u Observer.
 
 ### Trade-offs asumidos
 
-| Beneficio                                                        | Costo aceptado                                                                         |
-| ---------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| El cupo no se supera con solicitudes concurrentes.               | Las inscripciones del mismo torneo se procesan secuencialmente durante la transacción. |
-| Se conserva el historial de retiros.                             | Las consultas deben filtrar el estado y la tabla crece con el historial.               |
-| La base impide duplicados y referencias rotas.                   | Algunas eliminaciones dejan de estar permitidas y requieren respuestas `409`.          |
-| Los resultados `outcome` hacen explícitas las reglas esperables. | Los controladores contienen varias ramas de traducción a HTTP.                         |
-| No hay abstracciones GoF prematuras.                             | Si el caso de uso crece mucho, el servicio deberá refactorizarse.                      |
-| Se mantienen los datos históricos de demostración. | La capitanía y la propiedad de torneos requieren vínculos explícitos con cuentas activas. |
+| Beneficio                                                        | Costo aceptado                                                                            |
+| ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------- |
+| El cupo no se supera con solicitudes concurrentes.               | Las inscripciones del mismo torneo se procesan secuencialmente durante la transacción.    |
+| Se conserva el historial de retiros.                             | Las consultas deben filtrar el estado y la tabla crece con el historial.                  |
+| La base impide duplicados y referencias rotas.                   | Algunas eliminaciones dejan de estar permitidas y requieren respuestas `409`.             |
+| Los resultados `outcome` hacen explícitas las reglas esperables. | Los controladores contienen varias ramas de traducción a HTTP.                            |
+| No hay abstracciones GoF prematuras.                             | Si el caso de uso crece mucho, el servicio deberá refactorizarse.                         |
+| Se mantienen los datos históricos de demostración.               | La capitanía y la propiedad de torneos requieren vínculos explícitos con cuentas activas. |
 
 ## Pruebas y comprobaciones
 

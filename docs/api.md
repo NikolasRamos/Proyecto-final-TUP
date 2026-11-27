@@ -343,14 +343,14 @@ activa o retirada, la API responde `409 Conflict`.
 
 Estas rutas usan el token de la cuenta que realiza la acción.
 
-| Método y ruta | Uso |
-| --- | --- |
-| `GET /api/teams/mine` | Lista los equipos de la cuenta por membresía vinculada, con `page` y `limit`. |
-| `GET /api/teams/:teamId/membership` | Indica si la cuenta ya integra el equipo, tiene un trámite pendiente o puede pedir ingreso. |
-| `POST /api/teams/:teamId/join-requests` | Crea la solicitud de la cuenta participante al capitán del equipo. |
-| `POST /api/teams/:teamId/invitations` | El capitán invita a una cuenta activa mediante `{ "email": "participante@example.test" }`. |
-| `GET /api/teams/membership-requests` | Lista trámites de la cuenta con `box=received` o `box=sent`, `page` y `limit`. El filtro opcional `requestId` abre un trámite desde su aviso. |
-| `PATCH /api/teams/:teamId/membership-requests/:requestId` | El destinatario envía `{ "status": "accepted" }` o `{ "status": "rejected" }`. |
+| Método y ruta                                             | Uso                                                                                                                                           |
+| --------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /api/teams/mine`                                     | Lista los equipos de la cuenta por membresía vinculada, con `page` y `limit`.                                                                 |
+| `GET /api/teams/:teamId/membership`                       | Indica si la cuenta ya integra el equipo, tiene un trámite pendiente o puede pedir ingreso.                                                   |
+| `POST /api/teams/:teamId/join-requests`                   | Crea la solicitud de la cuenta participante al capitán del equipo.                                                                            |
+| `POST /api/teams/:teamId/invitations`                     | El capitán invita a una cuenta activa mediante `{ "email": "participante@example.test" }`.                                                    |
+| `GET /api/teams/membership-requests`                      | Lista trámites de la cuenta con `box=received` o `box=sent`, `page` y `limit`. El filtro opcional `requestId` abre un trámite desde su aviso. |
+| `PATCH /api/teams/:teamId/membership-requests/:requestId` | El destinatario envía `{ "status": "accepted" }` o `{ "status": "rejected" }`.                                                                |
 
 Aceptar vincula la membresía a una cuenta activa en la misma transacción. Puede
 haber un solo trámite pendiente entre un equipo y una cuenta. Un `403` indica
@@ -505,7 +505,7 @@ con la cuenta administradora para habilitar otras cuentas del equipo.
 | ------ | ------------------------------------------ |
 | `400`  | Identificador, parámetro o cuerpo inválido |
 | `401`  | Credenciales incorrectas o sesión inválida |
-| `403`  | Permisos insuficientes                      |
+| `403`  | Permisos insuficientes                     |
 | `404`  | Recurso inexistente                        |
 | `409`  | Conflicto con una regla de negocio         |
 | `500`  | Error interno sin detalles sensibles       |

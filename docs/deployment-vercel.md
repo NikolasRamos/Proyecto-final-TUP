@@ -69,6 +69,7 @@ propio backend automáticamente.
    `db:seed:demo` carga torneos, equipos, integrantes, inscripciones y roles.
    El cargador general `db:seed` también crea cuentas de prueba con una
    contraseña conocida, por eso se reserva para entornos locales.
+
 3. Configurar las variables indicadas en el paso 7 y validar la publicación
    con el paso 8. Confirmar que se ven los torneos y equipos de ejemplo.
 

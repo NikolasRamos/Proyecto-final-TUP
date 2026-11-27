@@ -125,7 +125,7 @@ El backend lee las variables del archivo `.env` ubicado en la raíz:
 | `DB_HOST`, `DB_PORT`                | Dirección de PostgreSQL local        |
 | `DB_NAME`, `DB_USER`, `DB_PASSWORD` | Base de datos y credenciales locales |
 | `DB_SSL`, `DB_POOL_MAX`             | SSL y límite de conexiones           |
-| `JWT_SECRET`                        | Secreto para firmar y validar JWT |
+| `JWT_SECRET`                        | Secreto para firmar y validar JWT    |
 | `VITE_API_URL`                      | URL pública de la API para React     |
 
 El frontend lee `VITE_API_URL` desde `frontend/.env`. En desarrollo utiliza

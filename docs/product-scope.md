@@ -6,12 +6,12 @@ El Grupo 16 desarrolla una aplicación para organizar torneos, administrar equip
 
 El registro público crea una cuenta con rol participante. La API usa la cuenta de la sesión y consulta su rol actual antes de ejecutar una operación protegida.
 
-| Perfil | Acciones disponibles |
-| --- | --- |
-| Invitado | Buscar y consultar torneos abiertos o en curso y consultar el catálogo de equipos. |
-| Participante | Además de consultar los catálogos, puede crear un equipo como capitán, pedir ingreso a otro equipo y responder sus invitaciones. |
-| Organizador | Crea torneos a nombre de su cuenta y ve sus torneos privados junto con los torneos públicos del catálogo. Puede gestionar sus propios torneos, sus inscripciones y su reporte. El rol también habilita la edición de equipos y la gestión directa de integrantes. |
-| Administrador | Puede gestionar todos los torneos y equipos, vincular capitanes a cuentas activas y asignar roles a cuentas participantes mediante la API. |
+| Perfil        | Acciones disponibles                                                                                                                                                                                                                                              |
+| ------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Invitado      | Buscar y consultar torneos abiertos o en curso y consultar el catálogo de equipos.                                                                                                                                                                                |
+| Participante  | Además de consultar los catálogos, puede crear un equipo como capitán, pedir ingreso a otro equipo y responder sus invitaciones.                                                                                                                                  |
+| Organizador   | Crea torneos a nombre de su cuenta y ve sus torneos privados junto con los torneos públicos del catálogo. Puede gestionar sus propios torneos, sus inscripciones y su reporte. El rol también habilita la edición de equipos y la gestión directa de integrantes. |
+| Administrador | Puede gestionar todos los torneos y equipos, vincular capitanes a cuentas activas y asignar roles a cuentas participantes mediante la API.                                                                                                                        |
 
 Cualquier cuenta con sesión puede usar **Mis equipos**, **Solicitudes** y **Notificaciones**. El capitán vinculado puede enviar invitaciones y responder pedidos de ingreso. Solo el capitán vinculado o un administrador puede eliminar un equipo, y el historial de inscripciones bloquea esa operación.
 
@@ -19,16 +19,16 @@ Cualquier cuenta con sesión puede usar **Mis equipos**, **Solicitudes** y **Not
 
 ## Funcionalidades disponibles
 
-| Módulo | Implementación |
-| --- | --- |
-| Torneos | Búsqueda, filtros, orden, paginación, detalle, creación, edición y eliminación de borradores. Seis formatos con validaciones específicas. |
-| Equipos | Catálogo, detalle, creación, edición, eliminación, integrantes y asignación de capitanes. El catálogo admite búsqueda y paginación. |
-| Membresías | Solicitudes e invitaciones con aceptación o rechazo. **Mis equipos** muestra las membresías vinculadas a la cuenta. |
-| Notificaciones | Bandeja privada con avisos de solicitudes e invitaciones, estado de lectura y acceso al trámite. |
-| Inscripciones | Alta, listado y retiro de equipos desde el detalle del torneo. El organizador selecciona el plantel que representa al equipo. |
-| Reportes | PDF con datos del torneo, ocupación y equipos activos. |
-| Usuarios | Registro, inicio y cierre de sesión, consulta de la cuenta y asignación de roles desde Postman. |
-| Entorno de entrega | Aplicación pública en [Vercel](https://proyecto-final-tup.vercel.app/) con PostgreSQL administrado en Neon. |
+| Módulo             | Implementación                                                                                                                            |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Torneos            | Búsqueda, filtros, orden, paginación, detalle, creación, edición y eliminación de borradores. Seis formatos con validaciones específicas. |
+| Equipos            | Catálogo, detalle, creación, edición, eliminación, integrantes y asignación de capitanes. El catálogo admite búsqueda y paginación.       |
+| Membresías         | Solicitudes e invitaciones con aceptación o rechazo. **Mis equipos** muestra las membresías vinculadas a la cuenta.                       |
+| Notificaciones     | Bandeja privada con avisos de solicitudes e invitaciones, estado de lectura y acceso al trámite.                                          |
+| Inscripciones      | Alta, listado y retiro de equipos desde el detalle del torneo. El organizador selecciona el plantel que representa al equipo.             |
+| Reportes           | PDF con datos del torneo, ocupación y equipos activos.                                                                                    |
+| Usuarios           | Registro, inicio y cierre de sesión, consulta de la cuenta y asignación de roles desde Postman.                                           |
+| Entorno de entrega | Aplicación pública en [Vercel](https://proyecto-final-tup.vercel.app/) con PostgreSQL administrado en Neon.                               |
 
 ## Reglas del dominio
 

@@ -1,10 +1,19 @@
 import bcrypt from "bcrypt";
-import { DataTypes, Model, InferAttributes, InferCreationAttributes, CreationOptional } from "sequelize";
+import {
+  DataTypes,
+  Model,
+  InferAttributes,
+  InferCreationAttributes,
+  CreationOptional,
+} from "sequelize";
 import database from "../config/database.js";
 
 const SALT_ROUNDS = 10;
 
-export class User extends Model<InferAttributes<User>, InferCreationAttributes<User>> {
+export class User extends Model<
+  InferAttributes<User>,
+  InferCreationAttributes<User>
+> {
   declare idUsuario: CreationOptional<number>;
   declare nombre: string;
   declare email: string;

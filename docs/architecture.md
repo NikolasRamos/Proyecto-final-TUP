@@ -45,8 +45,8 @@ independiente. No implica por sí sola la aplicación de un patrón GoF.
 | Carpeta               | Responsabilidad                                  |
 | --------------------- | ------------------------------------------------ |
 | `backend/config`      | Conexión y configuración de Sequelize            |
-| `backend/routes`      | Métodos y rutas de la API                         |
-| `backend/middlewares` | Sesión, roles y permisos sobre los recursos       |
+| `backend/routes`      | Métodos y rutas de la API                        |
+| `backend/middlewares` | Sesión, roles y permisos sobre los recursos      |
 | `backend/controllers` | Validación de entrada y respuestas HTTP          |
 | `backend/schemas`     | Contratos y validaciones con Zod                 |
 | `backend/services`    | Reglas de negocio, transacciones y consultas     |
@@ -66,16 +66,16 @@ independiente. No implica por sí sola la aplicación de un patrón GoF.
 
 ### Rutas del frontend
 
-| Ruta | Pantalla | Acceso |
-| --- | --- | --- |
-| `/` | Panel y accesos al catálogo | Público |
-| `/login`, `/register` | Inicio de sesión y registro | Público |
-| `/tournaments`, `/tournaments/:id` | Listado y detalle de torneos. La gestión y las inscripciones se muestran según los permisos del torneo. | Según la visibilidad de cada torneo |
-| `/tournaments/new` | Crear torneo | Organizador o administrador |
-| `/my-tournaments` | Listado de torneos de la cuenta | Organizador o administrador |
-| `/teams`, `/teams/:id` | Listado y detalle de equipos | Público. Las acciones requieren los permisos correspondientes. |
-| `/teams/new` | Crear equipo | Participante, organizador o administrador |
-| `/my-teams`, `/team-requests`, `/notifications` | Membresías, trámites y avisos de la cuenta | Sesión válida |
+| Ruta                                            | Pantalla                                                                                                | Acceso                                                         |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `/`                                             | Panel y accesos al catálogo                                                                             | Público                                                        |
+| `/login`, `/register`                           | Inicio de sesión y registro                                                                             | Público                                                        |
+| `/tournaments`, `/tournaments/:id`              | Listado y detalle de torneos. La gestión y las inscripciones se muestran según los permisos del torneo. | Según la visibilidad de cada torneo                            |
+| `/tournaments/new`                              | Crear torneo                                                                                            | Organizador o administrador                                    |
+| `/my-tournaments`                               | Listado de torneos de la cuenta                                                                         | Organizador o administrador                                    |
+| `/teams`, `/teams/:id`                          | Listado y detalle de equipos                                                                            | Público. Las acciones requieren los permisos correspondientes. |
+| `/teams/new`                                    | Crear equipo                                                                                            | Participante, organizador o administrador                      |
+| `/my-teams`, `/team-requests`, `/notifications` | Membresías, trámites y avisos de la cuenta                                                              | Sesión válida                                                  |
 
 React comprueba la sesión para mostrar las acciones disponibles. Los
 middlewares de Express verifican el rol y la propiedad del recurso al recibir

@@ -1,7 +1,19 @@
 import { Router } from "express";
-import { requireAdministrator, requireSession } from "../middlewares/auth.middleware.js";
-import { getAllRoles, getRoleById, createRole, updateRole, deleteRole } from "../controllers/role.controller.js";
-import { protectSystemRole, roleExists } from "../middlewares/roleExists.middleware.js";
+import {
+  requireAdministrator,
+  requireSession,
+} from "../middlewares/auth.middleware.js";
+import {
+  getAllRoles,
+  getRoleById,
+  createRole,
+  updateRole,
+  deleteRole,
+} from "../controllers/role.controller.js";
+import {
+  protectSystemRole,
+  roleExists,
+} from "../middlewares/roleExists.middleware.js";
 
 const router = Router();
 
