@@ -1,14 +1,14 @@
-'use strict';
-const matchesService = require('../services/matches.service');
+import matchesService from "../services/matches.service.js";
 
 class MatchesController {
-  
   // Endpoint para generar el fixture de un torneo
   async generate(req, res) {
     try {
       const { tournamentId } = req.params;
       const matches = await matchesService.generateFixtures(tournamentId);
-      return res.status(201).json({ message: 'Fixture armado correctamente', matches });
+      return res
+        .status(201)
+        .json({ message: "Fixture armado correctamente", matches });
     } catch (error) {
       return res.status(400).json({ error: error.message });
     }
@@ -30,8 +30,13 @@ class MatchesController {
     try {
       const { id } = req.params; // ID de la partida
       const { homeScore, awayScore } = req.body;
-      const data = await matchesService.registerResult(id, { homeScore, awayScore });
-      return res.status(200).json({ message: 'Resultado guardado y posiciones al día', ...data });
+      const data = await matchesService.registerResult(id, {
+        homeScore,
+        awayScore,
+      });
+      return res
+        .status(200)
+        .json({ message: "Resultado guardado y posiciones al día", ...data });
     } catch (error) {
       return res.status(400).json({ error: error.message });
     }
@@ -49,4 +54,4 @@ class MatchesController {
   }
 }
 
-module.exports = new MatchesController();
+export default new MatchesController();

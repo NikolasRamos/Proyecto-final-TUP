@@ -159,9 +159,7 @@ npm run build
 ```
 
 La secuencia comprueba estilo, comportamiento, tipos del frontend y
-compilación. ESLint informa usos de CommonJS en los tres archivos iniciales
-de partidas fuera de las rutas activas. Al revisar otro cambio, compará el
-resultado con la rama de integración y comprobá los archivos modificados.
+compilación.
 
 Vitest, Testing Library y Supertest cubren las verificaciones automatizadas.
 La [colección de Postman](../postman/README.md) cubre el contrato para las
