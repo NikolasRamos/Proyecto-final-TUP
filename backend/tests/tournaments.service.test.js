@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { Op } from "sequelize";
 
 import Tournament from "../models/Tournament.js";
+import User from "../models/user.js";
 import {
   createTournament,
   deleteTournament,
@@ -19,9 +20,14 @@ vi.mock("../models/Tournament.js", () => ({
   },
 }));
 
+vi.mock("../models/user.js", () => ({
+  default: { findAll: vi.fn() },
+}));
+
 describe("tournaments service", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    User.findAll.mockResolvedValue([]);
   });
 
   it("delega la creacion al modelo", async () => {
@@ -93,6 +99,21 @@ describe("tournaments service", () => {
 
     await expect(getTournamentById(tournamentId)).resolves.toBe(tournament);
     expect(Tournament.findByPk).toHaveBeenCalledWith(tournamentId);
+  });
+
+  it("incluye el nombre del organizador en el detalle", async () => {
+    const tournament = { id: 101, organizerId: 7 };
+    Tournament.findByPk.mockResolvedValue(tournament);
+    User.findAll.mockResolvedValue([{ idUsuario: 7, nombre: "Niko" }]);
+
+    const result = await getTournamentById(101);
+
+    expect(result.organizerName).toBe("Niko");
+    expect(User.findAll).toHaveBeenCalledWith({
+      attributes: ["idUsuario", "nombre"],
+      where: { idUsuario: { [Op.in]: [7] } },
+      raw: true,
+    });
   });
 
   it("actualiza un torneo existente", async () => {

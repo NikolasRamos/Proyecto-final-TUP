@@ -1,6 +1,7 @@
 import { Op } from "sequelize";
 
 import Tournament from "../models/Tournament.js";
+import { getUserNamesByIds } from "./user-names.service.js";
 
 const publicTournamentStatuses = ["open", "in_progress"];
 
@@ -63,16 +64,31 @@ export function listTournaments(
   });
 }
 
-export function getTournamentById(tournamentId, { publicOnly = false } = {}) {
-  if (publicOnly) {
-    return Tournament.findOne({
-      where: {
-        id: tournamentId,
-        status: { [Op.in]: publicTournamentStatuses },
-      },
-    });
+export async function getTournamentById(
+  tournamentId,
+  { publicOnly = false } = {},
+) {
+  const tournament = publicOnly
+    ? await Tournament.findOne({
+        where: {
+          id: tournamentId,
+          status: { [Op.in]: publicTournamentStatuses },
+        },
+      })
+    : await Tournament.findByPk(tournamentId);
+
+  if (!tournament) return tournament;
+
+  const namesById = await getUserNamesByIds([tournament.organizerId]);
+  const organizerName = namesById.get(tournament.organizerId) ?? null;
+
+  if (typeof tournament.setDataValue === "function") {
+    tournament.setDataValue("organizerName", organizerName);
+  } else {
+    tournament.organizerName = organizerName;
   }
-  return Tournament.findByPk(tournamentId);
+
+  return tournament;
 }
 
 export async function updateTournament(tournamentId, tournamentData) {
