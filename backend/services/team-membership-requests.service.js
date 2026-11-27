@@ -170,8 +170,10 @@ export function listMyTeams(userId, { page, limit }) {
   return paginate(
     `
     SELECT t.id, t.name, t.description, t.captain_id AS "captainId",
-      t.captain_account_id AS "captainAccountId", t.created_at AS "createdAt", t.updated_at AS "updatedAt"
+      t.captain_account_id AS "captainAccountId", u.nombre AS "captainName",
+      t.created_at AS "createdAt", t.updated_at AS "updatedAt"
     FROM team_members m JOIN teams t ON t.id = m.team_id
+    LEFT JOIN usuario u ON u."idUsuario" = t.captain_account_id AND u."deletedAt" IS NULL
     WHERE m.user_id = $userId AND m.account_linked
   `,
     { userId },
