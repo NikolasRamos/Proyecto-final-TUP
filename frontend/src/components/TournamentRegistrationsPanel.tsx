@@ -418,7 +418,11 @@ export default function TournamentRegistrationsPanel({
                     : "integrantes"}{" "}
                   (
                   {registration.memberIds
-                    .map((memberId) => `Usuario #${memberId}`)
+                    .map(
+                      (memberId, index) =>
+                        registration.memberNames?.[index] ??
+                        `Usuario #${memberId}`,
+                    )
                     .join(", ")}
                   )
                 </p>
